@@ -103,149 +103,140 @@ export async function AboutSection() {
           </h2>
         </div>
 
-        <div className="flex flex-col gap-24">
-          
-          {/* Top Row: Bio & Tech Stack */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
-            {/* Left Column: Bio & Consultant Edge */}
-            <div className="flex flex-col gap-10">
-              {profile.avatar_url && (
-                <div className="relative w-48 h-48 rounded-2xl overflow-hidden border-4 border-background shadow-xl ring-2 ring-emerald-500/30">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={formatImageUrl(profile.avatar_url)} 
-                    alt="Avatar Portrait" 
-                    className="object-cover w-full h-full"
-                  />
-                </div>
-              )}
-
-              <div className="prose prose-invert prose-emerald text-muted-foreground">
-                {profile.bio.split('\n\n').map((paragraph, idx) => (
-                  <p key={idx} className="text-lg leading-relaxed mt-4 first:mt-0">
-                    {paragraph}
-                  </p>
-                ))}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
+          {/* Left Column: Bio & Consultant Edge */}
+          <div className="flex flex-col gap-10">
+            {profile.avatar_url && (
+              <div className="relative w-48 h-48 rounded-2xl overflow-hidden border-4 border-background shadow-xl ring-2 ring-emerald-500/30">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img 
+                  src={formatImageUrl(profile.avatar_url)} 
+                  alt="Avatar Portrait" 
+                  className="object-cover w-full h-full"
+                />
               </div>
+            )}
 
-              {/* The Consultant Edge */}
-              <Card className="bg-sky-100 dark:bg-sky-950/20 border-sky-200 dark:border-sky-500/30 relative overflow-hidden group">
-                <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-sky-400 to-emerald-400"></div>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-bold text-foreground dark:text-white mb-2 flex items-center gap-2">
-                    <Rocket className="text-sky-600 dark:text-sky-400 w-5 h-5" />
-                    Why Me?
-                  </h3>
-                  <p className="text-muted-foreground italic leading-relaxed">
-                    &quot;I don&apos;t just build infrastructure; I optimize for ROI. My goal is to reduce your cloud bill while increasing your deployment frequency.&quot;
-                  </p>
-                </CardContent>
-              </Card>
-
-              {/* Connect / Socials */}
-              <div>
-                <h3 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-4">Let&apos;s Connect</h3>
-                <div className="flex flex-wrap gap-4">
-                  {profile.linkedin_url && (
-                    <Link href={profile.linkedin_url} target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border hover:bg-secondary/80 hover:border-foreground/20 transition-all text-sm text-foreground shadow-sm">
-                      <Linkedin className="w-4 h-4 text-[#0A66C2]" /> LinkedIn
-                    </Link>
-                  )}
-                  {profile.github_url && (
-                    <Link href={profile.github_url} target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border hover:bg-secondary/80 hover:border-foreground/20 transition-all text-sm text-foreground shadow-sm">
-                      <Github className="w-4 h-4 text-foreground dark:text-white" /> GitHub
-                    </Link>
-                  )}
-                  {profile.twitter_url && (
-                    <Link href={profile.twitter_url} target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border hover:bg-secondary/80 hover:border-foreground/20 transition-all text-sm text-foreground shadow-sm">
-                      <svg className="w-4 h-4 text-foreground dark:text-white fill-current" viewBox="0 0 24 24">
-                        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-                      </svg> <span className="px-1">X</span>
-                    </Link>
-                  )}
-                </div>
-              </div>
+            <div className="prose prose-invert prose-emerald text-muted-foreground">
+              {profile.bio.split('\n\n').map((paragraph, idx) => (
+                <p key={idx} className="text-lg leading-relaxed mt-4 first:mt-0">
+                  {paragraph}
+                </p>
+              ))}
             </div>
 
-            {/* Right Column: Tech Stack Cloud */}
-            <div className="flex flex-col gap-12 mt-10 lg:mt-0">
-              {profile.technical_skills && profile.technical_skills.length > 0 && (
-                <div className="bg-card/50 backdrop-blur-sm p-8 rounded-2xl border border-border/50 shadow-sm">
-                  <h3 className="text-2xl font-bold text-foreground mb-6 flex items-center gap-2">
-                    <Rocket className="w-6 h-6 text-sky-500" />
-                    Technical Arsenal
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    {profile.technical_skills.map((tech, idx) => (
-                      <Badge key={idx} variant="secondary" className="px-4 py-2 text-sm bg-sky-100 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all cursor-default">
-                        {tech}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
+            {/* The Consultant Edge */}
+            <Card className="bg-sky-100 dark:bg-sky-950/20 border-sky-200 dark:border-sky-500/30 relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-sky-400 to-emerald-400"></div>
+              <CardContent className="p-6">
+                <h3 className="text-xl font-bold text-foreground dark:text-white mb-2 flex items-center gap-2">
+                  <Rocket className="text-sky-600 dark:text-sky-400 w-5 h-5" />
+                  Why Me?
+                </h3>
+                <p className="text-muted-foreground italic leading-relaxed">
+                  &quot;I don&apos;t just build infrastructure; I optimize for ROI. My goal is to reduce your cloud bill while increasing your deployment frequency.&quot;
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Connect / Socials */}
+            <div>
+              <h3 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-4">Let&apos;s Connect</h3>
+              <div className="flex flex-wrap gap-4">
+                {profile.linkedin_url && (
+                  <Link href={profile.linkedin_url} target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border hover:bg-secondary/80 hover:border-foreground/20 transition-all text-sm text-foreground">
+                    <Linkedin className="w-4 h-4 text-[#0A66C2]" /> LinkedIn
+                  </Link>
+                )}
+                {profile.github_url && (
+                  <Link href={profile.github_url} target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border hover:bg-secondary/80 hover:border-foreground/20 transition-all text-sm text-foreground">
+                    <Github className="w-4 h-4 text-foreground dark:text-white" /> GitHub
+                  </Link>
+                )}
+                {profile.twitter_url && (
+                  <Link href={profile.twitter_url} target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border hover:bg-secondary/80 hover:border-foreground/20 transition-all text-sm text-foreground">
+                    <svg className="w-4 h-4 text-foreground dark:text-white fill-current" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 22.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg> <span className="px-1">X</span>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Bottom Row: Full Width Professional Timeline */}
-          <div className="max-w-4xl pt-8 border-t border-border/50">
-            <h3 className="text-3xl font-bold text-foreground mb-12 flex items-center gap-3">
-              <Briefcase className="w-8 h-8 text-emerald-500" />
-              Career Timeline
-            </h3>
+          {/* Right Column: Tech Stack & Timeline */}
+          <div className="flex flex-col gap-12">
             
-            <div className="relative border-l-2 border-slate-200 dark:border-slate-800 ml-3 md:ml-4 space-y-12">
-              
-              {(!profile.experiences || profile.experiences.length === 0) && (!profile.education || profile.education.length === 0) && (
-                <p className="text-sm text-muted-foreground ml-4">No timeline configured yet.</p>
-              )}
-
-              {/* Map Experiences */}
-              {[...profile.experiences].sort((a, b) => {
-                const aEnd = a.is_present ? "9999-99" : (a.end_time || a.start_time || "");
-                const bEnd = b.is_present ? "9999-99" : (b.end_time || b.start_time || "");
-                if (aEnd !== bEnd) return bEnd.localeCompare(aEnd);
-                return (b.start_time || "").localeCompare(a.start_time || "");
-              }).map((exp, idx) => (
-                <div key={`exp-${idx}`} className="relative pl-8 group">
-                  <div className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full bg-emerald-400 ring-4 ring-background shadow-sm group-hover:scale-110 transition-transform"></div>
-                  <h4 className="text-xl font-bold text-foreground dark:text-white flex items-center gap-2">
-                     {exp.role}
-                  </h4>
-                  <p className="text-emerald-600 dark:text-emerald-400 font-medium mt-1">
-                    {exp.company} <span className="opacity-70 text-xs ml-2">({exp.start_time || "Unknown"} — {exp.is_present ? "Present" : exp.end_time || "Unknown"})</span>
-                  </p>
-                  {exp.location && (
-                    <p className="text-muted-foreground text-xs mt-0.5 uppercase tracking-wide">{exp.location} • {exp.location_type}</p>
-                  )}
-                  <p className="text-muted-foreground text-sm mt-3 leading-relaxed max-w-3xl">
-                    {exp.description}
-                  </p>
+            {/* Tech Stack Cloud */}
+            {profile.technical_skills && profile.technical_skills.length > 0 && (
+              <div>
+                <h3 className="text-2xl font-bold text-foreground mb-6">Technical Arsenal</h3>
+                <div className="flex flex-wrap gap-3">
+                  {profile.technical_skills.map((tech, idx) => (
+                    <Badge key={idx} variant="secondary" className="px-4 py-2 text-sm bg-sky-100 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-500/20 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 hover:text-emerald-700 dark:hover:text-emerald-300 transition-all cursor-default">
+                      {tech}
+                    </Badge>
+                  ))}
                 </div>
-              ))}
+              </div>
+            )}
 
-              {/* Map Education */}
-              {[...profile.education].sort((a, b) => {
-                const aEnd = a.end_time || a.start_time || "";
-                const bEnd = b.end_time || b.start_time || "";
-                if (aEnd !== bEnd) return bEnd.localeCompare(aEnd);
-                return (b.start_time || "").localeCompare(a.start_time || "");
-              }).map((edu, idx) => (
-                <div key={`edu-${idx}`} className="relative pl-8 group mt-16">
-                  <div className="absolute -left-[9px] top-1.5 h-4 w-4 rounded-full bg-slate-400 dark:bg-slate-600 ring-4 ring-background shadow-sm group-hover:scale-110 transition-transform"></div>
-                  <h4 className="text-xl font-bold text-foreground dark:text-white flex items-center gap-2">
-                    <GraduationCap className="w-5 h-5 text-slate-500 dark:text-slate-400" /> {edu.institution}
-                  </h4>
-                  <p className="text-foreground dark:text-white/80 font-medium mt-1">{edu.degree} <span className="opacity-70 text-xs ml-2">({edu.start_time || "Unknown"} — {edu.end_time || "Unknown"})</span></p>
-                  <p className="text-muted-foreground text-sm mt-2 max-w-3xl">
-                    {edu.program_type}
-                  </p>
-                </div>
-              ))}
+            {/* Professional Timeline */}
+            <div>
+              <h3 className="text-2xl font-bold text-foreground mb-8">Career Timeline</h3>
+              <div className="relative border-l border-border ml-3 md:ml-4 space-y-10">
+                
+                {(!profile.experiences || profile.experiences.length === 0) && (!profile.education || profile.education.length === 0) && (
+                  <p className="text-sm text-muted-foreground ml-4">No timeline configured yet.</p>
+                )}
 
+                {/* Map Experiences */}
+                {[...profile.experiences].sort((a, b) => {
+                  const aEnd = a.is_present ? "9999-99" : (a.end_time || a.start_time || "");
+                  const bEnd = b.is_present ? "9999-99" : (b.end_time || b.start_time || "");
+                  if (aEnd !== bEnd) return bEnd.localeCompare(aEnd);
+                  return (b.start_time || "").localeCompare(a.start_time || "");
+                }).map((exp, idx) => (
+                  <div key={`exp-${idx}`} className="relative pl-8">
+                    <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-emerald-400 ring-4 ring-background"></div>
+                    <h4 className="text-lg font-bold text-foreground dark:text-white flex items-center gap-2">
+                      <Briefcase className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> {exp.role}
+                    </h4>
+                    <p className="text-emerald-600 dark:text-emerald-400 font-medium mt-1">
+                      {exp.company} <span className="opacity-70 text-xs ml-2">({exp.start_time || "Unknown"} — {exp.is_present ? "Present" : exp.end_time || "Unknown"})</span>
+                    </p>
+                    {exp.location && (
+                      <p className="text-muted-foreground text-xs mt-0.5">{exp.location} • {exp.location_type}</p>
+                    )}
+                    <p className="text-muted-foreground text-sm mt-3">
+                      {exp.description}
+                    </p>
+                  </div>
+                ))}
+
+                {/* Map Education */}
+                {[...profile.education].sort((a, b) => {
+                  const aEnd = a.end_time || a.start_time || "";
+                  const bEnd = b.end_time || b.start_time || "";
+                  if (aEnd !== bEnd) return bEnd.localeCompare(aEnd);
+                  return (b.start_time || "").localeCompare(a.start_time || "");
+                }).map((edu, idx) => (
+                  <div key={`edu-${idx}`} className="relative pl-8">
+                    <div className="absolute -left-1.5 top-1.5 h-3 w-3 rounded-full bg-slate-400 dark:bg-white/40 ring-4 ring-background"></div>
+                    <h4 className="text-lg font-bold text-foreground dark:text-white flex items-center gap-2">
+                      <GraduationCap className="w-4 h-4 text-slate-500 dark:text-white/70" /> {edu.institution}
+                    </h4>
+                    <p className="text-foreground dark:text-white/80 font-medium mt-1">{edu.degree} <span className="opacity-70 text-xs ml-2">({edu.start_time || "Unknown"} — {edu.end_time || "Unknown"})</span></p>
+                    <p className="text-muted-foreground text-sm mt-2">
+                      {edu.program_type}
+                    </p>
+                  </div>
+                ))}
+
+              </div>
             </div>
-          </div>
 
+          </div>
         </div>
       </div>
     </section>
