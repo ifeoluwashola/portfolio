@@ -16,7 +16,7 @@ export function LatestPosts() {
             Latest Thoughts and Guides
           </p>
           <p className="mt-6 text-lg leading-8 text-muted-foreground">
-            Deep dives into Platform Engineering, Site Reliability, and Go programming.
+            Deep dives into DevOps Engineering, Cloud Engineering, Platform Engineering, and Site Reliability Engineering.
           </p>
         </div>
 
