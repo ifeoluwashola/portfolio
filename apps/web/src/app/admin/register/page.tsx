@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ThemeProvider } from "next-themes";
+
 import { ModeToggle } from "@/components/ModeToggle";
 import { Eye, EyeOff, Check, X } from "lucide-react";
 
@@ -82,8 +82,9 @@ export default function RegisterPage() {
 
       // Automatically redirect to login upon successful registration
       router.push("/admin/login");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError(String(err));
     } finally {
       setLoading(false);
     }

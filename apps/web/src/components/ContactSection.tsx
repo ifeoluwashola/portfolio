@@ -57,9 +57,10 @@ export function ContactSection() {
         company: "",
         message: ""
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setStatus("error");
-      setErrorMessage(err.message);
+      if (err instanceof Error) setErrorMessage(err.message);
+      else setErrorMessage(String(err));
     } finally {
       setIsSubmitting(false);
     }

@@ -7,7 +7,7 @@ import { Github, ArrowRight, Star, GitFork } from "lucide-react";
 import Link from "next/link";
 
 export function ProjectsGrid() {
-  const [projects, setProjects] = useState<any[]>([]);
+  const [projects, setProjects] = useState<{title: string, description: string, tags: string[], githubUrl: string, caseStudyUrl: string, borderColor?: string, color?: string}[]>([]);
   const [guardrailStats, setGuardrailStats] = useState<{ stars: number; forks: number } | null>(null);
 
   useEffect(() => {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ModeToggle } from "@/components/ModeToggle";
-import { Eye, EyeOff, Check, X } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,8 +39,9 @@ export default function LoginPage() {
       // Redirect to admin dashboard
       router.push("/admin/projects");
       router.refresh(); // Important to trigger middleware re-evaluation
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError(String(err));
     } finally {
       setLoading(false);
     }
@@ -103,7 +104,7 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-6 text-center text-sm text-muted-foreground">
-          Don't have an account?{" "}
+          Don&apos;t have an account?{" "}
           <Link href="/admin/register" className="text-primary hover:underline font-medium">
             Register here
           </Link>

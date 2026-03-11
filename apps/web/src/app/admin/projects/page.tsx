@@ -43,8 +43,9 @@ export default function AdminProjectsPage() {
       if (!res.ok) throw new Error("Failed to fetch projects");
       const data = await res.json();
       setProjects(data || []);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError(String(err));
     } finally {
       setLoading(false);
     }
@@ -123,8 +124,9 @@ export default function AdminProjectsPage() {
       // Reset form and reload
       handleCancelEdit();
       await fetchProjects();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) setError(err.message);
+      else setError(String(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -161,8 +163,9 @@ export default function AdminProjectsPage() {
       }
 
       await fetchProjects();
-    } catch (err: any) {
-      alert(err.message);
+    } catch (err: unknown) {
+      if (err instanceof Error) alert(err.message);
+      else alert(String(err));
     }
   };
 
