@@ -1,6 +1,7 @@
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Terminal, Database, Server, Cloud, Network } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export function HeroSection() {
   return (
@@ -53,13 +54,19 @@ export function HeroSection() {
           </p>
           
           <div className="mt-10 flex items-center justify-center gap-x-6">
-            <Button size="lg" className="bg-sky-500 hover:bg-sky-400 text-white gap-2 font-semibold shadow-lg shadow-sky-500/20 hover:shadow-sky-500/40 transition-all h-12 px-8">
+            <Link 
+              href="#contact" 
+              className={cn(buttonVariants({ size: "lg" }), "bg-sky-500 hover:bg-sky-400 text-white gap-2 font-semibold shadow-lg shadow-sky-500/20 hover:shadow-sky-500/40 transition-all h-12 px-8 cursor-pointer")}
+            >
               <Terminal size={18} />
               Book an Audit
-            </Button>
-            <Button size="lg" variant="outline" className="gap-2 border-border hover:bg-accent hover:text-accent-foreground h-12 px-8 bg-background/50 backdrop-blur-sm">
+            </Link>
+            <Link 
+              href="#projects" 
+              className={cn(buttonVariants({ size: "lg", variant: "outline" }), "gap-2 border-border hover:bg-accent hover:text-accent-foreground h-12 px-8 bg-background/50 backdrop-blur-sm cursor-pointer")}
+            >
               View Portfolio <ArrowRight size={18} />
-            </Button>
+            </Link>
           </div>
         </div>
       </div>
