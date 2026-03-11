@@ -5,12 +5,24 @@ import Link from "next/link";
 export function HeroSection() {
   return (
     <section className="relative overflow-hidden bg-background pt-24 pb-32 sm:pt-32 sm:pb-40 lg:pb-48">
-      {/* Background glowing effects for "Cloud" aesthetic */}
-      <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-        <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#0ea5e9] to-[#10b981] opacity-20 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
+      {/* Dynamic Grid Background */}
+      <div 
+        className="absolute inset-0 -z-20 h-full w-full bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"
+        aria-hidden="true"
+      >
+        <div className="absolute left-0 right-0 top-0 -z-20 m-auto h-[310px] w-[310px] rounded-full bg-emerald-400 opacity-20 blur-[100px]"></div>
+        <div className="absolute left-1/3 right-0 top-1/2 -z-20 m-auto h-[250px] w-[250px] rounded-full bg-sky-400 opacity-20 blur-[100px]"></div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
+      {/* Floating Tech Icons Layer */}
+      <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none opacity-20 dark:opacity-30">
+        <Server className="absolute top-1/4 left-1/4 w-12 h-12 text-emerald-500 animate-pulse" style={{ animationDuration: '4s' }} />
+        <Cloud className="absolute top-1/3 right-1/4 w-16 h-16 text-sky-500 animate-pulse" style={{ animationDuration: '6s' }} />
+        <Database className="absolute bottom-1/4 left-1/3 w-10 h-10 text-emerald-500 animate-pulse" style={{ animationDuration: '5s' }} />
+        <Network className="absolute bottom-1/3 right-1/3 w-14 h-14 text-sky-500 animate-pulse" style={{ animationDuration: '7s' }} />
+      </div>
+
+      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
         <div className="mx-auto max-w-3xl text-center">
           <div className="hidden sm:mb-8 sm:flex sm:justify-center">
             <div className="relative rounded-full px-3 py-1 text-sm leading-6 text-muted-foreground ring-1 ring-border hover:ring-foreground/20">
