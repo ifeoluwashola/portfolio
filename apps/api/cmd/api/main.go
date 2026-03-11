@@ -27,12 +27,16 @@ func main() {
 	cfg := config.LoadConfig()
 
 	// 2. Setup Database Connection Pool
-	ctx := context.Background()
+	log.Println("Initializing database connection...")
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	
 	dbPool, err := database.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer dbPool.Close()
+	log.Println("Database connection established.")
 
 	// 3. Initialize Repositories
 	contactRepo := postgres.NewContactRepository(dbPool)
