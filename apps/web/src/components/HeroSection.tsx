@@ -1,4 +1,6 @@
-import { Button, buttonVariants } from "@/components/ui/button";
+"use client";
+
+import { buttonVariants } from "@/components/ui/button";
 import { ArrowRight, Terminal, Database, Server, Cloud, Network } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
