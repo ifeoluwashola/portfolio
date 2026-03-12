@@ -20,6 +20,8 @@ interface BlogData {
   comments: Comment[];
 }
 
+const viewedPosts = new Set<string>();
+
 export function BlogInteractivity({ slug }: { slug: string }) {
   const [data, setData] = useState<BlogData | null>(null);
   const [hasLiked, setHasLiked] = useState(false);
@@ -34,8 +36,11 @@ export function BlogInteractivity({ slug }: { slug: string }) {
 
     // Register View
     const registerView = async () => {
+      if (viewedPosts.has(slug)) return;
+      
       try {
         await fetch(`${API_URL}/blog/${slug}/view`, { method: "POST" });
+        viewedPosts.add(slug);
       } catch (err) {
         console.error("Failed to register view", err);
       }
@@ -122,7 +127,7 @@ export function BlogInteractivity({ slug }: { slug: string }) {
         <div className="flex items-center gap-6 text-muted-foreground">
           <div className="flex items-center gap-2">
             <Eye className="w-5 h-5" />
-            <span className="font-medium">{data ? data.views + 1 : "..."}</span> {/* +1 optimistic view */}
+            <span className="font-medium">{data !== null ? data.views : "..."}</span>
           </div>
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />

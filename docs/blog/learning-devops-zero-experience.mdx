@@ -1,0 +1,84 @@
+---
+title: "How I'd Learn DevOps from Scratch (With Zero Tech Experience)"
+date: "2026-03-12"
+description: "DevOps is not an entry-level field. But if you have zero tech background and want to break in, here is the exact, brutal, and rewarding roadmap I would follow."
+---
+
+# How I'd Learn DevOps from Scratch (With Zero Tech Experience)
+
+I get this question almost weekly: *"I don't have any tech skills, but I want to become a Cloud DevOps Engineer. Where do I start?"*
+
+I'm going to be completely honest with you. **DevOps is not an entry-level field.** Historically, "DevOps" isn’t something you start as; it is an evolution of a seasoned Software Developer or a veteran Systems Administrator who got tired of everything breaking and started automating their pain away.
+
+Jumping straight into Kubernetes, Terraform, and CI/CD pipelines without understanding how a computer talks to a network is like trying to fly a commercial airliner before learning how to drive a car. It will lead to massive frustration and burnout.
+
+However, is it impossible? **Absolutely not.** With intense dedication, consistency, and the willingness to push through the "I have no idea what I'm doing" phase, you can transition into this lucrative career. If I lost all my knowledge today and had to start completely from scratch with zero tech background, here is the exact roadmap I would follow.
+
+---
+
+## Phase 1: The Foundations (Months 1-3)
+*You cannot automate what you do not understand.* 
+
+Do not look at AWS. Do not touch Docker. Your only goal right now is to understand how computers and the internet actually work.
+
+### 1. Master Linux and the Command Line
+The cloud runs entirely on Linux. If you cannot navigate a server using only text commands, you cannot do DevOps.
+- **The actions:** Install a Linux distribution (like Ubuntu) on a virtual machine or use Windows Subsystem for Linux (WSL). Learn how to navigate directories (`cd`, `ls`), manipulate files (`cat`, `grep`, `nano`, `vim`), manage users, and check system resources (`top`, `df`).
+- **The goal:** You should feel comfortable never using a mouse to manage a computer.
+
+### 2. Learn Computer Networking
+How does your browser get this article when you type a URL? You must know the answer in excruciating detail.
+- **The actions:** Learn the OSI model, IP addressing, Subnets, DNS, Routing, HTTP/HTTPS, and SSH. 
+- **The goal:** Understand what happens from the moment a user hits "Enter" until the server responds.
+
+### 3. Learn to Code (Just One Language)
+DevOps requires automation, and automation requires coding. You don't need to be a full-stack developer, but you need to write logic.
+- **The actions:** Learn **Python**. It is the undisputed king of scripting and automation in the cloud. Learn variables, loops, functions, and how to make API calls using the `requests` library.
+
+---
+
+## Phase 2: Building and Running Applications (Months 4-5)
+Now that you know how a computer works, you need to understand how software is built and managed.
+
+### 1. Git and GitHub
+Version control is the bedrock of modern engineering.
+- **The actions:** Learn how to `git commit`, `git push`, `git pull`, and navigate merge conflicts. Put all your Python scripts into a GitHub repository.
+
+### 2. The Cloud (Pick One Provider)
+Don't learn "The Cloud" generally. Pick one major player (AWS, GCP, or Azure) and stick to it. I highly recommend **AWS** or **GCP** for beginners due to their massive ecosystems and free tiers.
+- **The actions:** Spin up a virtual machine (EC2/Compute Engine). Configure security groups (firewalls) to only allow SSH from your IP address and HTTP from the world. Install a web server (Nginx) and serve a simple HTML page you created.
+
+---
+
+## Phase 3: The Actual "DevOps" Tools (Months 6-8)
+*Now* you are ready to learn the tools that put the "Ops" in DevOps.
+
+### 1. Containerization (Docker)
+Instead of installing your app directly on the server, you will learn to package it so it runs anywhere.
+- **The actions:** Take your Python code, write a `Dockerfile`, and run it as a container on your local machine.
+
+### 2. Infrastructure as Code (Terraform)
+Clicking buttons in the AWS/GCP console is for amateurs. Professionals write code to provision servers.
+- **The actions:** Write a Terraform script that automatically provisions the Virtual Machine and networking rules you clicked together manually in Phase 2.
+
+### 3. CI/CD Pipelines (GitHub Actions)
+Deployments should be automatic.
+- **The actions:** Write a GitHub Actions YAML file so that whenever you push a change to your code, GitHub automatically tests it, builds your Docker container, and deploys it to your provisioned cloud server.
+
+---
+
+## Phase 4: Prove It (Month 9+)
+Do not just list these tools on a resume. No one will believe you know them without proof.
+
+### The Portfolio Project
+Build the **Cloud Resume Challenge**. 
+1. Build a simple website for your resume.
+2. Host it on cloud storage behind a CDN.
+3. Write a serverless function (AWS Lambda / Google Cloud Functions) in Python to act as a visitor counter.
+4. Store the visitor count in a NoSQL database.
+5. Provision the entire thing using Terraform.
+6. Deploy the website and backend automatically using GitHub Actions.
+
+Document everything you struggled with on a blog. When you sit in an interview and walk a Senior Engineer through the architecture diagram of that project, your lack of formal tech experience will suddenly matter a whole lot less.
+
+It’s a brutal journey, but the view from the top is worth it. Stay consistent.
