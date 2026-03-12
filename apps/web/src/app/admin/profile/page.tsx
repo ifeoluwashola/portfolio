@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Plus, Trash2, CheckCircle2, Pencil, X, Mail, Phone, MapPin, Github, Linkedin, Twitter, Briefcase, GraduationCap, Award, Code, MessageCircle } from "lucide-react";
 
 export interface Experience {
@@ -254,7 +255,7 @@ export default function AdminProfilePage() {
           ) : (
             <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
               {profile.avatar_url ? (
-                <img src={profile.avatar_url} alt="Avatar" className="w-32 h-32 rounded-full object-cover border-4 border-muted flex-shrink-0 shadow-sm" />
+                <Image src={profile.avatar_url} alt="Avatar" className="w-32 h-32 rounded-full object-cover border-4 border-muted flex-shrink-0 shadow-sm" />
               ) : (
                 <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-border flex-shrink-0 text-muted-foreground">No Photo</div>
               )}

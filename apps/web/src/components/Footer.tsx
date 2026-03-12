@@ -1,10 +1,8 @@
 import Link from "next/link";
-import { Github, Linkedin, Mail, Phone } from "lucide-react";
+import { Github, Linkedin, Mail } from "lucide-react";
 
 interface ProfileData {
   email: string;
-  phone: string;
-  whatsapp_number: string;
   github_url: string;
   linkedin_url: string;
   twitter_url: string;
@@ -12,8 +10,6 @@ interface ProfileData {
 
 const defaultProfile: ProfileData = {
   email: "hello@example.com",
-  phone: "",
-  whatsapp_number: "",
   github_url: "#",
   linkedin_url: "#",
   twitter_url: "#"
@@ -32,8 +28,6 @@ export async function Footer() {
       if (data.id && data.id !== 0) {
         profile = {
           email: data.email || defaultProfile.email,
-          phone: data.phone || defaultProfile.phone,
-          whatsapp_number: data.whatsapp_number || defaultProfile.whatsapp_number,
           github_url: data.github_url || defaultProfile.github_url,
           linkedin_url: data.linkedin_url || defaultProfile.linkedin_url,
           twitter_url: data.twitter_url || defaultProfile.twitter_url,
