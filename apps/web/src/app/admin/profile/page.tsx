@@ -87,8 +87,20 @@ export default function AdminProfilePage() {
       if (!res.ok) throw new Error("Failed to load profile");
       const data = await res.json();
       
-      data.experiences = data.experiences || [];
-      data.education = data.education || [];
+      data.experiences = (data.experiences || []).sort((a: Experience, b: Experience) => {
+        const aEnd = a.is_present ? "9999-99" : (a.end_time || a.start_time || "");
+        const bEnd = b.is_present ? "9999-99" : (b.end_time || b.start_time || "");
+        if (aEnd !== bEnd) return bEnd.localeCompare(aEnd);
+        return (b.start_time || "").localeCompare(a.start_time || "");
+      });
+      
+      data.education = (data.education || []).sort((a: Education, b: Education) => {
+        const aEnd = a.end_time || a.start_time || "";
+        const bEnd = b.end_time || b.start_time || "";
+        if (aEnd !== bEnd) return bEnd.localeCompare(aEnd);
+        return (b.start_time || "").localeCompare(a.start_time || "");
+      });
+
       data.certifications = data.certifications || [];
       data.technical_skills = data.technical_skills || [];
       
