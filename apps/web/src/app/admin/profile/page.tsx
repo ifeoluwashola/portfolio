@@ -254,10 +254,12 @@ export default function AdminProfilePage() {
   if (loading) return <div className="animate-pulse flex items-center h-full">Loading profile...</div>;
 
   return (
-    <div className="max-w-4xl space-y-8 pb-12">
+    <div className="max-w-4xl mx-auto space-y-8 pb-12 w-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between sticky top-0 -mt-4 sm:-mt-8 -mx-4 sm:-mx-8 px-4 sm:px-8 py-4 bg-background/95 backdrop-blur-sm z-50 border-b border-border mb-8 shadow-sm gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Profile & Bio</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-emerald-500 to-sky-500">
+            Profile & Bio
+          </h1>
           <p className="text-muted-foreground mt-1">Manage all public information displayed on the website.</p>
         </div>
         <div className="flex items-center gap-3 self-start sm:self-auto">
@@ -294,9 +296,10 @@ export default function AdminProfilePage() {
       {successMsg && <div className="p-4 bg-green-500/10 text-green-500 rounded-md border border-green-500/20">{successMsg}</div>}
 
       {!isEditing ? (
-        <div className="space-y-8">
+        <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
           {/* Header Card (Avatar + Bio + Contact + Socials) */}
-          <div className="bg-card border border-border rounded-xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row gap-8 items-start">
+          <div className="bg-card border border-border/50 hover:border-emerald-500/30 rounded-2xl p-6 sm:p-8 shadow-sm hover:shadow-emerald-500/5 transition-all flex flex-col md:flex-row gap-8 items-start relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-bl-full pointer-events-none group-hover:bg-emerald-500/10 transition-colors"></div>
             {profile.avatar_url ? (
               <img src={profile.avatar_url} alt="Avatar" className="w-32 h-32 rounded-full object-cover border-4 border-muted flex-shrink-0 shadow-sm" />
             ) : (
@@ -327,8 +330,8 @@ export default function AdminProfilePage() {
           </div>
 
           {/* Technical Skills */}
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><Code className="w-5 h-5 text-indigo-500" /> Technical Skills</h2>
+          <div className="bg-card border border-border/50 hover:border-indigo-500/30 rounded-2xl p-6 shadow-sm hover:shadow-indigo-500/5 transition-all">
+             <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-indigo-500"><Code className="w-5 h-5 text-indigo-500" /> Technical Skills</h2>
              <div className="flex flex-wrap gap-2">
                {profile.technical_skills && profile.technical_skills.length > 0 ? (
                  profile.technical_skills.map((skill, i) => (
@@ -343,8 +346,8 @@ export default function AdminProfilePage() {
           </div>
 
           {/* Experiences */}
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-6 flex items-center gap-2"><Briefcase className="w-5 h-5 text-amber-500" /> Work Experience</h2>
+          <div className="bg-card border border-border/50 hover:border-amber-500/30 rounded-2xl p-6 shadow-sm hover:shadow-amber-500/5 transition-all">
+             <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-amber-500"><Briefcase className="w-5 h-5 text-amber-500" /> Work Experience</h2>
              <div className="space-y-6">
                {profile.experiences.map((exp, i) => (
                  <div key={`read-exp-${i}`} className="relative pl-6 border-l-2 border-muted pb-6 last:pb-0">
@@ -362,8 +365,8 @@ export default function AdminProfilePage() {
           </div>
 
           {/* Education */}
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-6 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-emerald-500" /> Education</h2>
+          <div className="bg-card border border-border/50 hover:border-emerald-500/30 rounded-2xl p-6 shadow-sm hover:shadow-emerald-500/5 transition-all">
+             <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-emerald-500"><GraduationCap className="w-5 h-5 text-emerald-500" /> Education</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                {profile.education.map((edu, i) => (
                  <div key={`read-edu-${i}`} className="p-5 border border-border rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors">
@@ -380,8 +383,8 @@ export default function AdminProfilePage() {
           </div>
 
           {/* Certifications */}
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-6 flex items-center gap-2"><Award className="w-5 h-5 text-rose-500" /> Certifications</h2>
+          <div className="bg-card border border-border/50 hover:border-rose-500/30 rounded-2xl p-6 shadow-sm hover:shadow-rose-500/5 transition-all">
+             <h2 className="text-xl font-bold mb-6 flex items-center gap-2 text-rose-500"><Award className="w-5 h-5 text-rose-500" /> Certifications</h2>
              <div className="flex flex-wrap gap-4">
                {profile.certifications.map((cert, i) => (
                  <div key={`read-cert-${i}`} className="flex items-center gap-4 p-4 pr-8 border border-border rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors">
