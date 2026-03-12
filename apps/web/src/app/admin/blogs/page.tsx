@@ -20,7 +20,7 @@ export default function AdminBlogsPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const token = Cookies.get("admin_token");
+        const token = Cookies.get("auth_token");
         const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/admin/blog/stats`, {
           headers: {
             Authorization: `Bearer ${token}`
