@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2, CheckCircle2, Pencil, X } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Pencil, X, Mail, Phone, MapPin, Github, Linkedin, Twitter, Briefcase, GraduationCap, Award, Code, MessageCircle } from "lucide-react";
 
 export interface Experience {
   role: string;
@@ -283,77 +283,107 @@ export default function AdminProfilePage() {
 
       {!isEditing ? (
         <div className="space-y-8">
-          {/* Read Only View */}
+          {/* Header Card (Avatar + Bio + Contact + Socials) */}
+          <div className="bg-card border border-border rounded-xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row gap-8 items-start">
+            {profile.avatar_url ? (
+              <img src={profile.avatar_url} alt="Avatar" className="w-32 h-32 rounded-full object-cover border-4 border-muted flex-shrink-0 shadow-sm" />
+            ) : (
+              <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-border flex-shrink-0 text-muted-foreground">
+                No Photo
+              </div>
+            )}
+            
+            <div className="flex-1 space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold">Bio</h2>
+                <p className="mt-2 text-muted-foreground whitespace-pre-wrap leading-relaxed">{profile.bio || "No biography provided."}</p>
+              </div>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border">
+                {profile.email && <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors"><Mail className="w-4 h-4 text-sky-500" /> {profile.email}</div>}
+                {profile.phone && <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors"><Phone className="w-4 h-4 text-emerald-500" /> {profile.phone}</div>}
+                {profile.whatsapp_number && <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors"><MessageCircle className="w-4 h-4 text-green-500" /> {profile.whatsapp_number}</div>}
+                {profile.location && <div className="flex items-center gap-3 text-sm text-muted-foreground hover:text-foreground transition-colors"><MapPin className="w-4 h-4 text-rose-500" /> {profile.location}</div>}
+              </div>
+
+              <div className="flex items-center gap-4 pt-4 border-t border-border">
+                {profile.github_url && <a href={profile.github_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground transition-colors p-2 bg-muted/50 rounded-full hover:bg-muted"><Github className="w-5 h-5" /></a>}
+                {profile.linkedin_url && <a href={profile.linkedin_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-sky-500 transition-colors p-2 bg-muted/50 rounded-full hover:bg-muted"><Linkedin className="w-5 h-5" /></a>}
+                {profile.twitter_url && <a href={profile.twitter_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-sky-400 transition-colors p-2 bg-muted/50 rounded-full hover:bg-muted"><Twitter className="w-5 h-5" /></a>}
+              </div>
+            </div>
+          </div>
+
+          {/* Technical Skills */}
           <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-4">Core Identifier</h2>
-             <div className="space-y-4">
-               <div>
-                 <span className="text-sm font-medium text-muted-foreground">Bio:</span>
-                 <p className="mt-1 whitespace-pre-wrap">{profile.bio || "Not provided"}</p>
-               </div>
-               <div>
-                 <span className="text-sm font-medium text-muted-foreground">Avatar URL:</span>
-                 <p className="mt-1 break-all">{profile.avatar_url || "Not provided"}</p>
-               </div>
+             <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><Code className="w-5 h-5 text-indigo-500" /> Technical Skills</h2>
+             <div className="flex flex-wrap gap-2">
+               {profile.technical_skills && profile.technical_skills.length > 0 ? (
+                 profile.technical_skills.map((skill, i) => (
+                   <span key={i} className="px-3 py-1 bg-primary/10 text-primary border border-primary/20 rounded-full text-sm font-medium">
+                     {skill}
+                   </span>
+                 ))
+               ) : (
+                 <p className="text-sm text-muted-foreground">No technical skills added yet.</p>
+               )}
              </div>
           </div>
 
+          {/* Experiences */}
           <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
+             <h2 className="text-xl font-semibold mb-6 flex items-center gap-2"><Briefcase className="w-5 h-5 text-amber-500" /> Work Experience</h2>
+             <div className="space-y-6">
+               {profile.experiences.map((exp, i) => (
+                 <div key={`read-exp-${i}`} className="relative pl-6 border-l-2 border-muted pb-6 last:pb-0">
+                   <div className="absolute w-3 h-3 bg-primary rounded-full -left-[7px] top-1.5 ring-4 ring-background"></div>
+                   <h3 className="font-bold text-lg text-foreground">{exp.role}</h3>
+                   <div className="text-primary font-medium">{exp.company}</div>
+                   <p className="text-sm text-muted-foreground mt-1 mb-3">
+                     {exp.start_time} - {exp.is_present ? "Present" : exp.end_time} • {exp.work_type} • {exp.location_type}
+                   </p>
+                   {exp.description && <p className="text-sm mt-2 whitespace-pre-wrap leading-relaxed text-muted-foreground">{exp.description}</p>}
+                 </div>
+               ))}
+               {profile.experiences.length === 0 && <p className="text-muted-foreground text-sm">No experiences added yet.</p>}
+             </div>
+          </div>
+
+          {/* Education */}
+          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+             <h2 className="text-xl font-semibold mb-6 flex items-center gap-2"><GraduationCap className="w-5 h-5 text-emerald-500" /> Education</h2>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div><span className="text-sm font-medium text-muted-foreground">Email:</span> <p className="mt-1">{profile.email || "Not provided"}</p></div>
-               <div><span className="text-sm font-medium text-muted-foreground">Phone:</span> <p className="mt-1">{profile.phone || "Not provided"}</p></div>
-               <div><span className="text-sm font-medium text-muted-foreground">WhatsApp:</span> <p className="mt-1">{profile.whatsapp_number || "Not provided"}</p></div>
-               <div><span className="text-sm font-medium text-muted-foreground">Location:</span> <p className="mt-1">{profile.location || "Not provided"}</p></div>
+               {profile.education.map((edu, i) => (
+                 <div key={`read-edu-${i}`} className="p-5 border border-border rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors">
+                   <h3 className="font-bold text-lg text-foreground">{edu.degree}</h3>
+                   <p className="text-primary font-medium">{edu.institution}</p>
+                   <p className="text-sm text-muted-foreground mt-2 flex justify-between items-center">
+                     <span>{edu.start_time} - {edu.end_time || "N/A"}</span>
+                     <span className="px-2 py-0.5 bg-background border border-border rounded-md text-xs">{edu.program_type}</span>
+                   </p>
+                 </div>
+               ))}
+               {profile.education.length === 0 && <p className="text-muted-foreground text-sm col-span-2">No education history added yet.</p>}
              </div>
           </div>
 
+          {/* Certifications */}
           <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-4">Social Presence</h2>
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-               <div><span className="text-sm font-medium text-muted-foreground">GitHub:</span> <p className="mt-1 break-all">{profile.github_url || "Not provided"}</p></div>
-               <div><span className="text-sm font-medium text-muted-foreground">LinkedIn:</span> <p className="mt-1 break-all">{profile.linkedin_url || "Not provided"}</p></div>
-               <div><span className="text-sm font-medium text-muted-foreground">Twitter:</span> <p className="mt-1 break-all">{profile.twitter_url || "Not provided"}</p></div>
+             <h2 className="text-xl font-semibold mb-6 flex items-center gap-2"><Award className="w-5 h-5 text-rose-500" /> Certifications</h2>
+             <div className="flex flex-wrap gap-4">
+               {profile.certifications.map((cert, i) => (
+                 <div key={`read-cert-${i}`} className="flex items-center gap-4 p-4 pr-8 border border-border rounded-xl bg-muted/20 hover:bg-muted/40 transition-colors">
+                   <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                     <Award className="w-6 h-6 text-primary" />
+                   </div>
+                   <div>
+                     <h3 className="font-bold text-sm sm:text-base text-foreground">{cert.name}</h3>
+                     <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Issued: {cert.year}</p>
+                   </div>
+                 </div>
+               ))}
+               {profile.certifications.length === 0 && <p className="text-muted-foreground text-sm">No certifications added yet.</p>}
              </div>
-          </div>
-
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-4">Technical Skills</h2>
-             <p className="mt-1">{skillsText || "Not provided"}</p>
-          </div>
-
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-4">Experiences ({profile.experiences.length})</h2>
-             {profile.experiences.map((exp, i) => (
-               <div key={`read-exp-${i}`} className="border-t border-border mt-4 pt-4 first:border-0 first:mt-0 first:pt-0">
-                 <h3 className="font-bold">{exp.role} at {exp.company}</h3>
-                 <p className="text-sm text-muted-foreground">{exp.start_time} - {exp.is_present ? "Present" : exp.end_time} • {exp.work_type} • {exp.location_type}</p>
-                 {exp.description && <p className="text-sm mt-2 whitespace-pre-wrap">{exp.description}</p>}
-               </div>
-             ))}
-             {profile.experiences.length === 0 && <p className="text-muted-foreground text-sm">No experiences added yet.</p>}
-          </div>
-
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-4">Education ({profile.education.length})</h2>
-             {profile.education.map((edu, i) => (
-               <div key={`read-edu-${i}`} className="border-t border-border mt-4 pt-4 first:border-0 first:mt-0 first:pt-0">
-                 <h3 className="font-bold">{edu.degree} from {edu.institution}</h3>
-                 <p className="text-sm text-muted-foreground">{edu.start_time} - {edu.end_time || "N/A"} • {edu.program_type}</p>
-               </div>
-             ))}
-             {profile.education.length === 0 && <p className="text-muted-foreground text-sm">No education history added yet.</p>}
-          </div>
-
-          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-             <h2 className="text-xl font-semibold mb-4">Certifications ({profile.certifications.length})</h2>
-             {profile.certifications.map((cert, i) => (
-               <div key={`read-cert-${i}`} className="border-t border-border mt-4 pt-4 first:border-0 first:mt-0 first:pt-0">
-                 <h3 className="font-bold">{cert.name}</h3>
-                 <p className="text-sm text-muted-foreground">Issued: {cert.year}</p>
-               </div>
-             ))}
-             {profile.certifications.length === 0 && <p className="text-muted-foreground text-sm">No certifications added yet.</p>}
           </div>
         </div>
       ) : (
