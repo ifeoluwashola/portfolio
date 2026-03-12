@@ -35,7 +35,7 @@ func (n *ResendNotifier) SendNotification(lead *domain.ContactLead) error {
 	}
 
 	subject := fmt.Sprintf("New Consulting Lead: %s", lead.Company)
-	htmlBody := fmt.Sprintf(`
+	htmlTemplate := `
 		<!DOCTYPE html>
 		<html>
 		<head>
@@ -83,7 +83,13 @@ func (n *ResendNotifier) SendNotification(lead *domain.ContactLead) error {
 			</div>
 		</body>
 		</html>
-	`, lead.FirstName, lead.LastName, lead.Email, lead.Email, lead.Company, lead.Role, lead.Message)
+	`
+	
+	roleStr := ""
+	if lead.Role != nil {
+		roleStr = *lead.Role
+	}
+	htmlBody := fmt.Sprintf(htmlTemplate, lead.FirstName, lead.LastName, lead.Email, lead.Email, lead.Company, roleStr, lead.Message)
 
 	params := &resend.SendEmailRequest{
 		From:    "onboarding@resend.dev",
