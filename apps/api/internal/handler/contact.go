@@ -2,19 +2,23 @@ package handler
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/service"
 )
 
 type ContactHandler struct {
-	service domain.ContactService
+	service  domain.ContactService
+	notifier service.Notifier
 }
 
-func NewContactHandler(service domain.ContactService) *ContactHandler {
+func NewContactHandler(service domain.ContactService, notifier service.Notifier) *ContactHandler {
 	return &ContactHandler{
-		service: service,
+		service:  service,
+		notifier: notifier,
 	}
 }
 
@@ -37,6 +41,14 @@ func (h *ContactHandler) HandleSubmitContact(w http.ResponseWriter, r *http.Requ
 		writeJSONError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	go func(l domain.ContactLead) {
+		if h.notifier != nil {
+			if nErr := h.notifier.SendNotification(&l); nErr != nil {
+				log.Printf("Failed to send notification email for lead %d: %v", l.ID, nErr)
+			}
+		}
+	}(lead)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)

@@ -20,8 +20,8 @@ func NewContactRepository(pool *pgxpool.Pool) domain.ContactRepository {
 
 func (r *ContactRepository) CreateContact(ctx context.Context, lead *domain.ContactLead) error {
 	query := `
-		INSERT INTO contacts (first_name, last_name, email, company, message)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO contacts (first_name, last_name, email, company, role, message)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id, created_at
 	`
 	err := r.pool.QueryRow(
@@ -31,6 +31,7 @@ func (r *ContactRepository) CreateContact(ctx context.Context, lead *domain.Cont
 		lead.LastName,
 		lead.Email,
 		lead.Company,
+		lead.Role,
 		lead.Message,
 	).Scan(&lead.ID, &lead.CreatedAt)
 
@@ -43,7 +44,7 @@ func (r *ContactRepository) CreateContact(ctx context.Context, lead *domain.Cont
 
 func (r *ContactRepository) GetContacts(ctx context.Context) ([]*domain.ContactLead, error) {
 	query := `
-		SELECT id, first_name, last_name, email, company, message, created_at
+		SELECT id, first_name, last_name, email, company, role, message, created_at
 		FROM contacts
 		ORDER BY created_at DESC
 	`
@@ -62,6 +63,7 @@ func (r *ContactRepository) GetContacts(ctx context.Context) ([]*domain.ContactL
 			&c.LastName,
 			&c.Email,
 			&c.Company,
+			&c.Role,
 			&c.Message,
 			&c.CreatedAt,
 		)
@@ -80,7 +82,7 @@ func (r *ContactRepository) GetContacts(ctx context.Context) ([]*domain.ContactL
 
 func (r *ContactRepository) GetContactByID(ctx context.Context, id int) (*domain.ContactLead, error) {
 	query := `
-		SELECT id, first_name, last_name, email, company, message, created_at
+		SELECT id, first_name, last_name, email, company, role, message, created_at
 		FROM contacts
 		WHERE id = $1
 	`
@@ -91,6 +93,7 @@ func (r *ContactRepository) GetContactByID(ctx context.Context, id int) (*domain
 		&c.LastName,
 		&c.Email,
 		&c.Company,
+		&c.Role,
 		&c.Message,
 		&c.CreatedAt,
 	)

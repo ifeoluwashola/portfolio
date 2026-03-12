@@ -12,6 +12,7 @@ type ContactLead struct {
 	LastName  string    `json:"last_name"`
 	Email     string    `json:"email"`
 	Company   string    `json:"company"`
+	Role      string    `json:"role"`
 	Message   string    `json:"message"`
 	CreatedAt time.Time `json:"created_at"`
 }

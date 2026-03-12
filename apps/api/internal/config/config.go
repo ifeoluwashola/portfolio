@@ -12,6 +12,8 @@ type Config struct {
 	DatabaseURL    string
 	GithubToken    string
 	AllowedOrigins string
+	ResendAPIKey   string
+	NotificationEmail string
 }
 
 func LoadConfig() *Config {
@@ -27,6 +29,8 @@ func LoadConfig() *Config {
 		),
 		GithubToken:    getEnv("GITHUB_TOKEN", ""),
 		AllowedOrigins: getEnv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001"),
+		ResendAPIKey:   getEnv("RESEND_API_KEY", ""),
+		NotificationEmail: getEnv("NOTIFICATION_EMAIL", ""),
 	}
 }
 

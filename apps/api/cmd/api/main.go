@@ -14,6 +14,7 @@ import (
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/database"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/handler"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/middleware"
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/notifications"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/repository/github"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/repository/postgres"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/service"
@@ -54,8 +55,10 @@ func main() {
 	profileSvc := service.NewProfileService(profileRepo)
 	blogSvc := service.NewBlogService(blogRepo)
 
+	resendNotifier := notifications.NewResendNotifier(cfg)
+
 	// 5. Initialize Handlers
-	contactHandler := handler.NewContactHandler(contactSvc)
+	contactHandler := handler.NewContactHandler(contactSvc, resendNotifier)
 	projectHandler := handler.NewProjectHandler(projectSvc)
 	projectDataHandler := handler.NewProjectDataHandler(projectDataSvc)
 	authHandler := handler.NewAuthHandler(authSvc)

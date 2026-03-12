@@ -13,6 +13,7 @@ export function ContactSection() {
     lastName: "",
     email: "",
     company: "",
+    role: "",
     message: ""
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -40,6 +41,7 @@ export function ContactSection() {
           last_name: formData.lastName,
           email: formData.email,
           company: formData.company,
+          role: formData.role,
           message: formData.message,
         }),
       });
@@ -55,6 +57,7 @@ export function ContactSection() {
         lastName: "",
         email: "",
         company: "",
+        role: "",
         message: ""
       });
     } catch (err: unknown) {
@@ -104,9 +107,15 @@ export function ContactSection() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="company" className="text-foreground">Company</Label>
-                <Input id="company" value={formData.company} onChange={handleChange} placeholder="Acme Corp" className="bg-background border-border" />
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="company" className="text-foreground">Company</Label>
+                  <Input id="company" value={formData.company} onChange={handleChange} placeholder="Acme Corp" className="bg-background border-border" />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role" className="text-foreground">Role / Position</Label>
+                  <Input id="role" value={formData.role} onChange={handleChange} placeholder="CTO, Founder, etc." className="bg-background border-border" />
+                </div>
               </div>
 
               <div className="space-y-2">
