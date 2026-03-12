@@ -93,7 +93,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="hidden w-64 border-r border-border bg-card md:flex flex-col flex-shrink-0">
+      <aside className="hidden w-64 border-r border-border bg-card md:flex flex-col flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="p-6 border-b border-border">
           <Link href="/" className="text-xl font-bold flex items-center gap-2">
             <span className="text-primary">⌘</span> Admin
