@@ -47,3 +47,18 @@ CREATE TABLE IF NOT EXISTS profile (
     technical_skills JSONB DEFAULT '[]',
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS blog_metrics (
+    slug VARCHAR(255) PRIMARY KEY,
+    views INT DEFAULT 0,
+    likes INT DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS blog_comments (
+    id SERIAL PRIMARY KEY,
+    slug VARCHAR(255) NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    content TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_blog_comments_slug ON blog_comments(slug);

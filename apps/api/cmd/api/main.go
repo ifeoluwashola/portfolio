@@ -44,6 +44,7 @@ func main() {
 	projectDataRepo := postgres.NewProjectRepository(dbPool)
 	userRepo := postgres.NewUserRepository(dbPool)
 	profileRepo := postgres.NewProfileRepository(dbPool)
+	blogRepo := postgres.NewBlogRepository(dbPool)
 
 	// 4. Initialize Services
 	contactSvc := service.NewContactService(contactRepo)
@@ -51,6 +52,7 @@ func main() {
 	projectDataSvc := service.NewProjectDataService(projectDataRepo)
 	authSvc := service.NewAuthService(userRepo)
 	profileSvc := service.NewProfileService(profileRepo)
+	blogSvc := service.NewBlogService(blogRepo)
 
 	// 5. Initialize Handlers
 	contactHandler := handler.NewContactHandler(contactSvc)
@@ -58,6 +60,7 @@ func main() {
 	projectDataHandler := handler.NewProjectDataHandler(projectDataSvc)
 	authHandler := handler.NewAuthHandler(authSvc)
 	profileHandler := handler.NewProfileHandler(profileSvc)
+	blogHandler := handler.NewBlogHandler(blogSvc)
 
 	// 6. Setup Router (ServeMux)
 	mux := http.NewServeMux()
@@ -79,6 +82,12 @@ func main() {
 	mux.HandleFunc("/api/admin/login", authHandler.HandleLogin)
 	mux.HandleFunc("/api/admin/logout", authHandler.HandleLogout)
 
+	// Blog API Routes
+	mux.HandleFunc("GET /api/blog/{slug}", blogHandler.GetPostData)
+	mux.HandleFunc("POST /api/blog/{slug}/view", blogHandler.RegisterView)
+	mux.HandleFunc("POST /api/blog/{slug}/like", blogHandler.RegisterLike)
+	mux.HandleFunc("POST /api/blog/{slug}/comment", blogHandler.LeaveComment)
+
 	// Profile API (GET is public, PUT is protected)
 	mux.HandleFunc("/api/profile", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -94,6 +103,7 @@ func main() {
 	// Protected Admin Routes (RequireAuth Middleware)
 	mux.HandleFunc("/api/contacts", middleware.RequireAuth(contactHandler.HandleGetContacts))
 	mux.HandleFunc("GET /api/contacts/{id}", middleware.RequireAuth(contactHandler.HandleGetContactByID))
+	mux.HandleFunc("GET /api/admin/blog/stats", middleware.RequireAuth(blogHandler.GetAdminStats))
 	
 	// Dynamic DB Projects (GET is public, POST requires auth)
 	mux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {

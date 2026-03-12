@@ -2,6 +2,7 @@ import { getPostFromSlug, getSlugs } from "@/lib/mdx";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
 import { format, parseISO } from "date-fns";
+import { BlogInteractivity } from "@/components/BlogInteractivity";
 
 export async function generateStaticParams() {
   const slugs = getSlugs();
@@ -34,6 +35,8 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="prose dark:prose-invert prose-emerald lg:prose-lg max-w-none prose-pre:bg-secondary prose-pre:border-border prose-pre:border">
           <MDXRemote source={post.content} />
         </div>
+
+        <BlogInteractivity slug={resolvedParams.slug} />
       </div>
     </article>
   );

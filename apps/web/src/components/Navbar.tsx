@@ -19,7 +19,7 @@ export function Navbar() {
         <div className="hidden md:flex gap-8 items-center text-sm font-medium text-muted-foreground">
           <Link href="/#services" className="hover:text-emerald-500 transition-colors">Services</Link>
           <Link href="/#projects" className="hover:text-sky-500 transition-colors">Projects</Link>
-          <Link href="/blog" className="hover:text-foreground transition-colors">Blog</Link>
+          <Link href="/blog" className="hover:text-foreground transition-colors">Blogs</Link>
         </div>
 
         <div className="flex items-center gap-4">
@@ -49,7 +49,7 @@ export function Navbar() {
                     Projects
                   </Link>
                   <Link href="/blog" className="text-muted-foreground hover:text-foreground transition-colors">
-                    Blog
+                    Blogs
                   </Link>
                   <div className="mt-4 pt-4 border-t border-border">
                     <Link href="/#contact" className="w-full inline-block">

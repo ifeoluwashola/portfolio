@@ -36,6 +36,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/profile", label: "Profile & Bio" },
     { href: "/admin/contacts", label: "Consultation Requests" },
     { href: "/admin/projects", label: "Manage Projects" },
+    { href: "/admin/blogs", label: "Blog Analytics" },
   ];
 
   return (
