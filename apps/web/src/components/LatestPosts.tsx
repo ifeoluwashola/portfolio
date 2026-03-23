@@ -3,7 +3,9 @@ import { getAllPosts } from "@/lib/mdx";
 import { format, parseISO } from "date-fns";
 
 export function LatestPosts() {
-  const posts = getAllPosts().slice(0, 3); // Get the 3 most recent posts
+  const posts = getAllPosts()
+    .filter(post => post.category === "Architecture" || post.category === "Cost Optimization")
+    .slice(0, 3); // Get the 3 most recent posts
 
   if (!posts.length) return null;
 
@@ -27,8 +29,12 @@ export function LatestPosts() {
                 <time dateTime={post.date} className="text-muted-foreground">
                   {post.date ? format(parseISO(post.date), 'MMMM d, yyyy') : 'Unknown Date'}
                 </time>
-                <span className="relative z-10 rounded-full bg-emerald-500/10 px-3 py-1.5 font-medium text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 transition-colors">
-                  Engineering
+                <span className={`relative z-10 rounded-full px-3 py-1.5 font-medium transition-colors ${
+                  post.category === 'Architecture' ? 'bg-sky-500/10 text-sky-400 hover:bg-sky-500/20' :
+                  post.category === 'Cost Optimization' ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20' :
+                  'bg-slate-500/10 text-slate-400 hover:bg-slate-500/20'
+                }`}>
+                  {post.category}
                 </span>
               </div>
               <div className="group relative">

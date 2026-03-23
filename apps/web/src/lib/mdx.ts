@@ -10,6 +10,7 @@ export interface PostMeta {
   date: string;
   description: string;
   slug: string;
+  category: string;
 }
 
 export interface Post {
@@ -45,6 +46,7 @@ export const getPostFromSlug = (slug: string): Post | null => {
       title: data.title ?? slug,
       date: data.date ?? new Date().toISOString(),
       description: data.description ?? "",
+      category: data.category ?? "Community",
     },
   };
 };
