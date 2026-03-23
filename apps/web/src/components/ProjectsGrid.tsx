@@ -42,10 +42,10 @@ export function ProjectsGrid() {
         <div className="mx-auto max-w-2xl lg:text-center">
           <h2 className="text-base font-semibold leading-7 text-emerald-400">Engineering Showcase</h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-            Featured Projects
+            Architecture Case Studies
           </p>
           <p className="mt-6 text-lg leading-8 text-muted-foreground">
-            Tools and systems I&apos;ve built to optimize workflows and scale businesses.
+            Enterprise solutions architected to optimize workflows, improve security, and scale businesses.
           </p>
         </div>
 

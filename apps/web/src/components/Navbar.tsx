@@ -15,9 +15,11 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-8 items-center text-sm font-medium text-muted-foreground">
+          <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
           <Link href="/#services" className="hover:text-foreground transition-colors">Services</Link>
           <Link href="/#projects" className="hover:text-foreground transition-colors">Projects</Link>
           <Link href="/blog" className="hover:text-foreground transition-colors">Blogs</Link>
+          <Link href="/about" className="hover:text-foreground transition-colors">About</Link>
         </div>
 
         <div className="flex items-center gap-3">
@@ -46,6 +48,9 @@ export function Navbar() {
                   </Link>
                 </div>
                 <nav className="flex-1 p-4 space-y-1">
+                  <Link href="/about" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium">
+                    About
+                  </Link>
                   <Link href="/#services" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium">
                     Services
                   </Link>

@@ -1,5 +1,5 @@
 import { HeroSection } from "@/components/HeroSection";
-import { AboutSection } from "@/components/AboutSection";
+import { PainPointsSection } from "@/components/PainPointsSection";
 import { ServicesGrid } from "@/components/ServicesGrid";
 import { ProjectsGrid } from "@/components/ProjectsGrid";
 import { LatestPosts } from "@/components/LatestPosts";
@@ -9,7 +9,7 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-background">
       <HeroSection />
-      <AboutSection />
+      <PainPointsSection />
       <ServicesGrid />
       <ProjectsGrid />
       <LatestPosts />

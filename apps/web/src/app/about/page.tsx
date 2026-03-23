@@ -48,7 +48,7 @@ const defaultProfile: ProfileData = {
   technical_skills: ["Go", "React", "TypeScript", "PostgreSQL", "Docker"]
 };
 
-export async function AboutSection() {
+export default async function AboutPage() {
   let profile: ProfileData = defaultProfile;
   
   function formatImageUrl(url: string) {
