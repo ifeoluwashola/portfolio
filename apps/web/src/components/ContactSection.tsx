@@ -81,7 +81,7 @@ export function ContactSection() {
             Let&apos;s Optimize Your Cloud ROI
           </h2>
           <p className="mt-4 text-lg leading-8 text-muted-foreground">
-            Whether you need a comprehensive infrastructure audit or wish to harden your deployment pipelines, I&apos;m ready to help you scale securely.
+            Whether you need a comprehensive infrastructure audit or wish to harden your deployment pipelines, we&apos;re ready to help you scale securely.
           </p>
         </div>
 
@@ -119,7 +119,7 @@ export function ContactSection() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="message" className="text-foreground">How can I help you?</Label>
+                <Label htmlFor="message" className="text-foreground">How can we help you?</Label>
                 <Textarea 
                   id="message" 
                   value={formData.message}
