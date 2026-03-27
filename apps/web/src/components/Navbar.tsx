@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription, SheetClose } from "@/components/ui/sheet";
 import { Menu } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
@@ -43,30 +43,30 @@ export function Navbar() {
                   <SheetDescription>Main navigation for the portfolio site</SheetDescription>
                 </VisuallyHidden>
                 <div className="p-6 border-b border-border">
-                  <Link href="/" className="text-xl font-bold flex items-center gap-2">
+                  <SheetClose render={<Link href="/" className="text-xl font-bold flex items-center gap-2" />}>
                     <span className="text-emerald-500">⌘</span> Ifeoluwa
-                  </Link>
+                  </SheetClose>
                 </div>
                 <nav className="flex-1 p-4 space-y-1">
-                  <Link href="/about" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium">
+                  <SheetClose render={<Link href="/about" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium" />}>
                     About
-                  </Link>
-                  <Link href="/#services" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium">
+                  </SheetClose>
+                  <SheetClose render={<Link href="/#services" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium" />}>
                     Services
-                  </Link>
-                  <Link href="/#projects" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium">
+                  </SheetClose>
+                  <SheetClose render={<Link href="/#projects" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium" />}>
                     Projects
-                  </Link>
-                  <Link href="/blog" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium">
+                  </SheetClose>
+                  <SheetClose render={<Link href="/blog" className="flex items-center px-4 py-3 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors font-medium" />}>
                     Blogs
-                  </Link>
+                  </SheetClose>
                 </nav>
                 <div className="p-4 border-t border-border">
-                  <Link href="/#contact" className="w-full inline-block">
+                  <SheetClose render={<Link href="/#contact" className="w-full inline-block" />}>
                     <Button className="w-full bg-sky-500 hover:bg-sky-400 text-white rounded-md">
                       Book a Consultation
                     </Button>
-                  </Link>
+                  </SheetClose>
                 </div>
               </SheetContent>
             </Sheet>

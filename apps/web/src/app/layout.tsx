@@ -15,9 +15,42 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
+  ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  : process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000";
+
 export const metadata: Metadata = {
-  title: "Ifeoluwa | DevOps & Cloud Engineer",
-  description: "Senior DevOps & Cloud Engineer specializing in Workflow Optimization, Automation, and Cost Reduction.",
+  metadataBase: new URL(baseUrl),
+  title: {
+    default: "Ifeoluwa | DevOps & Cloud Infrastructure Consulting",
+    template: "%s | Ifeoluwa Consulting",
+  },
+  description:
+    "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
+  keywords: [
+    "DevOps Consultant",
+    "Cloud Cost Optimization",
+    "AWS Infrastructure Audit",
+    "GCP Scaling",
+    "Kubernetes Migration",
+    "CI/CD Pipeline Hardening",
+    "Site Reliability Engineering",
+    "GitOps",
+    "Terraform Expert",
+  ],
+  openGraph: {
+    title: "Ifeoluwa | DevOps & Cloud Infrastructure Consulting",
+    description:
+      "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
+    type: "website",
+  },
+  twitter: {
+    title: "Ifeoluwa | DevOps & Cloud Infrastructure Consulting",
+    description:
+      "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
+  },
 };
 
 export default function RootLayout({
