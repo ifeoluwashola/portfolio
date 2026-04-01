@@ -114,6 +114,7 @@ func main() {
 	mux.HandleFunc("/api/contacts", middleware.RequireAuth(contactHandler.HandleGetContacts))
 	mux.HandleFunc("GET /api/contacts/{id}", middleware.RequireAuth(contactHandler.HandleGetContactByID))
 	mux.HandleFunc("GET /api/admin/blog/stats", middleware.RequireAuth(blogHandler.GetAdminStats))
+	mux.HandleFunc("GET /api/admin/cohort-applications", middleware.RequireAuth(academyHandler.HandleGetAdminApplications))
 	
 	// Dynamic DB Projects (GET is public, POST requires auth)
 	mux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {

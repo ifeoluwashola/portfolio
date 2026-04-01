@@ -46,6 +46,7 @@ func (s *academyService) InitializeApplication(ctx context.Context, req *domain.
 		FirstName:     req.FirstName,
 		LastName:      req.LastName,
 		Email:         req.Email,
+		Phone:         req.Phone,
 		CurrentRole:   req.CurrentRole,
 		Goal:          req.Goal,
 		Reference:     reference,
@@ -141,4 +142,32 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 	}
 
 	return nil
+}
+
+func (s *academyService) GetAdminApplications(ctx context.Context) (*domain.AdminCohortResponse, error) {
+	apps, err := s.repo.GetAdminCohortApplications(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch applications: %w", err)
+	}
+
+	var paidSeats int
+	var pendingSeats int
+
+	for _, app := range apps {
+		if app.PaymentStatus == "Paid" {
+			paidSeats++
+		} else {
+			pendingSeats++
+		}
+	}
+
+	return &domain.AdminCohortResponse{
+		Metrics: domain.AdminCohortStats{
+			TotalApplications: len(apps),
+			PaidSeats:         paidSeats,
+			PendingSeats:      pendingSeats,
+			TotalRevenue:      paidSeats * 10000,
+		},
+		Applications: apps,
+	}, nil
 }

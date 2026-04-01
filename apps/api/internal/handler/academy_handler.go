@@ -77,3 +77,21 @@ func (h *AcademyHandler) HandlePaystackWebhook(w http.ResponseWriter, r *http.Re
 	// Send generic 200 OK so Paystack knows we've received it successfully.
 	w.WriteHeader(http.StatusOK)
 }
+
+func (h *AcademyHandler) HandleGetAdminApplications(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	apps, err := h.svc.GetAdminApplications(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to retrieve applications: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(apps); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+	}
+}

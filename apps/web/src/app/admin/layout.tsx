@@ -38,6 +38,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const navLinks = [
     { href: "/admin/profile", label: "Profile & Bio" },
     { href: "/admin/contacts", label: "Consultation Requests" },
+    { href: "/admin/cohort", label: "Cohort Applications" },
     { href: "/admin/projects", label: "Manage Projects" },
     { href: "/admin/blogs", label: "Blog Analytics" },
   ];

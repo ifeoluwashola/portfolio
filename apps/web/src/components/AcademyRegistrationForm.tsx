@@ -13,6 +13,7 @@ export function AcademyRegistrationForm() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState("");
   const [otherRole, setOtherRole] = useState("");
   const [goal, setGoal] = useState("");
@@ -27,7 +28,7 @@ export function AcademyRegistrationForm() {
     setErrorMsg("");
 
     const finalRole = role === "other" ? otherRole : role;
-    if (!firstName || !lastName || !email || !finalRole || !goal || !agreed) {
+    if (!firstName || !lastName || !email || !phone || !finalRole || !goal || !agreed) {
       setErrorMsg("Please complete all required fields and accept the Code of Conduct.");
       return;
     }
@@ -45,6 +46,7 @@ export function AcademyRegistrationForm() {
           first_name: firstName,
           last_name: lastName,
           email,
+          phone,
           current_role: finalRole,
           goal,
         }),
@@ -57,8 +59,12 @@ export function AcademyRegistrationForm() {
 
       // Redirect securely to Paystack Checkout URL
       window.location.href = data.authorization_url;
-    } catch (err: any) {
-      setErrorMsg(err.message || "An unexpected error occurred.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setErrorMsg(err.message || "An unexpected error occurred.");
+      } else {
+        setErrorMsg("An unexpected error occurred.");
+      }
       setIsSubmitting(false);
     }
   };
@@ -159,9 +165,16 @@ export function AcademyRegistrationForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Email Address</label>
-            <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono text-sm" placeholder="john@example.com" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Email Address</label>
+              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono text-sm" placeholder="john@example.com" />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Phone Number (WhatsApp)</label>
+              <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono text-sm" placeholder="+234 800 000 0000" />
+            </div>
           </div>
 
           <div className="space-y-2">
