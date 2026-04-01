@@ -63,3 +63,15 @@ CREATE TABLE IF NOT EXISTS blog_comments (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS idx_blog_comments_slug ON blog_comments(slug);
+
+CREATE TABLE IF NOT EXISTS cohort_applications (
+    id UUID PRIMARY KEY,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255) NOT NULL,
+    role VARCHAR(100) NOT NULL,
+    goal TEXT NOT NULL,
+    reference VARCHAR(255) NOT NULL UNIQUE,
+    payment_status VARCHAR(50) DEFAULT 'Pending',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

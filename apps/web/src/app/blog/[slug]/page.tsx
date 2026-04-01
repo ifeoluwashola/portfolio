@@ -1,17 +1,17 @@
-import { getPostFromSlug, getSlugs } from "@/lib/mdx";
+import { getConsultingPostFromSlug, getConsultingSlugs } from "@/lib/mdx";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { BlogInteractivity } from "@/components/BlogInteractivity";
 
 export async function generateStaticParams() {
-  const slugs = getSlugs();
+  const slugs = getConsultingSlugs();
   return slugs.map((slug) => ({ slug: slug.replace(/\.mdx?$/, "") }));
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
   const resolvedParams = await params;
-  const post = getPostFromSlug(resolvedParams.slug);
+  const post = getConsultingPostFromSlug(resolvedParams.slug);
 
   if (!post) {
     notFound();

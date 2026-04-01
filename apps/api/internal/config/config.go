@@ -8,12 +8,14 @@ import (
 )
 
 type Config struct {
-	Port        string
-	DatabaseURL    string
-	GithubToken    string
-	AllowedOrigins string
-	ResendAPIKey   string
+	Port              string
+	DatabaseURL       string
+	GithubToken       string
+	AllowedOrigins    string
+	ResendAPIKey      string
 	NotificationEmail string
+	PaystackSecretKey string
+	FrontendURL       string
 }
 
 func LoadConfig() *Config {
@@ -27,10 +29,12 @@ func LoadConfig() *Config {
 		DatabaseURL: getEnv("DATABASE_URL", 
 			"postgres://"+getEnv("DB_USER", "postgres")+":"+getEnv("DB_PASSWORD", "postgres")+"@"+getEnv("DB_HOST", "localhost")+":"+getEnv("DB_PORT", "5432")+"/"+getEnv("DB_NAME", "portfolio")+"?sslmode=disable",
 		),
-		GithubToken:    getEnv("GITHUB_TOKEN", ""),
-		AllowedOrigins: getEnv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001"),
-		ResendAPIKey:   getEnv("RESEND_API_KEY", ""),
+		GithubToken:       getEnv("GITHUB_TOKEN", ""),
+		AllowedOrigins:    getEnv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001"),
+		ResendAPIKey:      getEnv("RESEND_API_KEY", ""),
 		NotificationEmail: getEnv("NOTIFICATION_EMAIL", ""),
+		PaystackSecretKey: getEnv("PAYSTACK_SECRET_KEY", ""),
+		FrontendURL:       getEnv("FRONTEND_URL", "http://localhost:3000"),
 	}
 }
 

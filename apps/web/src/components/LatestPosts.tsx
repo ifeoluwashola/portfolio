@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { getAllPosts } from "@/lib/mdx";
+import { getConsultingPosts } from "@/lib/mdx";
 import { format, parseISO } from "date-fns";
 
 export function LatestPosts() {
-  const posts = getAllPosts()
-    .filter(post => post.category === "Architecture" || post.category === "Cost Optimization")
-    .slice(0, 3); // Get the 3 most recent posts
+  const posts = getConsultingPosts().slice(0, 3); // Get the 3 most recent consulting posts
 
   if (!posts.length) return null;
 

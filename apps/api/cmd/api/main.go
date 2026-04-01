@@ -46,6 +46,7 @@ func main() {
 	userRepo := postgres.NewUserRepository(dbPool)
 	profileRepo := postgres.NewProfileRepository(dbPool)
 	blogRepo := postgres.NewBlogRepository(dbPool)
+	academyRepo := postgres.NewAcademyRepository(dbPool)
 
 	// 4. Initialize Services
 	contactSvc := service.NewContactService(contactRepo)
@@ -56,6 +57,7 @@ func main() {
 	blogSvc := service.NewBlogService(blogRepo)
 
 	resendNotifier := notifications.NewResendNotifier(cfg)
+	academySvc := service.NewAcademyService(academyRepo, cfg, resendNotifier)
 
 	// 5. Initialize Handlers
 	contactHandler := handler.NewContactHandler(contactSvc, resendNotifier)
@@ -64,6 +66,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(authSvc)
 	profileHandler := handler.NewProfileHandler(profileSvc)
 	blogHandler := handler.NewBlogHandler(blogSvc)
+	academyHandler := handler.NewAcademyHandler(academySvc)
 
 	// 6. Setup Router (ServeMux)
 	mux := http.NewServeMux()
@@ -90,6 +93,10 @@ func main() {
 	mux.HandleFunc("POST /api/blog/{slug}/view", blogHandler.RegisterView)
 	mux.HandleFunc("POST /api/blog/{slug}/like", blogHandler.RegisterLike)
 	mux.HandleFunc("POST /api/blog/{slug}/comment", blogHandler.LeaveComment)
+
+	// Academy & Webhooks
+	mux.HandleFunc("POST /api/v1/academy/apply", academyHandler.HandleApply)
+	mux.HandleFunc("POST /api/v1/paystack/webhook", academyHandler.HandlePaystackWebhook)
 
 	// Profile API (GET is public, PUT is protected)
 	mux.HandleFunc("/api/profile", func(w http.ResponseWriter, r *http.Request) {
