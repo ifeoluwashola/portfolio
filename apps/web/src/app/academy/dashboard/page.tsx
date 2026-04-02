@@ -87,7 +87,7 @@ export default async function StudentDashboard() {
                   title: "Join Official Communications",
                   desc: "Connect with instructors and peers via the private Telegram group.",
                   action: "Connect Now",
-                  link: "#",
+                  link: "https://t.me/+VxGj5OzwDNJhY2Zk",
                   icon: <ExternalLink className="w-4 h-4" />
                 },
                 {
