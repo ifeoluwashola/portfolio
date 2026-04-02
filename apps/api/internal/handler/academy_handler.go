@@ -6,6 +6,8 @@ import (
 	"net/http"
 
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/middleware"
+	"github.com/google/uuid"
 )
 
 type AcademyHandler struct {
@@ -94,4 +96,110 @@ func (h *AcademyHandler) HandleGetAdminApplications(w http.ResponseWriter, r *ht
 	if err := json.NewEncoder(w).Encode(apps); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 	}
+}
+
+func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req domain.AcademyLoginRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if req.Email == "" || req.Password == "" {
+		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		return
+	}
+
+	resp, err := h.svc.LoginStudent(r.Context(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *AcademyHandler) HandleAcademyChangePassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req domain.AcademyChangePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		return
+	}
+
+	stID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		http.Error(w, "Invalid student ID formatted", http.StatusBadRequest)
+		return
+	}
+
+	err = h.svc.ChangePassword(r.Context(), stID, &req)
+	if err != nil {
+		http.Error(w, "Failed to change password: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Password changed successfully. Please log in again."})
+}
+
+func (h *AcademyHandler) HandleAcademyForgotPassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req domain.AcademyForgotPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	err := h.svc.ForgotPassword(r.Context(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "If the email exists, a reset instruction has been sent."})
+}
+
+func (h *AcademyHandler) HandleAcademyResetPassword(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req domain.AcademyResetPasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	err := h.svc.ResetPassword(r.Context(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Password reset successfully"})
 }

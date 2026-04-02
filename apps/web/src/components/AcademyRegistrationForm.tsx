@@ -79,7 +79,7 @@ export function AcademyRegistrationForm() {
         </p>
 
         {submittedWaitlist ? (
-          <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-6 flex items-center text-emerald-400">
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 flex items-center text-yellow-400">
             <CheckCircle className="w-6 h-6 mr-3" />
             <span className="font-medium">You are on the list. Keep an eye on your inbox.</span>
           </div>
@@ -109,7 +109,7 @@ export function AcademyRegistrationForm() {
   return (
     <div id="registration-form" className="w-full max-w-3xl mx-auto mt-12 mb-24 scroll-mt-24">
       {/* Zero Tolerance Warning */}
-      <div className="bg-amber-500/5 border border-amber-500/40 rounded-2xl p-6 sm:p-8 mb-10 shadow-[0_0_30px_rgba(245,158,11,0.05)]">
+      <div className="bg-amber-500/5 border border-amber-500/40 rounded-2xl p-6 sm:p-8 mb-10 shadow-[0_0_30px_rgba(234,179,8,0.05)]">
         <div className="flex items-center gap-3 text-amber-500 mb-6 font-bold text-xl uppercase tracking-wider">
           <AlertCircle className="w-6 h-6" />
           Zero-Tolerance Code of Conduct
@@ -140,11 +140,11 @@ export function AcademyRegistrationForm() {
         </div>
       </div>
 
-      <div className="bg-card rounded-3xl p-6 sm:p-10 border border-emerald-500/20 shadow-[0_0_50px_rgba(16,185,129,0.05)] relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-400 to-sky-500" />
+      <div className="bg-card rounded-3xl p-6 sm:p-10 border border-yellow-500/20 shadow-[0_0_50px_rgba(234,179,8,0.05)] relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 to-sky-500" />
         
         <h2 className="text-2xl font-bold mb-8 flex items-center">
-          <Terminal className="w-6 h-6 mr-3 text-emerald-400" />
+          <Terminal className="w-6 h-6 mr-3 text-yellow-400" />
           Cohort 1 Application
         </h2>
 
@@ -157,23 +157,23 @@ export function AcademyRegistrationForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">First Name</label>
-              <input required type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-sm" placeholder="John" />
+              <input required type="text" value={firstName} onChange={(e) => setFirstName(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all text-sm" placeholder="John" />
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Last Name</label>
-              <input required type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-sm" placeholder="Doe" />
+              <input required type="text" value={lastName} onChange={(e) => setLastName(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all text-sm" placeholder="Doe" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Email Address</label>
-              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono text-sm" placeholder="john@example.com" />
+              <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all font-mono text-sm" placeholder="john@example.com" />
             </div>
             
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">Phone Number (WhatsApp)</label>
-              <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all font-mono text-sm" placeholder="+234 800 000 0000" />
+              <input required type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all font-mono text-sm" placeholder="+234 800 000 0000" />
             </div>
           </div>
 
@@ -182,7 +182,7 @@ export function AcademyRegistrationForm() {
             <select 
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-sm text-foreground"
+              className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all text-sm text-foreground"
             >
               <option value="" disabled>Select your current status...</option>
               <option value="student">Student / Recent Grad</option>
@@ -197,14 +197,14 @@ export function AcademyRegistrationForm() {
                 value={otherRole}
                 onChange={(e) => setOtherRole(e.target.value)}
                 placeholder="Please specify your role..." 
-                className="w-full mt-3 bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-sm" 
+                className="w-full mt-3 bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all text-sm" 
               />
             )}
           </div>
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">What is your primary goal for this cohort?</label>
-            <textarea required value={goal} onChange={(e) => setGoal(e.target.value)} rows={4} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all text-sm resize-none" placeholder="I want to learn how to deploy scalable apps..." />
+            <textarea required value={goal} onChange={(e) => setGoal(e.target.value)} rows={4} className="w-full bg-background border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-500/50 focus:border-yellow-500/50 transition-all text-sm resize-none" placeholder="I want to learn how to deploy scalable apps..." />
           </div>
 
           <div className="pt-4 pb-2 border-t border-border mt-8">
@@ -212,7 +212,7 @@ export function AcademyRegistrationForm() {
               <div className="relative flex items-center justify-center mt-1">
                 <input
                   type="checkbox"
-                  className="w-5 h-5 appearance-none border-2 border-border rounded bg-background checked:bg-emerald-500 checked:border-emerald-500 transition-colors cursor-pointer"
+                  className="w-5 h-5 appearance-none border-2 border-border rounded bg-background checked:bg-yellow-500 checked:border-yellow-500 transition-colors cursor-pointer"
                   checked={agreed}
                   onChange={(e) => setAgreed(e.target.checked)}
                 />
@@ -231,7 +231,7 @@ export function AcademyRegistrationForm() {
               phase === "pre-launch"
                 ? "bg-secondary text-muted-foreground border border-border cursor-not-allowed"
                 : agreed && !isSubmitting
-                  ? "bg-emerald-500 text-black hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] shadow-[0_0_10px_rgba(16,185,129,0.2)] transform active:scale-[0.99]" 
+                  ? "bg-yellow-500 text-black hover:bg-yellow-400 hover:shadow-[0_0_20px_rgba(234,179,8,0.3)] shadow-[0_0_10px_rgba(234,179,8,0.2)] transform active:scale-[0.99]" 
                   : "bg-secondary text-muted-foreground border border-border cursor-not-allowed opacity-70"
             }`}
           >

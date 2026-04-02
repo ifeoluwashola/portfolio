@@ -97,6 +97,10 @@ func main() {
 	// Academy & Webhooks
 	mux.HandleFunc("POST /api/v1/academy/apply", academyHandler.HandleApply)
 	mux.HandleFunc("POST /api/v1/paystack/webhook", academyHandler.HandlePaystackWebhook)
+	mux.HandleFunc("POST /api/v1/academy/login", academyHandler.HandleAcademyLogin)
+	mux.HandleFunc("POST /api/v1/academy/forgot-password", academyHandler.HandleAcademyForgotPassword)
+	mux.HandleFunc("POST /api/v1/academy/reset-password", academyHandler.HandleAcademyResetPassword)
+	mux.HandleFunc("POST /api/v1/academy/change-password", middleware.RequireStudentAuth(academyHandler.HandleAcademyChangePassword))
 
 	// Profile API (GET is public, PUT is protected)
 	mux.HandleFunc("/api/profile", func(w http.ResponseWriter, r *http.Request) {

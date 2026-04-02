@@ -61,12 +61,57 @@ type AcademyRepository interface {
 	UpdatePaymentStatus(ctx context.Context, reference, status string) error
 	GetApplicationByReference(ctx context.Context, reference string) (*CohortApplication, error)
 	GetAdminCohortApplications(ctx context.Context) ([]*CohortApplication, error)
+	GetStudentByEmail(ctx context.Context, email string) (*Student, error)
+	GetStudentByID(ctx context.Context, id uuid.UUID) (*Student, error)
+	CreateStudent(ctx context.Context, student *Student) error
+	UpdateStudentPassword(ctx context.Context, id uuid.UUID, newPasswordHash string) error
+	SetStudentResetToken(ctx context.Context, email, token string, expiresAt time.Time) error
+	GetStudentByResetToken(ctx context.Context, token string) (*Student, error)
 }
 
 type AcademyService interface {
 	InitializeApplication(ctx context.Context, req *AcademyApplyRequest) (*AcademyApplyResponse, error)
 	ProcessWebhook(ctx context.Context, signature string, body []byte) error
 	GetAdminApplications(ctx context.Context) (*AdminCohortResponse, error)
+	LoginStudent(ctx context.Context, req *AcademyLoginRequest) (*AcademyAuthResponse, error)
+	ChangePassword(ctx context.Context, studentID uuid.UUID, req *AcademyChangePasswordRequest) error
+	ForgotPassword(ctx context.Context, req *AcademyForgotPasswordRequest) error
+	ResetPassword(ctx context.Context, req *AcademyResetPasswordRequest) error
+}
+
+type Student struct {
+	ID                  uuid.UUID  `json:"id"`
+	FirstName           string     `json:"first_name"`
+	LastName            string     `json:"last_name"`
+	Email               string     `json:"email"`
+	PasswordHash        string     `json:"-"` // never leak password hash
+	IsFirstLogin        bool       `json:"is_first_login"`
+	ResetToken          *string    `json:"-"`
+	ResetTokenExpiresAt *time.Time `json:"-"`
+	CreatedAt           time.Time  `json:"created_at"`
+}
+
+type AcademyLoginRequest struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type AcademyAuthResponse struct {
+	Token        string `json:"token"`
+	IsFirstLogin bool   `json:"is_first_login"`
+}
+
+type AcademyChangePasswordRequest struct {
+	NewPassword string `json:"new_password"`
+}
+
+type AcademyForgotPasswordRequest struct {
+	Email string `json:"email"`
+}
+
+type AcademyResetPasswordRequest struct {
+	Token       string `json:"token"`
+	NewPassword string `json:"new_password"`
 }
 
 // Admin-specific response structures

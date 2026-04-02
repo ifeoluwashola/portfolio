@@ -2,8 +2,10 @@ package postgres
 
 import (
 	"context"
+	"time"
 
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -86,4 +88,84 @@ func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*
 	}
 
 	return apps, nil
+}
+
+func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string) (*domain.Student, error) {
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, reset_token, reset_token_expires_at, created_at
+		FROM students WHERE email = $1
+	`
+	student := &domain.Student{}
+	err := r.db.QueryRow(ctx, query, email).Scan(
+		&student.ID, &student.FirstName, &student.LastName, &student.Email,
+		&student.PasswordHash, &student.IsFirstLogin, &student.ResetToken, 
+		&student.ResetTokenExpiresAt, &student.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return student, nil
+}
+
+func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*domain.Student, error) {
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, reset_token, reset_token_expires_at, created_at
+		FROM students WHERE id = $1
+	`
+	student := &domain.Student{}
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&student.ID, &student.FirstName, &student.LastName, &student.Email,
+		&student.PasswordHash, &student.IsFirstLogin, &student.ResetToken, 
+		&student.ResetTokenExpiresAt, &student.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return student, nil
+}
+
+func (r *AcademyRepository) CreateStudent(ctx context.Context, student *domain.Student) error {
+	query := `
+		INSERT INTO students (id, first_name, last_name, email, password_hash, is_first_login, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`
+	_, err := r.db.Exec(ctx, query, student.ID, student.FirstName, student.LastName, student.Email, student.PasswordHash, student.IsFirstLogin, student.CreatedAt)
+	return err
+}
+
+func (r *AcademyRepository) UpdateStudentPassword(ctx context.Context, id uuid.UUID, newPasswordHash string) error {
+	query := `
+		UPDATE students
+		SET password_hash = $1, is_first_login = false, reset_token = NULL, reset_token_expires_at = NULL
+		WHERE id = $2
+	`
+	_, err := r.db.Exec(ctx, query, newPasswordHash, id)
+	return err
+}
+
+func (r *AcademyRepository) SetStudentResetToken(ctx context.Context, email, token string, expiresAt time.Time) error {
+	query := `
+		UPDATE students
+		SET reset_token = $1, reset_token_expires_at = $2
+		WHERE email = $3
+	`
+	_, err := r.db.Exec(ctx, query, token, expiresAt, email)
+	return err
+}
+
+func (r *AcademyRepository) GetStudentByResetToken(ctx context.Context, token string) (*domain.Student, error) {
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, reset_token, reset_token_expires_at, created_at
+		FROM students WHERE reset_token = $1
+	`
+	student := &domain.Student{}
+	err := r.db.QueryRow(ctx, query, token).Scan(
+		&student.ID, &student.FirstName, &student.LastName, &student.Email,
+		&student.PasswordHash, &student.IsFirstLogin, &student.ResetToken, 
+		&student.ResetTokenExpiresAt, &student.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return student, nil
 }

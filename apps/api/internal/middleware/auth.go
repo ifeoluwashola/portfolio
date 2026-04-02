@@ -74,3 +74,54 @@ func RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	}
 }
+
+const StudentIDKey contextKey = "studentID"
+
+func RequireStudentAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			writeJSONError(w, "Unauthorized: Missing Authorization header", http.StatusUnauthorized)
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			writeJSONError(w, "Unauthorized: Invalid Authorization header format", http.StatusUnauthorized)
+			return
+		}
+
+		tokenString := parts[1]
+		secret := os.Getenv("JWT_SECRET")
+		if secret == "" {
+			secret = "default_unsafe_secret_for_dev_only"
+		}
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, jwt.ErrSignatureInvalid
+			}
+			return []byte(secret), nil
+		})
+
+		if err != nil || !token.Valid {
+			writeJSONError(w, "Unauthorized: Invalid or expired token", http.StatusUnauthorized)
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			writeJSONError(w, "Unauthorized: Invalid token claims", http.StatusUnauthorized)
+			return
+		}
+
+		studentIDStr, ok := claims["sub"].(string)
+		if !ok {
+			writeJSONError(w, "Unauthorized: Missing subject in claims or not a string", http.StatusUnauthorized)
+			return
+		}
+		
+		ctx := context.WithValue(r.Context(), StudentIDKey, studentIDStr)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	}
+}
