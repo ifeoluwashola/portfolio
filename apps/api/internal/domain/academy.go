@@ -97,15 +97,22 @@ type AcademyService interface {
 	GradeSubmission(ctx context.Context, req *GradeAssignmentRequest) error
 }
 
+type CourseMaterial struct {
+	Title string `json:"title"`
+	URL   string `json:"url"`
+}
+
 type CohortWeek struct {
-	ID           int        `json:"id"`
-	WeekNumber   int        `json:"week_number"`
-	Title        string     `json:"title"`
-	Status       string     `json:"status"` // locked, pre-flight, live, archived
-	MeetLink     *string    `json:"meet_link"`
-	RecordingURL *string    `json:"recording_url"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    time.Time  `json:"updated_at"`
+	ID           int               `json:"id"`
+	WeekNumber   int               `json:"week_number"`
+	Title        string            `json:"title"`
+	Status       string            `json:"status"` // locked, pre-flight, live, archived
+	MeetLink     *string           `json:"meet_link"`
+	RecordingURL *string           `json:"recording_url"`
+	Materials    []CourseMaterial `json:"materials"`
+	Transcript   *string           `json:"transcript"`
+	CreatedAt    time.Time         `json:"created_at"`
+	UpdatedAt    time.Time         `json:"updated_at"`
 }
 
 type Assignment struct {
@@ -121,10 +128,13 @@ type Assignment struct {
 }
 
 type UpdateWeekRequest struct {
-	ID           int     `json:"id"`
-	Status       string  `json:"status"`
-	MeetLink     *string `json:"meet_link"`
-	RecordingURL *string `json:"recording_url"`
+	ID           int              `json:"id"`
+	Title        string           `json:"title"`
+	Status       string           `json:"status"`
+	MeetLink     *string          `json:"meet_link"`
+	RecordingURL *string          `json:"recording_url"`
+	Materials    []CourseMaterial `json:"materials"`
+	Transcript   *string          `json:"transcript"`
 }
 
 type SubmitAssignmentRequest struct {

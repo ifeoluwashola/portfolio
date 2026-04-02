@@ -172,7 +172,7 @@ func (r *AcademyRepository) GetStudentByResetToken(ctx context.Context, token st
 
 func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek, error) {
 	query := `
-		SELECT id, week_number, title, status, meet_link, recording_url, created_at, updated_at
+		SELECT id, week_number, title, status, meet_link, recording_url, materials, transcript, created_at, updated_at
 		FROM cohort_weeks ORDER BY week_number ASC
 	`
 	rows, err := r.db.Query(ctx, query)
@@ -184,7 +184,7 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek,
 	var weeks []*domain.CohortWeek
 	for rows.Next() {
 		w := &domain.CohortWeek{}
-		err := rows.Scan(&w.ID, &w.WeekNumber, &w.Title, &w.Status, &w.MeetLink, &w.RecordingURL, &w.CreatedAt, &w.UpdatedAt)
+		err := rows.Scan(&w.ID, &w.WeekNumber, &w.Title, &w.Status, &w.MeetLink, &w.RecordingURL, &w.Materials, &w.Transcript, &w.CreatedAt, &w.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -195,11 +195,11 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek,
 
 func (r *AcademyRepository) GetWeekByID(ctx context.Context, id int) (*domain.CohortWeek, error) {
 	query := `
-		SELECT id, week_number, title, status, meet_link, recording_url, created_at, updated_at
+		SELECT id, week_number, title, status, meet_link, recording_url, materials, transcript, created_at, updated_at
 		FROM cohort_weeks WHERE id = $1
 	`
 	w := &domain.CohortWeek{}
-	err := r.db.QueryRow(ctx, query, id).Scan(&w.ID, &w.WeekNumber, &w.Title, &w.Status, &w.MeetLink, &w.RecordingURL, &w.CreatedAt, &w.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&w.ID, &w.WeekNumber, &w.Title, &w.Status, &w.MeetLink, &w.RecordingURL, &w.Materials, &w.Transcript, &w.CreatedAt, &w.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -209,10 +209,10 @@ func (r *AcademyRepository) GetWeekByID(ctx context.Context, id int) (*domain.Co
 func (r *AcademyRepository) UpdateWeek(ctx context.Context, week *domain.CohortWeek) error {
 	query := `
 		UPDATE cohort_weeks
-		SET status = $1, meet_link = $2, recording_url = $3, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $4
+		SET title = $1, status = $2, meet_link = $3, recording_url = $4, materials = $5, transcript = $6, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $7
 	`
-	_, err := r.db.Exec(ctx, query, week.Status, week.MeetLink, week.RecordingURL, week.ID)
+	_, err := r.db.Exec(ctx, query, week.Title, week.Status, week.MeetLink, week.RecordingURL, week.Materials, week.Transcript, week.ID)
 	return err
 }
 

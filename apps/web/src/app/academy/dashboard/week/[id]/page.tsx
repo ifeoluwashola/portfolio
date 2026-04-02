@@ -5,14 +5,20 @@ import {
   PlayCircle, 
   Lock, 
   CheckCircle2, 
-  ArrowRight,
   Terminal,
   Send,
   Loader2,
-  ChevronRight
+  ChevronRight,
+  ExternalLink,
+  Eye,
+  EyeOff
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { getDashboardData, submitAssignment } from "../../../actions";
+
+interface CourseMaterial {
+  title: string;
+  url: string;
+}
 
 interface CohortWeek {
   id: number;
@@ -21,6 +27,8 @@ interface CohortWeek {
   status: 'locked' | 'pre-flight' | 'live' | 'archived';
   meet_link?: string;
   recording_url?: string;
+  materials?: CourseMaterial[];
+  transcript?: string;
 }
 
 interface Assignment {
@@ -38,14 +46,15 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [githubUrl, setGithubUrl] = useState("");
+  const [showTranscript, setShowTranscript] = useState(false);
 
   useEffect(() => {
     async function fetchWeekData() {
       try {
         const data = await getDashboardData();
         if (data && !data.error) {
-          const foundWeek = data.weeks?.find((w: CohortWeek) => w.id === parseInt(id));
-          const foundAss = data.assignments?.find((a: Assignment) => a.week_id === parseInt(id));
+          const foundWeek = (data.weeks || []).find((w: CohortWeek) => w.id === parseInt(id));
+          const foundAss = (data.assignments || []).find((a: Assignment) => a.week_id === parseInt(id));
           setWeek(foundWeek || null);
           setAssignment(foundAss || null);
           if (foundAss) setGithubUrl(foundAss.github_url);
@@ -73,7 +82,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
       // Re-fetch to show pending status
       const data = await getDashboardData();
       if (data && !data.error) {
-        const foundAss = data.assignments?.find((a: Assignment) => a.week_id === parseInt(id));
+        const foundAss = (data.assignments || []).find((a: Assignment) => a.week_id === parseInt(id));
         setAssignment(foundAss || null);
       }
     } catch (err) {
@@ -83,17 +92,17 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
-  if (loading) return <div className="flex items-center gap-2 text-yellow-500 animate-pulse font-mono tracking-widest uppercase text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Synchronizing_Module_{id}...</div>;
-  if (!week) return <div className="text-red-400 font-mono">Module_ID_Invalid: Critical link failure.</div>;
+  if (loading) return <div className="flex items-center gap-2 text-yellow-500 animate-pulse tracking-widest uppercase text-sm p-10"><Loader2 className="w-4 h-4 animate-spin" /> Synchronizing Module {id}...</div>;
+  if (!week) return <div className="text-red-400 p-10">Module ID Invalid: Critical link failure.</div>;
 
   return (
     <div className="space-y-12 pb-20">
       {/* Week Header */}
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Badge variant="outline" className="text-[10px] font-bold text-yellow-500/60 border-yellow-500/20 px-2 uppercase font-mono">
-            Module_0{week.week_number}
-          </Badge>
+          <div className="text-[10px] font-bold text-yellow-500/60 border border-yellow-500/20 px-2 py-0.5 uppercase rounded">
+            Module {week.week_number}
+          </div>
           <div className="h-px bg-slate-900 flex-1" />
         </div>
         <h1 className="text-4xl font-bold tracking-tight text-slate-100">{week.title}</h1>
@@ -103,11 +112,11 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
       {week.status === 'locked' && (
         <div className="bg-slate-900/50 border border-slate-900 rounded-3xl p-12 text-center space-y-6">
           <div className="w-20 h-20 bg-slate-950 rounded-full flex items-center justify-center mx-auto border border-slate-800">
-            <Lock className="w-8 h-8 text-slate-700" />
+            < Lock className="w-8 h-8 text-slate-700" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-slate-400">ACCESS_DENIED: Critical Module Encryption</h3>
-            <p className="text-slate-600 text-sm max-w-sm mx-auto leading-relaxed italic"> This curriculum block is currently locked by central command. Module will unlock sequentially following prerequisite completion. </p>
+            <h3 className="text-xl font-bold text-slate-400">ACCESS DENIED: Module Status Locked</h3>
+            <p className="text-slate-600 text-sm max-w-sm mx-auto leading-relaxed"> This deployment block is currently locked by the academy. Modules will unlock sequentially following prerequisite completion. </p>
           </div>
         </div>
       )}
@@ -116,21 +125,37 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
         <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 flex flex-col items-center text-center space-y-8">
            <div className="flex items-center gap-4 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full">
             <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Status: Ready_to_Execute</span>
+            <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Status: Ready to Execute</span>
           </div>
           
           <div className="space-y-4 max-w-xl">
             <h2 className="text-2xl font-bold tracking-tight">Syllabus Synchronization Complete</h2>
-            <p className="text-slate-500 text-sm leading-relaxed"> The environment is provisioned. Labs are compiled. Waiting for instructor to initiate the live session relay for this module. Check the Telegram group for the live ping. </p>
+            <p className="text-slate-500 text-sm leading-relaxed tracking-tight"> The environment is provisioned. Labs are compiled. Waiting for instructor to initiate the live session relay for this module. Check the Telegram group for the live ping. </p>
           </div>
 
           <div className="w-full h-px bg-slate-900" />
           
-          <div className="flex flex-col items-center gap-2 opacity-50 cursor-not-allowed">
-            <div className="w-16 h-16 bg-slate-950 border border-slate-800 rounded-full flex items-center justify-center text-slate-700 mb-2">
-              <PlayCircle className="w-10 h-10" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
+            <div className="flex flex-col items-center gap-2 opacity-30 cursor-not-allowed grayscale p-6 border border-slate-900 rounded-2xl">
+              <div className="w-12 h-12 bg-slate-950 border border-slate-800 rounded-full flex items-center justify-center text-slate-700 mb-2">
+                <PlayCircle className="w-8 h-8" />
+              </div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Awaiting Signal...</p>
             </div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Awaiting Signal...</p>
+            
+            {week.materials && week.materials.length > 0 && (
+              <div className="p-6 border border-yellow-500/10 bg-yellow-500/[0.02] rounded-2xl text-left space-y-4">
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-yellow-500/80 underline decoration-yellow-500/20 underline-offset-4">Module Intelligence</h4>
+                <div className="space-y-2">
+                  {week.materials.map((mat, i) => (
+                    <a key={i} href={mat.url} target="_blank" className="flex items-center justify-between text-xs text-slate-400 hover:text-yellow-500 transition-colors group/link">
+                      <span className="font-bold tracking-tight">{mat.title}</span>
+                      <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -142,21 +167,21 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
           <div className="relative z-10 space-y-6">
             <div className="inline-flex items-center gap-3 px-4 py-1.5 bg-red-500/10 border border-red-500/20 rounded-full">
               <div className="w-2 h-2 rounded-full bg-red-600 animate-ping" />
-              <span className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em]">Live_Stream_Active</span>
+              <span className="text-[10px] font-bold text-red-500 uppercase tracking-[0.2em]">Live Stream Active</span>
             </div>
             
             <div className="space-y-3">
-              <h2 className="text-3xl font-bold tracking-tight uppercase">EXECUTE: Join Live Class</h2>
+              <h2 className="text-3xl font-bold tracking-tight uppercase tracking-tighter">EXECUTE: Join Live Class</h2>
               <p className="text-slate-500 text-sm max-w-sm mx-auto tracking-tighter"> The instructor is currently broadcasting this module. Link into the operational bridge now. </p>
             </div>
 
             <a 
               href={week.meet_link || "#"} 
               target="_blank" 
-              className="inline-flex items-center gap-4 px-10 py-5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 rounded-2xl font-bold text-lg uppercase transition-all shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:shadow-[0_0_60px_rgba(234,179,8,0.4)] group"
+              className="inline-flex items-center gap-4 px-10 py-5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 rounded-2xl font-bold text-lg uppercase transition-all shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:shadow-[0_0_60px_rgba(234,179,8,0.4)] group tracking-tighter"
             >
               <Terminal className="w-6 h-6 group-hover:rotate-12 transition-transform" />
-              ENTER_LIVE_OPS_BRIDGE
+              ENTER LIVE OPS BRIDGE
               <ChevronRight className="w-5 h-5 ml-2" />
             </a>
           </div>
@@ -177,35 +202,36 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
             ) : (
               <div className="text-center space-y-4">
                 <div className="w-12 h-12 text-slate-700 mx-auto border border-slate-800 rounded-full flex items-center justify-center">?</div>
-                <p className="text-slate-500 text-xs italic font-mono uppercase tracking-widest">RECORDING_NOT_FOUND: Processing_Buffer...</p>
+                <p className="text-slate-500 text-xs uppercase tracking-widest">RECORDING NOT FOUND: Processing Buffer...</p>
               </div>
             )}
           </div>
 
-          {/* Assignment Submission Section */}
+          {/* Assignment & Resources Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-8">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold flex items-center gap-3">
+                <h3 className="text-lg font-bold flex items-center gap-3 tracking-tight">
                   <Terminal className="w-5 h-5 text-yellow-500" />
-                  Terminal: Submit_PR
+                  Terminal: Submit Pull Request
                 </h3>
                 {assignment ? (
-                   <Badge variant={
-                    assignment.status === 'passed' ? 'default' : 
-                    assignment.status === 'failed' ? 'destructive' : 'secondary'
-                  } className="capitalize text-[10px] font-mono tracking-widest">
+                   <div className={`px-2 py-0.5 rounded border text-[10px] font-bold tracking-widest uppercase ${
+                    assignment.status === 'passed' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 
+                    assignment.status === 'failed' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 
+                    'bg-slate-800 border-slate-700 text-slate-400'
+                  }`}>
                     {assignment.status}
-                  </Badge>
+                  </div>
                 ) : (
-                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em] italic">Open_Deployment</span>
+                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">Open Deployment</span>
                 )}
               </div>
 
               <form onSubmit={handleSubmitAssignment} className="space-y-6">
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
-                    GitHub_Repository_URL
+                    GitHub Repository URL
                     {assignment?.status === 'passed' && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Validated</span>}
                   </label>
                   <div className="relative group/input">
@@ -213,7 +239,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                       type="url" 
                       required
                       placeholder="https://github.com/user/kybern-lab-01"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 text-sm text-yellow-500 focus:outline-none focus:border-yellow-500/40 transition-all font-mono"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 text-sm text-yellow-500 focus:outline-none focus:border-yellow-500/40 transition-all font-semibold"
                       value={githubUrl}
                       onChange={(e) => setGithubUrl(e.target.value)}
                       disabled={submitting || assignment?.status === 'passed'}
@@ -225,9 +251,9 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                   <div className="p-4 bg-slate-950 border-l-2 border-yellow-500/40 rounded-r-xl space-y-2">
                     <p className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-2">
                       <Terminal className="w-3 h-3" />
-                      Instructor_Feedback_log
+                      Instructor Feedback
                     </p>
-                    <p className="text-sm text-slate-400 italic leading-relaxed">
+                    <p className="text-sm text-slate-400 leading-relaxed font-medium">
                       &quot;{assignment.admin_feedback}&quot;
                     </p>
                   </div>
@@ -236,7 +262,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                 <button 
                   type="submit" 
                   disabled={submitting || assignment?.status === 'passed'}
-                  className={`w-full py-5 rounded-2xl font-bold uppercase transition-all flex items-center justify-center gap-4 group ${
+                  className={`w-full py-5 rounded-2xl font-bold uppercase transition-all flex items-center justify-center gap-4 group tracking-tighter ${
                     assignment?.status === 'passed' 
                       ? 'bg-slate-900/50 border border-slate-800 text-slate-600 cursor-not-allowed'
                       : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
@@ -247,33 +273,54 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                   ) : (
                     <>
                       <Send className={`w-5 h-5 ${assignment?.status === 'passed' ? "" : "group-hover:translate-x-1 group-hover:-translate-y-1"} transition-transform`} />
-                      {assignment?.status === 'passed' ? "Module_Validated" : assignment ? "Resubmit_Solution" : "Commit_Pull_Request"}
+                      {assignment?.status === 'passed' ? "Module Validated" : assignment ? "Resubmit Solution" : "Commit Pull Request"}
                     </>
                   )}
                 </button>
               </form>
             </div>
 
-            {/* Resources / Docs Mini Box */}
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col">
-              <h4 className="text-sm font-bold uppercase tracking-[0.2em] text-slate-600 mb-6">Lab_Documentation</h4>
-              <div className="flex-1 space-y-4">
-                {[
-                  { title: "Linux Basics Manifesto", icon: <CheckCircle2 className="w-4 h-4" /> },
-                  { title: "Standard Library Specs", icon: <CheckCircle2 className="w-4 h-4" /> },
-                  { title: "Deployment Instructions", icon: <ArrowRight className="w-4 h-4" /> }
-                ].map((doc, idx) => (
-                  <div key={idx} className="flex items-center justify-between p-4 bg-slate-950/50 border border-slate-800/50 rounded-2xl hover:border-slate-700 transition-all cursor-pointer group">
-                    <span className="text-sm text-slate-400 group-hover:text-slate-100 transition-colors font-bold tracking-tight">{doc.title}</span>
-                    <div className="text-slate-600 group-hover:text-yellow-500 transition-all">
-                      {doc.icon}
+            <div className="space-y-8">
+              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-6 underline decoration-slate-800 underline-offset-4">Module Inventory</h4>
+                <div className="flex-1 space-y-3">
+                  {(week.materials && week.materials.length > 0) ? (
+                    week.materials.map((doc, idx) => (
+                      <a key={idx} href={doc.url} target="_blank" className="flex items-center justify-between p-4 bg-slate-950/50 border border-slate-800/50 rounded-2xl hover:border-yellow-500/40 transition-all group">
+                        <span className="text-xs text-slate-400 group-hover:text-yellow-500 transition-colors font-bold tracking-tight underline decoration-transparent group-hover:decoration-yellow-500/30">{doc.title}</span>
+                        <div className="text-slate-600 group-hover:text-yellow-500 transition-all">
+                          <ExternalLink className="w-3 h-3" />
+                        </div>
+                      </a>
+                    ))
+                  ) : (
+                    <div className="py-8 text-center border border-dashed border-slate-800 rounded-2xl">
+                      <p className="text-[10px] text-slate-600 uppercase font-bold">No Supplementary Intel</p>
                     </div>
-                  </div>
-                ))}
+                  )}
+                </div>
               </div>
-              <p className="text-[10px] text-slate-600 mt-8 italic text-center uppercase tracking-widest">
-                Checksum: Verifying_integrity_v4.2
-              </p>
+
+              {week.transcript && (
+                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Session Transcript</h4>
+                    <button 
+                      onClick={() => setShowTranscript(!showTranscript)}
+                      className="text-[10px] font-bold text-yellow-500 hover:text-yellow-400 flex items-center gap-2 transition-colors uppercase tracking-widest"
+                    >
+                      {showTranscript ? <><EyeOff className="w-3 h-3" /> Hide Log</> : <><Eye className="w-3 h-3" /> Reveal Details</>}
+                    </button>
+                  </div>
+                  {showTranscript && (
+                    <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl max-h-[300px] overflow-y-auto scrollbar-hide">
+                      <p className="text-xs text-slate-400 leading-relaxed font-medium whitespace-pre-wrap">
+                        {week.transcript}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

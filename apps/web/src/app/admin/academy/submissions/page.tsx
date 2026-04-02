@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { 
   Clock, 
   GraduationCap, 
@@ -10,8 +10,7 @@ import {
   Check,
   X,
   ChevronRight,
-  Github,
-  Loader2
+  Github
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,7 +34,7 @@ export default function SubmissionsHub() {
   const [feedback, setFeedback] = useState("");
   const [isGrading, setIsGrading] = useState(false);
 
-  async function fetchSubmissions() {
+  const fetchSubmissions = useCallback(async () => {
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/v1/admin/academy/submissions`, {
         headers: {
@@ -51,11 +50,11 @@ export default function SubmissionsHub() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     fetchSubmissions();
-  }, []);
+  }, [fetchSubmissions]);
 
   async function handleGradeSubmission(status: 'passed' | 'failed') {
     if (!gradingSub) return;

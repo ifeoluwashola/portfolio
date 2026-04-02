@@ -299,9 +299,12 @@ func (s *academyService) UpdateCohortWeek(ctx context.Context, req *domain.Updat
 		return fmt.Errorf("week not found: %w", err)
 	}
 
+	week.Title = req.Title
 	week.Status = req.Status
 	week.MeetLink = req.MeetLink
 	week.RecordingURL = req.RecordingURL
+	week.Materials = req.Materials
+	week.Transcript = req.Transcript
 
 	return s.repo.UpdateWeek(ctx, week)
 }

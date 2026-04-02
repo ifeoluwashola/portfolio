@@ -96,6 +96,8 @@ CREATE TABLE IF NOT EXISTS cohort_weeks (
     status VARCHAR(50) NOT NULL DEFAULT 'locked', -- locked, pre-flight, live, archived
     meet_link VARCHAR(255),
     recording_url VARCHAR(255),
+    materials JSONB DEFAULT '[]',
+    transcript TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
