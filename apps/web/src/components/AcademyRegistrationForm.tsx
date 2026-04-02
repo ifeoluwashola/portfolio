@@ -36,7 +36,7 @@ export function AcademyRegistrationForm() {
     setIsSubmitting(true);
     try {
       // NEXT_PUBLIC_API_URL should point to Go backend, e.g. http://localhost:8080/api/v1
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080/api/v1";
+      const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api/v1";
       const response = await fetch(`${API_URL}/academy/apply`, {
         method: "POST",
         headers: {
