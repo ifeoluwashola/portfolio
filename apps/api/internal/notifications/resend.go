@@ -12,6 +12,7 @@ import (
 type ResendNotifier struct {
 	client            *resend.Client
 	notificationEmail string
+	frontendURL       string
 }
 
 func NewResendNotifier(cfg *config.Config) *ResendNotifier {
@@ -26,6 +27,7 @@ func NewResendNotifier(cfg *config.Config) *ResendNotifier {
 	return &ResendNotifier{
 		client:            client,
 		notificationEmail: cfg.NotificationEmail,
+		frontendURL:       cfg.FrontendURL,
 	}
 }
 
@@ -141,7 +143,7 @@ func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email, tempPassword 
 					<div class="password-box">%s</div>
 					
 					<p>Before Day 1, please ensure you have created your <strong>AWS or GCP Free Tier accounts</strong> as outlined in the curriculum prerequisites.</p>
-					<a href="https://kyberncloud.com/academy/login" class="button">Access Student Portal</a>
+					<a href="%s/academy/login" class="button">Access Student Portal</a>
 					<p>See you in class,<br/>The Kybern Team</p>
 				</div>
 			</div>
@@ -149,7 +151,7 @@ func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email, tempPassword 
 		</html>
 	`
 	
-	htmlBody := fmt.Sprintf(htmlTemplate, firstName, tempPassword)
+	htmlBody := fmt.Sprintf(htmlTemplate, firstName, tempPassword, n.frontendURL)
 
 	params := &resend.SendEmailRequest{
 		From:    sender,
@@ -170,8 +172,9 @@ func (n *ResendNotifier) SendPasswordResetEmail(email, token string) error {
 	subject := "Reset your Kybern Academy Password"
 	sender := "Kybern Academy <academy@kyberncloud.com>"
 	
-	// Replace with your actual frontend URL
-	resetLink := fmt.Sprintf("https://kyberncloud.com/academy/reset-password?token=%s", token)
+	// Use config-driven frontend URL
+	resetLink := fmt.Sprintf("%s/academy/reset-password?token=%%s", n.frontendURL)
+	resetLink = fmt.Sprintf(resetLink, token)
 	
 	htmlTemplate := `
 		<!DOCTYPE html>
