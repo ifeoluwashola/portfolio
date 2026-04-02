@@ -18,6 +18,7 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { logout, getDashboardData } from "../actions";
 import { FirstLoginOverlay } from "@/components/academy/FirstLoginOverlay";
+import { ModeToggle } from "@/components/ModeToggle";
 
 interface CohortWeek {
   id: number;
@@ -53,9 +54,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     fetchCurriculum();
   }, [fetchCurriculum]);
 
-  // Close mobile menu on route change
+  // Close mobile menu and scroll to top on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
   }, [pathname]);
 
   const NavItem = ({ href, label, icon, weekNumber, isCollapsed }: { href: string; label: string; icon: React.ReactNode; weekNumber?: number; isCollapsed?: boolean }) => {
@@ -63,6 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
       <Link
         href={href}
+        onClick={() => setIsMobileMenuOpen(false)}
         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative ${
           isActive 
             ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 shadow-[0_4px_20px_rgba(234,179,8,0.05)]" 
@@ -199,6 +204,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         <div className={`p-4 border-t border-slate-900/50 space-y-2 ${!isSidebarOpen ? "items-center" : ""}`}>
+          <div className={`flex items-center gap-3 w-full px-4 py-2 ${!isSidebarOpen ? "justify-center px-0" : ""}`}>
+            <ModeToggle variant="academy" />
+            {isSidebarOpen && <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Theme Control</span>}
+          </div>
+
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             className="hidden lg:flex items-center gap-3 w-full px-4 py-2.5 text-slate-500 hover:text-yellow-500 hover:bg-yellow-500/5 rounded-xl transition-all group"
@@ -217,7 +227,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content Area */}
-      <main className={`flex-1 min-h-screen transition-all duration-300 pt-16 lg:pt-0 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}>
+      <main className={`flex-1 min-h-screen transition-all duration-300 pt-24 lg:pt-0 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}>
         <div className="p-6 sm:p-10 max-w-6xl mx-auto">
           {children}
         </div>
