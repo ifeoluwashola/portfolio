@@ -134,13 +134,13 @@ func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email, tempPassword 
 				</div>
 				<div class="content">
 					<p>Congratulations on securing your seat in the Cloud Native Mentorship Cohort.</p>
-					<p>Classes begin the week of April 13th. We're incredibly excited to have you onboard.</p>
+					<p>Classes begin on April 16th. We're incredibly excited to have you onboard.</p>
 					
 					<p>Your LMS Student Portal has been automatically provisioned. Your login is your email address and the temporary password below. <strong>You will be required to change this upon first login.</strong></p>
 					
 					<div class="password-box">%s</div>
 					
-					<p>Before Day 1, please ensure you have created your <strong>AWS and GCP Free Tier accounts</strong> as outlined in the curriculum prerequisites.</p>
+					<p>Before Day 1, please ensure you have created your <strong>AWS or GCP Free Tier accounts</strong> as outlined in the curriculum prerequisites.</p>
 					<a href="#" class="button">Access Student Portal</a>
 					<p>See you in class,<br/>The Kybern Team</p>
 				</div>

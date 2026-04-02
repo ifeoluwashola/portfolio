@@ -105,12 +105,12 @@ export default async function StudentDashboard() {
               <div className="flex flex-wrap items-center gap-6 p-6 bg-slate-950/50 border border-slate-800/50 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-yellow-500" />
-                  <span className="text-slate-200">Start Date: <span className="text-yellow-400 font-bold">April 13th</span></span>
+                  <span className="text-slate-200">Start Date: <span className="text-yellow-400 font-bold">April 16th</span></span>
                 </div>
                 <div className="h-4 w-px bg-slate-800 hidden sm:block" />
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-yellow-500" />
-                  <span className="text-slate-200">Session: <span className="text-yellow-400 font-bold">7:00 PM WAT</span></span>
+                  <span className="text-slate-200">Session: <span className="text-yellow-400 font-bold">9:00 PM WAT</span></span>
                 </div>
               </div>
             </div>
@@ -128,7 +128,7 @@ export default async function StudentDashboard() {
                 {
                   id: "01",
                   title: "Join Official Communications",
-                  desc: "Connect with instructors and peers via the private WhatsApp/Telegram bridge.",
+                  desc: "Connect with instructors and peers via the private Telegram group.",
                   action: "Connect Now",
                   link: "#",
                   icon: <ArrowRight className="w-4 h-4" />
@@ -136,15 +136,15 @@ export default async function StudentDashboard() {
                 {
                   id: "02",
                   title: "Provision Infrastructure",
-                  desc: "Create your AWS and GCP Free Tier accounts. You'll need these for Day 1 labs.",
+                  desc: "Create your AWS or GCP Free Tier accounts. You'll need these for Day 1 labs.",
                   action: "View Specs",
                   link: "#",
                   icon: <ExternalLink className="w-4 h-4" />
                 },
                 {
                   id: "03",
-                  title: "Review Linux Basics",
-                  desc: "Refresh your CLI knowledge: bash, systemd, networking, and standard protocols.",
+                  title: "Understand DevOps Culture",
+                  desc: "Familiarize yourself with the core principles of DevOps and its importance in modern software development.",
                   action: "Access Docs",
                   link: "#",
                   icon: <ArrowRight className="w-4 h-4" />
