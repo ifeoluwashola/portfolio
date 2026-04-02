@@ -149,8 +149,9 @@ type GradeAssignmentRequest struct {
 }
 
 type StudentDashboardResponse struct {
-	Weeks       []*CohortWeek `json:"weeks"`
-	Assignments []*Assignment `json:"assignments"`
+	Weeks        []*CohortWeek `json:"weeks"`
+	Assignments  []*Assignment `json:"assignments"`
+	IsFirstLogin bool          `json:"is_first_login"`
 }
 
 type Student struct {

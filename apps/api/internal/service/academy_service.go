@@ -237,8 +237,14 @@ func (s *academyService) ForgotPassword(ctx context.Context, req *domain.Academy
 		return fmt.Errorf("failed to save reset token: %w", err)
 	}
 
-	// TODO: Send Reset Email
-	log.Printf("Password reset token for %s: %s\n", req.Email, token)
+	// Send Reset Email
+	err = s.notification.SendPasswordResetEmail(student.Email, token)
+	if err != nil {
+		log.Printf("ERROR: Failed to send password reset email to %s: %v\n", student.Email, err)
+		return fmt.Errorf("failed to send recovery email")
+	}
+
+	log.Printf("Password reset token for %s: %s\n", student.Email, token)
 
 	return nil
 }
@@ -335,14 +341,20 @@ func (s *academyService) GetStudentDashboardData(ctx context.Context, studentID 
 		return nil, err
 	}
 
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+
 	asses, err := s.repo.GetStudentAssignments(ctx, studentID)
 	if err != nil {
 		return nil, err
 	}
 
 	return &domain.StudentDashboardResponse{
-		Weeks:       weeks,
-		Assignments: asses,
+		Weeks:        weeks,
+		Assignments:  asses,
+		IsFirstLogin: student.IsFirstLogin,
 	}, nil
 }
 

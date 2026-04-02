@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { logout, getDashboardData } from "../actions";
+import { FirstLoginOverlay } from "@/components/academy/FirstLoginOverlay";
 
 interface CohortWeek {
   id: number;
@@ -32,12 +33,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isModulesExpanded, setIsModulesExpanded] = useState(true);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   const fetchCurriculum = useCallback(async () => {
     try {
       const data = await getDashboardData();
       if (data && !data.error) {
         setWeeks(data.weeks || []);
+        setIsFirstLogin(!!data.is_first_login);
       }
     } catch (err) {
       console.error("Failed to fetch curriculum:", err);
@@ -88,6 +91,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-slate-950 text-slate-100 selection:bg-yellow-500/30 selection:text-yellow-200">
+      {isFirstLogin && <FirstLoginOverlay />}
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 z-[60] px-6 flex items-center justify-between">
         <Link href="/academy" className="flex items-center gap-3">

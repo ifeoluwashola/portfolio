@@ -92,7 +92,7 @@ func (n *ResendNotifier) SendNotification(lead *domain.ContactLead) error {
 	htmlBody := fmt.Sprintf(htmlTemplate, lead.FirstName, lead.LastName, lead.Email, lead.Email, lead.Company, roleStr, lead.Message)
 
 	params := &resend.SendEmailRequest{
-		From:    "onboarding@resend.dev",
+		From:    "Kybern Partners <partners@kyberncloud.com>",
 		To:      []string{n.notificationEmail},
 		Subject: subject,
 		Html:    htmlBody,
@@ -111,7 +111,7 @@ func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email, tempPassword 
 	
 	// Dynamically use the notification email as the sender if possible.
 	// You might want to update this to a verified domain email later via config.
-	sender := "onboarding@resend.dev"
+	sender := "Kybern Academy <academy@kyberncloud.com>"
 	
 	htmlTemplate := `
 		<!DOCTYPE html>
@@ -141,7 +141,7 @@ func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email, tempPassword 
 					<div class="password-box">%s</div>
 					
 					<p>Before Day 1, please ensure you have created your <strong>AWS or GCP Free Tier accounts</strong> as outlined in the curriculum prerequisites.</p>
-					<a href="#" class="button">Access Student Portal</a>
+					<a href="https://kyberncloud.com/academy/login" class="button">Access Student Portal</a>
 					<p>See you in class,<br/>The Kybern Team</p>
 				</div>
 			</div>
@@ -161,6 +161,62 @@ func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email, tempPassword 
 	_, err := n.client.Emails.Send(params)
 	if err != nil {
 		return fmt.Errorf("failed to send student welcome email: %v", err)
+	}
+
+	return nil
+}
+
+func (n *ResendNotifier) SendPasswordResetEmail(email, token string) error {
+	subject := "Reset your Kybern Academy Password"
+	sender := "Kybern Academy <academy@kyberncloud.com>"
+	
+	// Replace with your actual frontend URL
+	resetLink := fmt.Sprintf("https://kyberncloud.com/academy/reset-password?token=%s", token)
+	
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Courier New", Courier, monospace; line-height: 1.6; color: #f8fafc; margin: 0; padding: 0; background-color: #020617; }
+				.container { max-width: 600px; margin: 40px auto; padding: 0 0 24px 0; border: 1px solid #1e293b; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); background-color: #0f172a; }
+				.header { background-color: #020617; padding: 20px 24px; border-radius: 8px 8px 0 0; margin-bottom: 24px; margin: 8px 8px 24px 8px; border-bottom: 1px solid #1e293b; }
+				.header h2 { margin: 0; color: #eab308; font-size: 20px; font-weight: 700; }
+				.content { padding: 0 24px; color: #cbd5e1; }
+				.button { display: inline-block; background-color: #eab308; color: #020617 !important; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 20px 0; border: none; }
+			</style>
+		</head>
+		<body>
+			<div class="container">
+				<div class="header">
+					<h2>> Password_Reset.sh Initiated</h2>
+				</div>
+				<div class="content">
+					<p>We received a request to reset your student portal credentials.</p>
+					<p>If you did not initiate this, please ignore this email. Otherwise, click the terminal link below to authorize a new password.</p>
+					
+					<a href="%s" class="button">Authorize New Password</a>
+					
+					<p>This link expires in 1 hour.</p>
+					<p>The Kybern Team</p>
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+	
+	htmlBody := fmt.Sprintf(htmlTemplate, resetLink)
+
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	if err != nil {
+		return fmt.Errorf("failed to send password reset email: %v", err)
 	}
 
 	return nil
