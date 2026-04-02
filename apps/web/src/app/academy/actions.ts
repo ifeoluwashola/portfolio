@@ -39,8 +39,8 @@ export async function login(formData: FormData) {
     });
 
     return { success: true, is_first_login };
-  } catch (err) {
-    console.error("Login action error:", err);
+  } catch {
+    console.error("Login action error");
     return { error: "Connection to authentication server failed" };
   }
 }
@@ -78,7 +78,7 @@ export async function changePassword(formData: FormData) {
     // Actually, the backend might have invalidated the token if we store is_first_login in it.
     (await cookies()).delete("academy_token");
     return { success: true };
-  } catch (err) {
+  } catch {
     return { error: "Failed to update password" };
   }
 }
@@ -93,7 +93,7 @@ export async function forgotPassword(email: string) {
 
     if (!res.ok) return { error: await res.text() };
     return { success: true };
-  } catch (err) {
+  } catch {
     return { error: "Failed to process forgot password request" };
   }
 }
@@ -111,7 +111,53 @@ export async function resetPassword(formData: FormData) {
 
     if (!res.ok) return { error: await res.text() };
     return { success: true };
-  } catch (err) {
+  } catch {
     return { error: "Failed to reset password" };
+  }
+}
+
+export async function getDashboardData() {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/dashboard`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) return { error: "Failed to fetch dashboard data" };
+    return await res.json();
+  } catch (err) {
+    console.error("Dashboard data fetch error:", err);
+    return { error: "Connection to API failed" };
+  }
+}
+
+export async function submitAssignment(weekId: number, githubUrl: string) {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/assignments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ week_id: weekId, github_url: githubUrl }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      return { error: errorText || "Submission failed" };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Assignment submission error:", err);
+    return { error: "Connection to API failed" };
   }
 }

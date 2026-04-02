@@ -107,8 +107,8 @@ export default function StudentLoginPage() {
         </form>
 
         <div className="mt-8 text-center border-t border-slate-800/60 pt-6">
-          <a href="#" className="font-mono text-xs text-slate-500 hover:text-yellow-500/80 transition-colors">
-            $ sudo grep "forgot_password" .logs
+          <a href="/academy/forgot-password" className="font-mono text-xs text-slate-500 hover:text-yellow-500/80 transition-colors">
+            $ sudo grep &quot;forgot_password&quot; .logs
           </a>
         </div>
       </div>

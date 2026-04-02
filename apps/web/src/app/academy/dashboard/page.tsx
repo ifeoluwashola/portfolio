@@ -1,8 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Terminal, CheckCircle2, Clock, LogOut, ArrowRight, Lock, ExternalLink, Calendar } from "lucide-react";
+import { Terminal, CheckCircle2, Clock, Calendar, ArrowRight, ExternalLink } from "lucide-react";
 import Link from "next/link";
-import { logout, changePassword } from "../actions";
 
 export default async function StudentDashboard() {
   const cookieStore = await cookies();
@@ -12,75 +11,22 @@ export default async function StudentDashboard() {
     redirect("/academy/login");
   }
 
-  // Manually decode JWT payload to check is_first_login
-  let isFirstLogin = false;
-  try {
-    const payloadBase64 = token.split(".")[1];
-    const decodedPayload = JSON.parse(Buffer.from(payloadBase64, "base64").toString());
-    isFirstLogin = decodedPayload.is_first_login;
-  } catch (err) {
-    console.error("Failed to decode token", err);
-  }
-
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-mono p-4 sm:p-8">
-      {/* First Login Overlay */}
-      {isFirstLogin && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/95 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-slate-900 border border-yellow-500/30 rounded-2xl p-8 shadow-[0_0_50px_rgba(234,179,8,0.1)]">
-            <div className="flex flex-col items-center text-center mb-8">
-              <div className="w-16 h-16 bg-yellow-500/10 rounded-full flex items-center justify-center mb-4 border border-yellow-500/20">
-                <Lock className="w-8 h-8 text-yellow-500" />
-              </div>
-              <h2 className="text-2xl font-bold text-yellow-500 tracking-tight">Security Alert</h2>
-              <p className="text-slate-400 text-sm mt-2">Temporary password detected. You must update your credentials before proceeding to the terminal.</p>
-            </div>
-
-            <form action={changePassword} className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs text-slate-500 uppercase tracking-widest">Set New Password</label>
-                <input
-                  type="password"
-                  name="new_password"
-                  required
-                  placeholder="••••••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-4 py-3 text-yellow-500 focus:outline-none focus:border-yellow-500/50 transition-all"
-                />
-                <p className="text-[10px] text-slate-600 italic mt-1">Min. 8 characters requirement.</p>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold rounded-lg transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)]"
-              >
-                UPDATE_CREDENTIALS && RE_LOGIN
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Main Header */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between mb-12 gap-6">
+    <div className="space-y-12">
+      {/* Main Header Integration */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500">
             <Terminal className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Cohort Welcome</h1>
-            <p className="text-slate-500 text-sm">Session: Cloud Native Mentorship 2026</p>
+            <h1 className="text-2xl font-bold tracking-tight">Mainframe_Overview</h1>
+            <p className="text-slate-500 text-sm italic">Session: Cloud_Native_Mentorship_2026</p>
           </div>
         </div>
-
-        <form action={logout}>
-          <button className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-red-400 hover:border-red-400/30 transition-all text-sm">
-            <LogOut className="w-4 h-4" />
-            DISCONNECT_SESSION
-          </button>
-        </form>
       </div>
 
-      <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left Column: Waiting Room Card */}
         <div className="lg:col-span-2 space-y-8">
@@ -101,7 +47,7 @@ export default async function StudentDashboard() {
               <p className="text-slate-400 leading-relaxed text-lg max-w-2xl mb-10">
                 Seats are locked. Payment was successful. You are now officially enrolled in the specialized Cloud Native Mentorship program. We are strictly in pre-flight phase.
               </p>
-
+              
               <div className="flex flex-wrap items-center gap-6 p-6 bg-slate-950/50 border border-slate-800/50 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-yellow-500" />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, Suspense } from "react";
-import { Lock, ArrowLeft, Terminal, Key } from "lucide-react";
+import { Lock, Key } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { resetPassword } from "../actions";
@@ -49,8 +49,8 @@ function ResetPasswordForm() {
       } else {
         setSuccessMsg("Password_reset_successful. Re-initiate login.");
       }
-    } catch (err) {
-      setErrorMsg("Failed to reset password. Connection interrupted.");
+    } catch {
+      setErrorMsg("Failed to process request. Try again later.");
     } finally {
       setIsLoading(false);
     }

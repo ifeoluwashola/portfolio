@@ -88,3 +88,41 @@ CREATE TABLE IF NOT EXISTS students (
     reset_token_expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS cohort_weeks (
+    id SERIAL PRIMARY KEY,
+    week_number INT NOT NULL UNIQUE,
+    title VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'locked', -- locked, pre-flight, live, archived
+    meet_link VARCHAR(255),
+    recording_url VARCHAR(255),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    week_id INT NOT NULL REFERENCES cohort_weeks(id) ON DELETE CASCADE,
+    github_url VARCHAR(255) NOT NULL,
+    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- pending, passed, failed
+    admin_feedback TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(student_id, week_id)
+);
+
+-- Seed initial 12 weeks
+INSERT INTO cohort_weeks (week_number, title, status) VALUES
+(1, 'Linux Foundations & CLI Mastery', 'locked'),
+(2, 'Networking Fundamentals & Protocols', 'locked'),
+(3, 'Cloud Infrastructure (AWS/GCP)', 'locked'),
+(4, 'Containerization with Docker', 'locked'),
+(5, 'Kubernetes Core Concepts', 'locked'),
+(6, 'Advanced K8s: Networking & Storage', 'locked'),
+(7, 'Infrastructure as Code (Terraform)', 'locked'),
+(8, 'CI/CD Pipelines (GitHub Actions)', 'locked'),
+(9, 'Observability: Metrics & Logging', 'locked'),
+(10, 'Security & DevSecOps Implementation', 'locked'),
+(11, 'Scaling & High Availability Strategies', 'locked'),
+(12, 'Capstone Project Deployment', 'locked')
+ON CONFLICT (week_number) DO NOTHING;

@@ -101,6 +101,10 @@ func main() {
 	mux.HandleFunc("POST /api/v1/academy/forgot-password", academyHandler.HandleAcademyForgotPassword)
 	mux.HandleFunc("POST /api/v1/academy/reset-password", academyHandler.HandleAcademyResetPassword)
 	mux.HandleFunc("POST /api/v1/academy/change-password", middleware.RequireStudentAuth(academyHandler.HandleAcademyChangePassword))
+	
+	// Phase 4: Student Dashboard & Assignments
+	mux.HandleFunc("GET /api/v1/academy/dashboard", middleware.RequireStudentAuth(academyHandler.HandleGetStudentDashboard))
+	mux.HandleFunc("POST /api/v1/academy/assignments", middleware.RequireStudentAuth(academyHandler.HandleSubmitAssignment))
 
 	// Profile API (GET is public, PUT is protected)
 	mux.HandleFunc("/api/profile", func(w http.ResponseWriter, r *http.Request) {
@@ -120,6 +124,12 @@ func main() {
 	mux.HandleFunc("GET /api/admin/blog/stats", middleware.RequireAuth(blogHandler.GetAdminStats))
 	mux.HandleFunc("GET /api/admin/cohort-applications", middleware.RequireAuth(academyHandler.HandleGetAdminApplications))
 	
+	// Phase 4: Admin Academy Management
+	mux.HandleFunc("GET /api/v1/admin/academy/weeks", middleware.RequireAuth(academyHandler.HandleGetCurriculum))
+	mux.HandleFunc("PUT /api/v1/admin/academy/weeks", middleware.RequireAuth(academyHandler.HandleUpdateWeek))
+	mux.HandleFunc("GET /api/v1/admin/academy/submissions", middleware.RequireAuth(academyHandler.HandleGetSubmissions))
+	mux.HandleFunc("POST /api/v1/admin/academy/submissions/grade", middleware.RequireAuth(academyHandler.HandleGradeSubmission))
+
 	// Dynamic DB Projects (GET is public, POST requires auth)
 	mux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {

@@ -288,3 +288,65 @@ func (s *academyService) GetAdminApplications(ctx context.Context) (*domain.Admi
 		Applications: apps,
 	}, nil
 }
+
+func (s *academyService) GetCurriculum(ctx context.Context) ([]*domain.CohortWeek, error) {
+	return s.repo.GetWeeks(ctx)
+}
+
+func (s *academyService) UpdateCohortWeek(ctx context.Context, req *domain.UpdateWeekRequest) error {
+	week, err := s.repo.GetWeekByID(ctx, req.ID)
+	if err != nil {
+		return fmt.Errorf("week not found: %w", err)
+	}
+
+	week.Status = req.Status
+	week.MeetLink = req.MeetLink
+	week.RecordingURL = req.RecordingURL
+
+	return s.repo.UpdateWeek(ctx, week)
+}
+
+func (s *academyService) SubmitAssignment(ctx context.Context, studentID uuid.UUID, req *domain.SubmitAssignmentRequest) error {
+	// First verify the week status is 'archived' (only then we accept submissions)
+	week, err := s.repo.GetWeekByID(ctx, req.WeekID)
+	if err != nil {
+		return fmt.Errorf("invalid week: %w", err)
+	}
+
+	if week.Status != "archived" {
+		return errors.New("assignments can only be submitted for archived/completed modules")
+	}
+
+	ass := &domain.Assignment{
+		StudentID: studentID,
+		WeekID:    req.WeekID,
+		GitHubURL: req.GitHubURL,
+	}
+
+	return s.repo.CreateAssignment(ctx, ass)
+}
+
+func (s *academyService) GetStudentDashboardData(ctx context.Context, studentID uuid.UUID) (*domain.StudentDashboardResponse, error) {
+	weeks, err := s.repo.GetWeeks(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	asses, err := s.repo.GetStudentAssignments(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.StudentDashboardResponse{
+		Weeks:       weeks,
+		Assignments: asses,
+	}, nil
+}
+
+func (s *academyService) GetAdminSubmissions(ctx context.Context) ([]*domain.Assignment, error) {
+	return s.repo.GetAllAssignments(ctx)
+}
+
+func (s *academyService) GradeSubmission(ctx context.Context, req *domain.GradeAssignmentRequest) error {
+	return s.repo.UpdateAssignmentGrade(ctx, req.AssignmentID, req.Status, req.Feedback)
+}

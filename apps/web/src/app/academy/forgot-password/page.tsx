@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
       } else {
         setSuccessMsg("If your account exists, you will receive a reset link shortly.");
       }
-    } catch (err) {
+    } catch {
       setErrorMsg("Failed to process request. Try again later.");
     } finally {
       setIsLoading(false);
