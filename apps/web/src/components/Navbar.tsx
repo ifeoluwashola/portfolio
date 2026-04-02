@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription, SheetClose } from "@/components/ui/sheet";
-import { Menu } from "lucide-react";
+import { Menu, Hexagon } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 export function Navbar() {
@@ -10,7 +10,8 @@ export function Navbar() {
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-card">
       <div className="flex h-16 items-center justify-between px-6">
         <Link href="/" className="text-xl font-bold flex items-center gap-2">
-          <span className="text-emerald-500">⌘</span> Ifeoluwa
+          <Hexagon className="text-emerald-500 fill-emerald-500/20 w-6 h-6" /> 
+          Kybern Partners
         </Link>
 
         {/* Desktop Navigation */}
@@ -44,7 +45,8 @@ export function Navbar() {
                 </VisuallyHidden>
                 <div className="p-6 border-b border-border">
                   <SheetClose render={<Link href="/" className="text-xl font-bold flex items-center gap-2" />}>
-                    <span className="text-emerald-500">⌘</span> Ifeoluwa
+                    <Hexagon className="text-emerald-500 fill-emerald-500/20 w-6 h-6" /> 
+                    Kybern Partners
                   </SheetClose>
                 </div>
                 <nav className="flex-1 p-4 space-y-1">

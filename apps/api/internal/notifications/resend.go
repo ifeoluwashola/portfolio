@@ -106,8 +106,8 @@ func (n *ResendNotifier) SendNotification(lead *domain.ContactLead) error {
 	return nil
 }
 
-func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email string) error {
-	subject := "Welcome to the Cloud Native Mentorship Cohort!"
+func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email, tempPassword string) error {
+	subject := "Welcome to the Kybern Academy Cohort!"
 	
 	// Dynamically use the notification email as the sender if possible.
 	// You might want to update this to a verified domain email later via config.
@@ -118,33 +118,38 @@ func (n *ResendNotifier) SendStudentWelcomeEmail(firstName, email string) error 
 		<html>
 		<head>
 			<style>
-				body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #fff; }
-				.container { max-width: 600px; margin: 40px auto; padding: 0 0 24px 0; border: 1px solid #eaeaec; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-				.header { background-color: #f7f7f9; padding: 20px 24px; border-radius: 8px 8px 0 0; margin-bottom: 24px; margin: 8px 8px 24px 8px; }
-				.header h2 { margin: 0; color: #1a1a1a; font-size: 20px; font-weight: 700; }
-				.content { padding: 0 24px; }
-				.button { display: inline-block; background-color: #10b981; color: white !important; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 20px 0; }
+				body { font-family: "Courier New", Courier, monospace; line-height: 1.6; color: #f8fafc; margin: 0; padding: 0; background-color: #020617; }
+				.container { max-width: 600px; margin: 40px auto; padding: 0 0 24px 0; border: 1px solid #1e293b; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.5); background-color: #0f172a; }
+				.header { background-color: #020617; padding: 20px 24px; border-radius: 8px 8px 0 0; margin-bottom: 24px; margin: 8px 8px 24px 8px; border-bottom: 1px solid #1e293b; }
+				.header h2 { margin: 0; color: #eab308; font-size: 20px; font-weight: 700; }
+				.content { padding: 0 24px; color: #cbd5e1; }
+				.password-box { background-color: #020617; border: 1px solid #eab308; padding: 12px; margin: 16px 0; border-radius: 4px; color: #eab308; font-weight: bold; text-align: center; font-size: 18px; letter-spacing: 2px; }
+				.button { display: inline-block; background-color: #eab308; color: #020617 !important; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 20px 0; border: none; }
 			</style>
 		</head>
 		<body>
 			<div class="container">
 				<div class="header">
-					<h2>Welcome to the Cohort, %s!</h2>
+					<h2>> Welcome to Kybern Academy, %s!</h2>
 				</div>
 				<div class="content">
 					<p>Congratulations on securing your seat in the Cloud Native Mentorship Cohort.</p>
-					<p>Classes begin the week of April 13th. We're excited to have you onboard.</p>
-					<p>Before Day 1, please ensure you have created your <strong>AWS and GCP Free Tier accounts</strong> as outlined in the curriculum prerequisites.</p>
-					<p>Click below to join the official private Telegram/WhatsApp group for the cohort:</p>
-					<a href="#" class="button">Join the Private Community</a>
-					<p>See you in class,<br/>The Academy Team</p>
+					<p>Classes begin on April 16th. We're incredibly excited to have you onboard.</p>
+					
+					<p>Your LMS Student Portal has been automatically provisioned. Your login is your email address and the temporary password below. <strong>You will be required to change this upon first login.</strong></p>
+					
+					<div class="password-box">%s</div>
+					
+					<p>Before Day 1, please ensure you have created your <strong>AWS or GCP Free Tier accounts</strong> as outlined in the curriculum prerequisites.</p>
+					<a href="#" class="button">Access Student Portal</a>
+					<p>See you in class,<br/>The Kybern Team</p>
 				</div>
 			</div>
 		</body>
 		</html>
 	`
 	
-	htmlBody := fmt.Sprintf(htmlTemplate, firstName)
+	htmlBody := fmt.Sprintf(htmlTemplate, firstName, tempPassword)
 
 	params := &resend.SendEmailRequest{
 		From:    sender,

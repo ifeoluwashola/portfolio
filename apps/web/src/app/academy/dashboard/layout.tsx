@@ -1,0 +1,223 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { 
+  CheckCircle2, 
+  Clock, 
+  LayoutDashboard,
+  LogOut,
+  Terminal,
+  ChevronRight,
+  Lock,
+  Menu,
+  X,
+  ChevronDown,
+  Layout
+} from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { logout, getDashboardData } from "../actions";
+
+interface CohortWeek {
+  id: number;
+  week_number: number;
+  title: string;
+  status: 'locked' | 'pre-flight' | 'live' | 'archived';
+}
+
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const [weeks, setWeeks] = useState<CohortWeek[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isModulesExpanded, setIsModulesExpanded] = useState(true);
+
+  const fetchCurriculum = useCallback(async () => {
+    try {
+      const data = await getDashboardData();
+      if (data && !data.error) {
+        setWeeks(data.weeks || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch curriculum:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCurriculum();
+  }, [fetchCurriculum]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
+
+  const NavItem = ({ href, label, icon, weekNumber, isCollapsed }: { href: string; label: string; icon: React.ReactNode; weekNumber?: number; isCollapsed?: boolean }) => {
+    const isActive = pathname === href;
+    return (
+      <Link
+        href={href}
+        className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative ${
+          isActive 
+            ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 shadow-[0_4px_20px_rgba(234,179,8,0.05)]" 
+            : "text-slate-500 hover:text-slate-200 hover:bg-slate-900"
+        } ${isCollapsed ? "justify-center px-0" : ""}`}
+        title={isCollapsed ? label : ""}
+      >
+        <div className={`flex-shrink-0 ${isActive ? "text-yellow-500" : "group-hover:text-yellow-500/70 transition-colors"}`}>
+          {icon}
+        </div>
+        {!isCollapsed && (
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-yellow-500/50 transition-colors">
+              {weekNumber ? `Module ${weekNumber}` : "Control Center"}
+            </p>
+            <p className="text-sm font-semibold truncate tracking-tight">{label}</p>
+          </div>
+        )}
+        {!isCollapsed && isActive && <ChevronRight className="w-4 h-4 opacity-50" />}
+        {isCollapsed && isActive && (
+          <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-yellow-500 rounded-l-full shadow-[0_0_10px_rgba(234,179,8,0.5)]" />
+        )}
+      </Link>
+    );
+  };
+
+  return (
+    <div className="flex min-h-screen bg-slate-950 text-slate-100 selection:bg-yellow-500/30 selection:text-yellow-200">
+      {/* Mobile Header */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 z-[60] px-6 flex items-center justify-between">
+        <Link href="/academy" className="flex items-center gap-3">
+          <Terminal className="w-6 h-6 text-yellow-500" />
+          <span className="text-sm font-bold uppercase tracking-widest text-slate-200">Kybern Academy</span>
+        </Link>
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="p-2 text-slate-400 hover:text-yellow-500 transition-colors"
+        >
+          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </div>
+
+      {/* Sidebar Overlay for Mobile */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[50] lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`
+        fixed inset-y-0 left-0 bg-slate-950 border-r border-slate-900 flex flex-col z-[55] transition-all duration-300 ease-in-out
+        ${isMobileMenuOpen ? "translate-x-0 w-[280px]" : "-translate-x-full lg:translate-x-0"}
+        ${!isSidebarOpen ? "lg:w-20" : "lg:w-72"}
+      `}>
+        <div className={`p-8 border-b border-slate-900/50 flex items-center justify-between overflow-hidden ${!isSidebarOpen ? "px-5" : ""}`}>
+          <Link href="/academy" className="flex items-center gap-3 group min-w-max">
+            <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 group-hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] transition-all">
+              <Terminal className="w-5 h-5" />
+            </div>
+            {isSidebarOpen && (
+              <div className="transition-all duration-300 opacity-100">
+                <h1 className="text-sm font-bold tracking-tight text-slate-200 uppercase whitespace-nowrap">Kybern Academy</h1>
+                <p className="text-[10px] text-yellow-500/60 font-bold uppercase tracking-widest">Student Portal</p>
+              </div>
+            )}
+          </Link>
+          <button 
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="lg:hidden p-2 text-slate-500 hover:text-white"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <nav className="flex-1 overflow-y-auto p-4 space-y-6 scrollbar-hide mt-4">
+          <div className="space-y-1">
+            <NavItem 
+              href="/academy/dashboard" 
+              label="Overview" 
+              icon={<LayoutDashboard className="w-5 h-5" />} 
+              isCollapsed={!isSidebarOpen}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <button 
+              onClick={() => isSidebarOpen && setIsModulesExpanded(!isModulesExpanded)}
+              className={`
+                w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em] hover:text-slate-400 transition-colors
+                ${!isSidebarOpen ? "justify-center px-0 cursor-default" : "cursor-pointer"}
+              `}
+            >
+              {isSidebarOpen ? (
+                <>
+                  <span>Modules</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isModulesExpanded ? "" : "-rotate-90"}`} />
+                </>
+              ) : (
+                <div className="h-px w-8 bg-slate-900" />
+              )}
+            </button>
+            <div className={`space-y-1 transition-all duration-300 overflow-hidden ${isModulesExpanded && isSidebarOpen ? "max-h-[1000px] opacity-100" : "max-h-0 lg:max-h-[1000px] opacity-0 lg:opacity-100"}`}>
+              {loading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-12 w-full bg-slate-900/40 animate-pulse rounded-lg mx-auto" style={{ width: !isSidebarOpen ? '48px' : '100%' }} />
+                ))
+              ) : (
+                weeks.map((week) => (
+                  <NavItem 
+                    key={week.id}
+                    href={`/academy/dashboard/week/${week.id}`}
+                    label={week.title}
+                    weekNumber={week.week_number}
+                    isCollapsed={!isSidebarOpen}
+                    icon={
+                      week.status === 'locked' ? <Lock className="w-5 h-5 opacity-40" /> :
+                      week.status === 'archived' ? <CheckCircle2 className="w-5 h-5 text-emerald-500/80" /> :
+                      week.status === 'live' ? (
+                        <div className="relative">
+                          <div className="w-2 h-2 rounded-full bg-red-500 animate-ping absolute inset-0" />
+                          <div className="w-2 h-2 rounded-full bg-red-500 relative" />
+                        </div>
+                      ) : 
+                      <Clock className="w-5 h-5 text-amber-500/80" />
+                    }
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </nav>
+
+        <div className={`p-4 border-t border-slate-900/50 space-y-2 ${!isSidebarOpen ? "items-center" : ""}`}>
+          <button 
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="hidden lg:flex items-center gap-3 w-full px-4 py-2.5 text-slate-500 hover:text-yellow-500 hover:bg-yellow-500/5 rounded-xl transition-all group"
+          >
+            <Layout className={`w-5 h-5 transition-transform duration-500 ${!isSidebarOpen ? "rotate-180" : ""}`} />
+            {isSidebarOpen && <span className="text-[10px] font-bold uppercase tracking-widest">Collapse View</span>}
+          </button>
+          
+          <form action={logout}>
+            <button className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-600 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all group">
+              <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+              {isSidebarOpen && <span className="text-[10px] font-bold uppercase tracking-widest">Logout Session</span>}
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className={`flex-1 min-h-screen transition-all duration-300 pt-16 lg:pt-0 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}>
+        <div className="p-6 sm:p-10 max-w-6xl mx-auto">
+          {children}
+        </div>
+      </main>
+    </div>
+  );
+}

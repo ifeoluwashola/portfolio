@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Github, Linkedin, Mail } from "lucide-react";
+import { Github, Linkedin, Mail, Hexagon } from "lucide-react";
 
 interface ProfileData {
   email: string;
@@ -77,11 +77,11 @@ export async function Footer() {
         <div className="mt-8 md:order-1 md:mt-0">
           <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
             <Link href="/" className="font-bold text-lg tracking-tight text-foreground flex items-center gap-2">
-              <span className="text-emerald-500">⌘</span> Ifeoluwa
+              <Hexagon className="text-emerald-500 fill-emerald-500/20 w-6 h-6" /> Kybern Partners
             </Link>
           </div>
           <p className="text-center md:text-left text-sm leading-5 text-muted-foreground">
-            &copy; {currentYear} Ifeoluwa. All rights reserved.
+            &copy; {currentYear} Kybern Partners. All rights reserved.
           </p>
           <div className="mt-4 flex justify-center md:justify-start gap-6 text-sm text-muted-foreground">
             <Link href="/#services" className="hover:text-emerald-500 transition-colors">Services</Link>

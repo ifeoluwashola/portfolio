@@ -23,7 +23,7 @@ export function CountdownTimer() {
         { label: "SECS", value: timeLeft.seconds },
       ].map((block, idx) => (
         <div key={idx} className="flex flex-col items-center">
-          <div className="flex items-center justify-center bg-card border border-emerald-500/30 text-emerald-400 font-mono text-3xl sm:text-4xl font-bold w-16 h-16 sm:w-20 sm:h-20 rounded-xl shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+          <div className="flex items-center justify-center bg-card border border-yellow-500/30 text-yellow-400 font-mono text-3xl sm:text-4xl font-bold w-16 h-16 sm:w-20 sm:h-20 rounded-xl shadow-[0_0_15px_rgba(234,179,8,0.15)]">
             {block.value.toString().padStart(2, "0")}
           </div>
           <span className="text-xs text-muted-foreground mt-2 font-medium tracking-wider">
@@ -60,10 +60,10 @@ export function CountdownTimer() {
 
   return (
     <div className="flex flex-col items-center mt-12 w-full">
-      <div className="inline-flex items-center px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-sm font-semibold mb-6">
+      <div className="inline-flex items-center px-4 py-2 rounded-full border border-yellow-500/30 bg-yellow-500/10 text-yellow-400 text-sm font-semibold mb-6">
         <span className="mr-2 relative flex h-2 w-2">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span>
         </span>
         {phase === "pre-launch" ? "Registration Opens In..." : "Registration Closes In..."}
       </div>
@@ -77,7 +77,7 @@ export function CountdownTimer() {
           className={`w-full py-4 px-8 rounded-xl font-bold text-lg transition-all duration-300 transform active:scale-[0.98] ${
             phase === "pre-launch"
               ? "bg-secondary text-muted-foreground cursor-not-allowed border border-border"
-              : "bg-emerald-500 text-black hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+              : "bg-yellow-500 text-black hover:bg-yellow-400 hover:shadow-[0_0_20px_rgba(234,179,8,0.3)] shadow-[0_0_10px_rgba(234,179,8,0.2)]"
           }`}
         >
           {phase === "pre-launch" ? "Registration Opens Soon" : "Secure Your Spot"}

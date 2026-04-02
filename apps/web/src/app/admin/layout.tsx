@@ -1,15 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Menu } from "lucide-react";
+import { Menu, ChevronDown, GraduationCap, Users, BookOpen, Send } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [academyOpen, setAcademyOpen] = useState(pathname.includes("/admin/academy") || pathname === "/admin/cohort");
 
   const isAuthPage = pathname === "/admin/login" || pathname === "/admin/register";
 
@@ -18,7 +20,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const handleLogout = async () => {
-    // Optionally call backend logout endpoint if needed
     try {
       await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/admin/logout`, {
         method: "POST",
@@ -27,28 +28,46 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       console.error(e);
     }
     
-    // Clear the auth cookie on the client side
     document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     
-    // Redirect to homepage
     router.push("/");
     router.refresh();
   };
 
   const navLinks = [
-    { href: "/admin/profile", label: "Profile & Bio" },
-    { href: "/admin/contacts", label: "Consultation Requests" },
-    { href: "/admin/cohort", label: "Cohort Applications" },
-    { href: "/admin/projects", label: "Manage Projects" },
-    { href: "/admin/blogs", label: "Blog Analytics" },
+    { href: "/admin/profile", label: "Profile & Bio", icon: <Users className="h-4 w-4" /> },
+    { href: "/admin/contacts", label: "Consultation Requests", icon: <Send className="h-4 w-4" /> },
+    { href: "/admin/projects", label: "Manage Projects", icon: <BookOpen className="h-4 w-4" /> },
+    { href: "/admin/blogs", label: "Blog Analytics", icon: <BookOpen className="h-4 w-4" /> },
   ];
+
+  const academyLinks = [
+    { href: "/admin/cohort", label: "Applications", icon: <Users className="h-4 w-4" /> },
+    { href: "/admin/academy/curriculum", label: "Curriculum", icon: <BookOpen className="h-4 w-4" /> },
+    { href: "/admin/academy/submissions", label: "Submissions", icon: <GraduationCap className="h-4 w-4" /> },
+  ];
+
+  const NavItem = ({ href, label, icon }: { href: string; label: string; icon: React.ReactNode }) => (
+    <Link
+      href={href}
+      className={`flex items-center gap-3 px-4 py-2 rounded-md transition-colors ${
+        pathname === href 
+          ? "bg-primary text-primary-foreground font-medium shadow-sm" 
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      }`}
+    >
+      {icon}
+      <span className="text-sm">{label}</span>
+    </Link>
+  );
 
   return (
     <div className="flex min-h-screen bg-background text-foreground flex-col md:flex-row">
       {/* Mobile Topbar */}
       <div className="md:hidden flex items-center justify-between p-4 border-b border-border bg-card">
         <Link href="/" className="text-xl font-bold flex items-center gap-2">
-          <span className="text-primary">⌘</span> Admin
+          <span className="text-primary text-2xl">⌘</span>
+          <span className="tracking-tight">Kybern Admin</span>
         </Link>
         <Sheet>
           <SheetTrigger className="p-2 -mr-2 text-foreground">
@@ -65,20 +84,31 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 <span className="text-primary">⌘</span> Admin
               </Link>
             </div>
-            <nav className="flex-1 p-4 space-y-2">
+            <nav className="flex-1 p-4 space-y-1">
               {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`flex items-center px-4 py-2 rounded-md transition-colors ${
-                    pathname === link.href 
-                      ? "bg-primary text-primary-foreground font-medium" 
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {link.label}
-                </Link>
+                <NavItem key={link.href} {...link} />
               ))}
+              
+              {/* Academy Section */}
+              <div className="pt-2">
+                <button 
+                  onClick={() => setAcademyOpen(!academyOpen)}
+                  className="flex items-center justify-between w-full px-4 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors uppercase tracking-wider"
+                >
+                  <span className="flex items-center gap-3">
+                    <GraduationCap className="h-4 w-4" />
+                    Academy
+                  </span>
+                  <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${academyOpen ? "rotate-180" : ""}`} />
+                </button>
+                {academyOpen && (
+                  <div className="mt-1 ml-4 space-y-1 border-l border-border pl-2">
+                    {academyLinks.map((link) => (
+                      <NavItem key={link.href} {...link} />
+                    ))}
+                  </div>
+                )}
+              </div>
             </nav>
             <div className="p-4 border-t border-border flex items-center justify-between">
               <button 
@@ -97,23 +127,35 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className="hidden w-64 border-r border-border bg-card md:flex flex-col flex-shrink-0 sticky top-0 h-screen overflow-y-auto">
         <div className="p-6 border-b border-border">
           <Link href="/" className="text-xl font-bold flex items-center gap-2">
-            <span className="text-primary">⌘</span> Admin
+            <span className="text-primary text-2xl">⌘</span>
+            <span className="tracking-tight">Kybern Admin</span>
           </Link>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-1">
           {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center px-4 py-2 rounded-md transition-colors ${
-                pathname === link.href 
-                  ? "bg-primary text-primary-foreground font-medium" 
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {link.label}
-            </Link>
+            <NavItem key={link.href} {...link} />
           ))}
+
+          {/* Academy Section */}
+          <div className="pt-4">
+            <button 
+              onClick={() => setAcademyOpen(!academyOpen)}
+              className="flex items-center justify-between w-full px-4 py-2 text-xs font-bold text-muted-foreground/60 hover:text-foreground transition-colors uppercase tracking-widest mb-1"
+            >
+              <span className="flex items-center gap-3">
+                <GraduationCap className="h-4 w-4" />
+                Academy
+              </span>
+              <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${academyOpen ? "rotate-180" : ""}`} />
+            </button>
+            {academyOpen && (
+              <div className="mt-1 space-y-1">
+                {academyLinks.map((link) => (
+                  <NavItem key={link.href} {...link} />
+                ))}
+              </div>
+            )}
+          </div>
         </nav>
         <div className="p-4 border-t border-border flex items-center justify-between">
           <button 

@@ -6,7 +6,7 @@ export type RegistrationPhase = "pre-launch" | "open" | "closed";
 
 // Target dates based on the prompt (WAT is UTC+1)
 // April 2, 2026 12:00 PM WAT = April 2, 2026 11:00 AM UTC
-const OPEN_DATE = new Date("2026-04-02T11:00:00Z").getTime(); // April 2 12:00 PM WAT
+const OPEN_DATE = new Date("2026-04-02T09:00:00Z").getTime(); // April 2 12:00 PM WAT
 // April 12, 2026 12:00 PM WAT = April 12, 2026 11:00 AM UTC
 const CLOSE_DATE = new Date("2026-04-12T11:00:00Z").getTime();
 

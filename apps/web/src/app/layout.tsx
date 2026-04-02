@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Navbar } from "@/components/Navbar";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Footer } from "@/components/Footer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,8 +22,8 @@ const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Ifeoluwa | DevOps & Cloud Infrastructure Consulting",
-    template: "%s | Ifeoluwa Consulting",
+    default: "Kybern Partners | DevOps & Cloud Infrastructure Consulting",
+    template: "%s | Kybern Partners",
   },
   description:
     "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
@@ -41,13 +39,13 @@ export const metadata: Metadata = {
     "Terraform Expert",
   ],
   openGraph: {
-    title: "Ifeoluwa | DevOps & Cloud Infrastructure Consulting",
+    title: "Kybern Partners | DevOps & Cloud Infrastructure Consulting",
     description:
       "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
     type: "website",
   },
   twitter: {
-    title: "Ifeoluwa | DevOps & Cloud Infrastructure Consulting",
+    title: "Kybern Partners | DevOps & Cloud Infrastructure Consulting",
     description:
       "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
   },
@@ -69,11 +67,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Navbar />
-          <div className="flex-1">
-            {children}
-          </div>
-          <Footer />
+          {children}
         </ThemeProvider>
       </body>
     </html>

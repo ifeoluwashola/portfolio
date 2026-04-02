@@ -25,20 +25,20 @@ export default async function AcademyMaterialPage({ params }: { params: Promise<
         
         {/* Breadcrumb */}
         <div className="mb-14 flex items-center space-x-2 text-sm text-muted-foreground">
-          <Link href="/academy/materials" className="flex items-center space-x-2 hover:text-emerald-400 transition-colors">
+          <Link href="/academy/materials" className="flex items-center space-x-2 hover:text-yellow-400 transition-colors">
             <BookOpen className="h-4 w-4" />
             <span className="font-medium">Academy Hub</span>
           </Link>
           <span>/</span>
-          <span className="text-emerald-400">{material.meta.title}</span>
+          <span className="text-yellow-400">{material.meta.title}</span>
         </div>
 
         <header className="mb-14">
           <div className="flex items-center gap-4 mb-4">
-            <time dateTime={material.meta.date} className="text-sky-400 text-sm font-semibold">
+            <time dateTime={material.meta.date} className="text-yellow-400 text-sm font-semibold">
               {material.meta.date ? format(parseISO(material.meta.date), 'MMMM d, yyyy') : 'Unknown Date'}
             </time>
-            <span className="relative z-10 rounded-full px-3 py-1 font-medium bg-emerald-500/10 text-emerald-400 text-xs text-center border border-emerald-500/20">
+            <span className="relative z-10 rounded-full px-3 py-1 font-medium bg-yellow-500/10 text-yellow-400 text-xs text-center border border-yellow-500/20">
               {material.meta.category}
             </span>
           </div>

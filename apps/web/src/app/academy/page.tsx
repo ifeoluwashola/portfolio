@@ -49,11 +49,11 @@ export default function AcademyCohortPage() {
       <div className="absolute inset-x-0 top-0 -z-10 h-full w-full bg-[linear-gradient(to_right,#8080800a_1px,transparent_1px),linear-gradient(to_bottom,#8080800a_1px,transparent_1px)] bg-[size:24px_24px]"></div>
       
       {/* Top Gradient Glow */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] opacity-20 pointer-events-none blur-[100px] bg-emerald-500/30 rounded-full" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] opacity-20 pointer-events-none blur-[100px] bg-yellow-500/30 rounded-full" />
 
       {/* Navigation Ecosystem Link */}
       <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-12">
-        <Link href="/academy/materials" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-emerald-400 transition-colors">
+        <Link href="/academy/materials" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-yellow-400 transition-colors">
           <BookOpen className="w-4 h-4 mr-2" />
           Browse free prerequisite materials
           <ChevronRight className="w-4 h-4 ml-1" />
@@ -65,7 +65,7 @@ export default function AcademyCohortPage() {
         <section className="text-center max-w-4xl mx-auto mb-24 relative z-10">
           <h1 className="text-4xl font-extrabold tracking-tight sm:text-7xl mb-6 text-transparent bg-clip-text bg-gradient-to-br from-white via-slate-200 to-slate-500">
             Break into<br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-sky-400 drop-shadow-sm">Cloud Engineering.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-sky-400 drop-shadow-sm">Cloud Engineering.</span>
           </h1>
           <p className="mt-6 text-xl leading-relaxed text-muted-foreground max-w-2xl mx-auto">
             A rigorous 12-week live DevOps mentorship program. Master Linux, Docker, Terraform, and Kubernetes.
@@ -78,7 +78,7 @@ export default function AcademyCohortPage() {
         <section className="mb-32">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="bg-card/40 backdrop-blur-md rounded-2xl p-8 border border-white/5 shadow-lg border-t-emerald-500/30 transition-all hover:bg-card/60">
-              <Clock className="w-8 h-8 text-sky-400 mb-6" />
+              <Clock className="w-8 h-8 text-yellow-400 mb-6" />
               <h3 className="text-xl font-bold mb-3">Intense Schedule</h3>
               <p className="text-muted-foreground leading-relaxed">
                 Thursdays and Fridays<br/>
@@ -87,16 +87,16 @@ export default function AcademyCohortPage() {
               </p>
             </div>
             <div className="bg-card/40 backdrop-blur-md rounded-2xl p-8 border border-white/5 shadow-lg border-t-emerald-500/30 transition-all hover:bg-card/60">
-              <Laptop className="w-8 h-8 text-emerald-400 mb-6" />
+              <Laptop className="w-8 h-8 text-yellow-400 mb-6" />
               <h3 className="text-xl font-bold mb-3">Prerequisites</h3>
               <ul className="text-muted-foreground leading-relaxed text-sm space-y-2">
-                <li className="flex items-start"><span className="mr-2 text-emerald-400">•</span>Basic computer knowledge & operations.</li>
-                <li className="flex items-start"><span className="mr-2 text-emerald-400">•</span>Minimum 8GB RAM of Linux Compatible Computer.</li>
-                <li className="flex items-start"><span className="mr-2 text-emerald-400">•</span>Create <a href="https://aws.amazon.com/free/" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline mx-1">AWS</a> & <a href="https://cloud.google.com/free" target="_blank" rel="noreferrer" className="text-emerald-400 hover:underline mx-1">GCP</a> Free Tier accounts.</li>
+                <li className="flex items-start"><span className="mr-2 text-yellow-400">•</span>Basic computer knowledge & operations.</li>
+                <li className="flex items-start"><span className="mr-2 text-yellow-400">•</span>Minimum 8GB RAM of Linux Compatible Computer.</li>
+                <li className="flex items-start"><span className="mr-2 text-yellow-400">•</span>Create <a href="https://aws.amazon.com/free/" target="_blank" rel="noreferrer" className="text-yellow-400 hover:underline mx-1">AWS</a> & <a href="https://cloud.google.com/free" target="_blank" rel="noreferrer" className="text-yellow-400 hover:underline mx-1">GCP</a> Free Tier accounts.</li>
               </ul>
             </div>
             <div className="bg-card/40 backdrop-blur-md rounded-2xl p-8 border border-white/5 shadow-lg border-t-emerald-500/30 transition-all hover:bg-card/60">
-              <Wallet className="w-8 h-8 text-sky-400 mb-6" />
+              <Wallet className="w-8 h-8 text-yellow-400 mb-6" />
               <h3 className="text-xl font-bold mb-3">Commitment</h3>
               <p className="text-muted-foreground leading-relaxed">
                 ₦10,000 Registration Fee.<br/>
@@ -110,14 +110,14 @@ export default function AcademyCohortPage() {
         <section className="mb-32 max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl font-bold mb-4 tracking-tight">The 12-Week Curriculum</h2>
-            <div className="w-24 h-1 bg-gradient-to-r from-emerald-500 to-sky-500 mx-auto rounded-full" />
+            <div className="w-24 h-1 bg-gradient-to-r from-yellow-500 to-sky-500 mx-auto rounded-full" />
           </div>
           
           <div className="space-y-6">
             {curriculum.map((item, index) => (
-              <div key={index} className="flex flex-col sm:flex-row gap-6 bg-secondary/50 p-6 sm:p-8 rounded-2xl border border-border items-start group hover:border-emerald-500/30 transition-colors">
+              <div key={index} className="flex flex-col sm:flex-row gap-6 bg-secondary/50 p-6 sm:p-8 rounded-2xl border border-border items-start group hover:border-yellow-500/30 transition-colors">
                 <div className="flex flex-col items-center sm:w-32 flex-shrink-0">
-                  <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-3 group-hover:scale-110 transition-transform">
+                  <div className="w-12 h-12 rounded-full bg-yellow-500/10 border border-yellow-500/30 flex items-center justify-center text-yellow-400 mb-3 group-hover:scale-110 transition-transform">
                     {item.icon}
                   </div>
                   <span className="text-sm font-bold text-muted-foreground text-center font-mono">
@@ -125,7 +125,7 @@ export default function AcademyCohortPage() {
                   </span>
                 </div>
                 <div className="flex-1 mt-1">
-                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-emerald-400 transition-colors">
+                  <h3 className="text-xl font-bold text-foreground mb-2 group-hover:text-yellow-400 transition-colors">
                     {item.title}
                   </h3>
                   <p className="text-muted-foreground leading-relaxed">
