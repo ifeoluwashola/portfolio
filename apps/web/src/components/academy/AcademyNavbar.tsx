@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { ModeToggle } from "../ModeToggle";
+import { ChevronRight } from "lucide-react";
 
 export async function AcademyNavbar() {
   const cookieStore = await cookies();
@@ -15,13 +16,18 @@ export async function AcademyNavbar() {
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex gap-8 items-center text-xs font-bold text-slate-400 font-mono tracking-widest uppercase">
-          <Link href="/academy/materials" className="hover:text-yellow-500 transition-colors">Curriculum</Link>
-          <Link href="/academy/labs" className="hover:text-yellow-500 transition-colors">Break-It Labs</Link>
+          <Link href="/academy" className="hover:text-yellow-500 transition-colors">Home</Link>
+          <Link href="/academy/break-it-labs" className="hover:text-yellow-500 transition-colors">Labs Hub</Link>
           <Link href="/academy/alumni" className="hover:text-yellow-500 transition-colors">Alumni</Link>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <ModeToggle variant="academy" />
+          {!token && (
+            <Link href="/academy#apply" className="hidden sm:block px-4 py-2 border border-slate-800 text-slate-300 text-[10px] font-bold tracking-widest uppercase rounded hover:bg-slate-900 transition-all">
+              Enroll_Now
+            </Link>
+          )}
           {token ? (
             <Link href="/academy/dashboard" className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-500 text-[10px] font-bold tracking-widest uppercase rounded hover:bg-yellow-500/20 transition-all">
               Dashboard / Terminal

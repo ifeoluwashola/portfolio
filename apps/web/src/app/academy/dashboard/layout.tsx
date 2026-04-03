@@ -153,6 +153,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               icon={<LayoutDashboard className="w-5 h-5" />} 
               isCollapsed={!isSidebarOpen}
             />
+            <NavItem 
+              href="/academy/break-it-labs" 
+              label="Break-It Labs" 
+              icon={<Terminal className="w-5 h-5" />} 
+              isCollapsed={!isSidebarOpen}
+            />
           </div>
 
           <div className="space-y-2">

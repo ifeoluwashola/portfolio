@@ -161,3 +161,60 @@ export async function submitAssignment(weekId: number, githubUrl: string) {
     return { error: "Connection to API failed" };
   }
 }
+
+export async function getAcademySession() {
+  const cookieStore = await cookies();
+  return !!cookieStore.get("academy_token")?.value;
+}
+
+export async function submitLabFix(labId: string, proposedFix: string) {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/labs/${labId}/submit`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ proposed_fix: proposedFix }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      return { error: errorText || "Submission failed" };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Lab submission error:", err);
+    return { error: "Connection to API failed" };
+  }
+}
+
+export async function addLabComment(submissionId: number, body: string) {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/labs/submissions/${submissionId}/comments`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ body }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      return { error: errorText || "Comment failed" };
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error("Comment submission error:", err);
+    return { error: "Connection to API failed" };
+  }
+}

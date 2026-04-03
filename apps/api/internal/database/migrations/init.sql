@@ -128,3 +128,31 @@ INSERT INTO cohort_weeks (week_number, title, status) VALUES
 (11, 'Scaling & High Availability Strategies', 'locked'),
 (12, 'Capstone Project Deployment', 'locked')
 ON CONFLICT (week_number) DO NOTHING;
+
+CREATE TABLE IF NOT EXISTS break_it_labs (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    scenario TEXT NOT NULL,
+    broken_code TEXT NOT NULL,
+    solution_code TEXT NOT NULL,
+    status VARCHAR(50) DEFAULT 'active', -- active, solved, archived
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS lab_submissions (
+    id SERIAL PRIMARY KEY,
+    lab_id INT NOT NULL REFERENCES break_it_labs(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    proposed_fix TEXT NOT NULL,
+    is_winner BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(lab_id, student_id) -- Force Push Strategy
+);
+
+CREATE TABLE IF NOT EXISTS submission_comments (
+    id SERIAL PRIMARY KEY,
+    submission_id INT NOT NULL REFERENCES lab_submissions(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    body TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);

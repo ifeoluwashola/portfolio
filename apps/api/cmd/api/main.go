@@ -106,6 +106,12 @@ func main() {
 	mux.HandleFunc("GET /api/v1/academy/dashboard", middleware.RequireStudentAuth(academyHandler.HandleGetStudentDashboard))
 	mux.HandleFunc("POST /api/v1/academy/assignments", middleware.RequireStudentAuth(academyHandler.HandleSubmitAssignment))
 
+	// Phase 5: Break-It Labs (Student & Public)
+	mux.HandleFunc("GET /api/v1/labs", academyHandler.HandleListLabs)
+	mux.HandleFunc("GET /api/v1/labs/{id}", academyHandler.HandleGetLab)
+	mux.HandleFunc("POST /api/v1/labs/{id}/submit", middleware.RequireStudentAuth(academyHandler.HandleSubmitLabFix))
+	mux.HandleFunc("POST /api/v1/labs/submissions/{id}/comments", middleware.RequireStudentAuth(academyHandler.HandleAddSubmissionComment))
+
 	// Profile API (GET is public, PUT is protected)
 	mux.HandleFunc("/api/profile", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
@@ -129,6 +135,12 @@ func main() {
 	mux.HandleFunc("PUT /api/v1/admin/academy/weeks", middleware.RequireAuth(academyHandler.HandleUpdateWeek))
 	mux.HandleFunc("GET /api/v1/admin/academy/submissions", middleware.RequireAuth(academyHandler.HandleGetSubmissions))
 	mux.HandleFunc("POST /api/v1/admin/academy/submissions/grade", middleware.RequireAuth(academyHandler.HandleGradeSubmission))
+
+	// Phase 5: Admin Break-It Labs Management
+	mux.HandleFunc("POST /api/v1/admin/labs", middleware.RequireAuth(academyHandler.HandleAdminCreateLab))
+	mux.HandleFunc("PUT /api/v1/admin/labs/{id}", middleware.RequireAuth(academyHandler.HandleAdminUpdateLab))
+	mux.HandleFunc("DELETE /api/v1/admin/labs/{id}", middleware.RequireAuth(academyHandler.HandleAdminDeleteLab))
+	mux.HandleFunc("POST /api/v1/admin/labs/winner", middleware.RequireAuth(academyHandler.HandleAdminSetLabWinner))
 
 	// Dynamic DB Projects (GET is public, POST requires auth)
 	mux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {
