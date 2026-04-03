@@ -89,6 +89,16 @@ type AcademyRepository interface {
 	UpdateLabSubmissionWinner(ctx context.Context, subID int, isWinner bool) error
 	CreateSubmissionComment(ctx context.Context, comm *SubmissionComment) error
 	GetSubmissionComments(ctx context.Context, subID int) ([]*SubmissionComment, error)
+
+	// Phase 6: Alumni Hall of Fame
+	CreateAlumniProfile(ctx context.Context, profile *AlumniProfile) (int, error)
+	GetAlumniProfiles(ctx context.Context) ([]*AlumniProfile, error)
+	GetAlumniBySlug(ctx context.Context, slug string) (*AlumniProfile, error)
+	UpdateAlumniProfile(ctx context.Context, profile *AlumniProfile) error
+	CreateCapstoneProject(ctx context.Context, project *CapstoneProject) error
+	GetCapstoneProjectsByAlumni(ctx context.Context, alumniID int) ([]*CapstoneProject, error)
+	DeleteCapstoneProjectsByAlumni(ctx context.Context, alumniID int) error
+	GetGraduationEligibleStudents(ctx context.Context) ([]*Student, error)
 }
 
 type AcademyService interface {
@@ -118,6 +128,13 @@ type AcademyService interface {
 	ListLabSubmissions(ctx context.Context, labID int) ([]*LabSubmission, error)
 	AdminSetLabWinner(ctx context.Context, req *SetLabWinnerRequest) error
 	AddSubmissionComment(ctx context.Context, studentID uuid.UUID, subID int, body string) error
+
+	// Phase 6: Alumni Hall of Fame
+	GraduateStudent(ctx context.Context, req *GraduateStudentRequest) error
+	AdminUpdateAlumni(ctx context.Context, id int, req *GraduateStudentRequest) error
+	ListAlumni(ctx context.Context) ([]*AlumniProfile, error)
+	GetAlumniPortfolio(ctx context.Context, slug string) (*AlumniProfile, error)
+	GetEligibleStudents(ctx context.Context) ([]*Student, error)
 }
 
 type CourseMaterial struct {
@@ -268,4 +285,44 @@ type SetLabWinnerRequest struct {
 
 type SubmissionCommentRequest struct {
 	Body string `json:"body"`
+}
+
+// Phase 6: Alumni Hall of Fame
+type AlumniProfile struct {
+	ID          int                `json:"id"`
+	StudentID   uuid.UUID          `json:"student_id"`
+	StudentName string             `json:"student_name,omitempty"`
+	Slug        string             `json:"slug"`
+	CohortName  string             `json:"cohort_name"`
+	LinkedInURL string             `json:"linkedin_url"`
+	GitHubURL   string             `json:"github_url"`
+	Projects    []*CapstoneProject `json:"projects,omitempty"`
+	CreatedAt   time.Time          `json:"created_at"`
+}
+
+type CapstoneProject struct {
+	ID                     int       `json:"id"`
+	AlumniID               int       `json:"alumni_id"`
+	ProjectTitle           string    `json:"project_title"`
+	Description            string    `json:"description"`
+	ArchitectureDiagramURL string    `json:"architecture_diagram_url"`
+	LiveDemoURL            string    `json:"live_demo_url"`
+	RepoURL                string    `json:"repo_url"`
+	CreatedAt              time.Time `json:"created_at"`
+}
+
+type GraduateStudentRequest struct {
+	StudentID   uuid.UUID                 `json:"student_id"`
+	CohortName  string                    `json:"cohort_name"`
+	LinkedInURL string                    `json:"linkedin_url"`
+	GitHubURL   string                    `json:"github_url"`
+	Projects    []*CapstoneProjectRequest `json:"projects"`
+}
+
+type CapstoneProjectRequest struct {
+	ProjectTitle           string `json:"project_title"`
+	Description            string `json:"description"`
+	ArchitectureDiagramURL string `json:"architecture_diagram_url"`
+	LiveDemoURL            string `json:"live_demo_url"`
+	RepoURL                string `json:"repo_url"`
 }

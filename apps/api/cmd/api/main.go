@@ -111,6 +111,10 @@ func main() {
 	mux.HandleFunc("GET /api/v1/labs/{id}", academyHandler.HandleGetLab)
 	mux.HandleFunc("POST /api/v1/labs/{id}/submit", middleware.RequireStudentAuth(academyHandler.HandleSubmitLabFix))
 	mux.HandleFunc("POST /api/v1/labs/submissions/{id}/comments", middleware.RequireStudentAuth(academyHandler.HandleAddSubmissionComment))
+	
+	// Phase 6: Alumni Hall of Fame (Public)
+	mux.HandleFunc("GET /api/v1/alumni", academyHandler.HandleListAlumni)
+	mux.HandleFunc("GET /api/v1/alumni/{slug}", academyHandler.HandleGetAlumniPortfolio)
 
 	// Profile API (GET is public, PUT is protected)
 	mux.HandleFunc("/api/profile", func(w http.ResponseWriter, r *http.Request) {
@@ -141,6 +145,12 @@ func main() {
 	mux.HandleFunc("PUT /api/v1/admin/labs/{id}", middleware.RequireAuth(academyHandler.HandleAdminUpdateLab))
 	mux.HandleFunc("DELETE /api/v1/admin/labs/{id}", middleware.RequireAuth(academyHandler.HandleAdminDeleteLab))
 	mux.HandleFunc("POST /api/v1/admin/labs/winner", middleware.RequireAuth(academyHandler.HandleAdminSetLabWinner))
+	
+	// Phase 6: Admin Alumni Management
+	mux.HandleFunc("GET /api/v1/admin/alumni/eligible", middleware.RequireAuth(academyHandler.HandleGetEligibleStudents))
+	mux.HandleFunc("POST /api/v1/admin/alumni/graduate", middleware.RequireAuth(academyHandler.HandleGraduateStudent))
+	mux.HandleFunc("PUT /api/v1/admin/alumni/{id}", middleware.RequireAuth(academyHandler.HandleAdminUpdateAlumni))
+	mux.HandleFunc("GET /api/v1/admin/alumni", middleware.RequireAuth(academyHandler.HandleListAlumni))
 
 	// Dynamic DB Projects (GET is public, POST requires auth)
 	mux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {

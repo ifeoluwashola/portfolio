@@ -483,3 +483,72 @@ func (h *AcademyHandler) HandleAdminSetLabWinner(w http.ResponseWriter, r *http.
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+// Phase 6: Alumni Hall of Fame
+
+func (h *AcademyHandler) HandleGraduateStudent(w http.ResponseWriter, r *http.Request) {
+	var req domain.GraduateStudentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	err := h.svc.GraduateStudent(r.Context(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *AcademyHandler) HandleAdminUpdateAlumni(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid alumni ID", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.GraduateStudentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+
+	err = h.svc.AdminUpdateAlumni(r.Context(), id, &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AcademyHandler) HandleGetEligibleStudents(w http.ResponseWriter, r *http.Request) {
+	students, err := h.svc.GetEligibleStudents(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(students)
+}
+
+func (h *AcademyHandler) HandleListAlumni(w http.ResponseWriter, r *http.Request) {
+	alumni, err := h.svc.ListAlumni(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(alumni)
+}
+
+func (h *AcademyHandler) HandleGetAlumniPortfolio(w http.ResponseWriter, r *http.Request) {
+	slug := r.PathValue("slug")
+	portfolio, err := h.svc.GetAlumniPortfolio(r.Context(), slug)
+	if err != nil {
+		http.Error(w, "Portfolio not found", http.StatusNotFound)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(portfolio)
+}
