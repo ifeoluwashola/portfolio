@@ -309,3 +309,137 @@ func (r *AcademyRepository) GetAssignmentByWeek(ctx context.Context, studentID u
 	return a, nil
 }
 
+// Phase 5: Break-It Labs
+
+func (r *AcademyRepository) GetLabs(ctx context.Context) ([]*domain.BreakItLab, error) {
+	query := `SELECT id, title, scenario, broken_code, solution_code, status, created_at FROM break_it_labs ORDER BY created_at DESC`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var labs []*domain.BreakItLab
+	for rows.Next() {
+		l := &domain.BreakItLab{}
+		err := rows.Scan(&l.ID, &l.Title, &l.Scenario, &l.BrokenCode, &l.SolutionCode, &l.Status, &l.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		labs = append(labs, l)
+	}
+	if labs == nil {
+		labs = []*domain.BreakItLab{}
+	}
+	return labs, nil
+}
+
+func (r *AcademyRepository) GetLabByID(ctx context.Context, id int) (*domain.BreakItLab, error) {
+	query := `SELECT id, title, scenario, broken_code, solution_code, status, created_at FROM break_it_labs WHERE id = $1`
+	l := &domain.BreakItLab{}
+	err := r.db.QueryRow(ctx, query, id).Scan(&l.ID, &l.Title, &l.Scenario, &l.BrokenCode, &l.SolutionCode, &l.Status, &l.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
+}
+
+func (r *AcademyRepository) CreateLab(ctx context.Context, lab *domain.BreakItLab) error {
+	query := `INSERT INTO break_it_labs (title, scenario, broken_code, solution_code, status) VALUES ($1, $2, $3, $4, $5)`
+	_, err := r.db.Exec(ctx, query, lab.Title, lab.Scenario, lab.BrokenCode, lab.SolutionCode, lab.Status)
+	return err
+}
+
+func (r *AcademyRepository) UpdateLab(ctx context.Context, lab *domain.BreakItLab) error {
+	query := `UPDATE break_it_labs SET title = $1, scenario = $2, broken_code = $3, solution_code = $4, status = $5 WHERE id = $6`
+	_, err := r.db.Exec(ctx, query, lab.Title, lab.Scenario, lab.BrokenCode, lab.SolutionCode, lab.Status, lab.ID)
+	return err
+}
+
+func (r *AcademyRepository) DeleteLab(ctx context.Context, id int) error {
+	query := `DELETE FROM break_it_labs WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
+func (r *AcademyRepository) UpsertLabSubmission(ctx context.Context, sub *domain.LabSubmission) error {
+	query := `
+		INSERT INTO lab_submissions (lab_id, student_id, proposed_fix, created_at)
+		VALUES ($1, $2, $3, CURRENT_TIMESTAMP)
+		ON CONFLICT (lab_id, student_id) 
+		DO UPDATE SET proposed_fix = EXCLUDED.proposed_fix, created_at = CURRENT_TIMESTAMP
+	`
+	_, err := r.db.Exec(ctx, query, sub.LabID, sub.StudentID, sub.ProposedFix)
+	return err
+}
+
+func (r *AcademyRepository) GetLabSubmissions(ctx context.Context, labID int) ([]*domain.LabSubmission, error) {
+	query := `
+		SELECT ls.id, ls.lab_id, ls.student_id, s.first_name || ' ' || s.last_name as student_name, ls.proposed_fix, ls.is_winner, ls.created_at
+		FROM lab_submissions ls
+		JOIN students s ON ls.student_id = s.id
+		WHERE ls.lab_id = $1
+		ORDER BY ls.created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query, labID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var subs = []*domain.LabSubmission{}
+	for rows.Next() {
+		s := &domain.LabSubmission{}
+		err := rows.Scan(&s.ID, &s.LabID, &s.StudentID, &s.StudentName, &s.ProposedFix, &s.IsWinner, &s.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		subs = append(subs, s)
+	}
+	if subs == nil {
+		subs = []*domain.LabSubmission{}
+	}
+	return subs, nil
+}
+
+func (r *AcademyRepository) UpdateLabSubmissionWinner(ctx context.Context, subID int, isWinner bool) error {
+	query := `UPDATE lab_submissions SET is_winner = $1 WHERE id = $2`
+	_, err := r.db.Exec(ctx, query, isWinner, subID)
+	return err
+}
+
+func (r *AcademyRepository) CreateSubmissionComment(ctx context.Context, comm *domain.SubmissionComment) error {
+	query := `INSERT INTO submission_comments (submission_id, student_id, body) VALUES ($1, $2, $3)`
+	_, err := r.db.Exec(ctx, query, comm.SubmissionID, comm.StudentID, comm.Body)
+	return err
+}
+
+func (r *AcademyRepository) GetSubmissionComments(ctx context.Context, subID int) ([]*domain.SubmissionComment, error) {
+	query := `
+		SELECT sc.id, sc.submission_id, sc.student_id, s.first_name || ' ' || s.last_name as student_name, sc.body, sc.created_at
+		FROM submission_comments sc
+		JOIN students s ON sc.student_id = s.id
+		WHERE sc.submission_id = $1
+		ORDER BY sc.created_at ASC
+	`
+	rows, err := r.db.Query(ctx, query, subID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var comms = []*domain.SubmissionComment{}
+	for rows.Next() {
+		c := &domain.SubmissionComment{}
+		err := rows.Scan(&c.ID, &c.SubmissionID, &c.StudentID, &c.StudentName, &c.Body, &c.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		comms = append(comms, c)
+	}
+	if comms == nil {
+		comms = []*domain.SubmissionComment{}
+	}
+	return comms, nil
+}
+

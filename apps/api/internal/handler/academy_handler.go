@@ -8,6 +8,7 @@ import (
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/middleware"
 	"github.com/google/uuid"
+	"strconv"
 )
 
 type AcademyHandler struct {
@@ -338,5 +339,147 @@ func (h *AcademyHandler) HandleSubmitAssignment(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
+}
+
+// Phase 5: Break-It Labs Handlers
+
+func (h *AcademyHandler) HandleListLabs(w http.ResponseWriter, r *http.Request) {
+	labs, err := h.svc.ListLabs(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to fetch labs: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(labs)
+}
+
+func (h *AcademyHandler) HandleGetLab(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid lab ID", http.StatusBadRequest)
+		return
+	}
+
+	lab, err := h.svc.GetLab(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Lab not found: "+err.Error(), http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(lab)
+}
+
+func (h *AcademyHandler) HandleSubmitLabFix(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid lab ID", http.StatusBadRequest)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	stID, _ := uuid.Parse(studentIDStr)
+
+	var req domain.SubmitLabFixRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	req.LabID = id
+
+	err = h.svc.SubmitLabFix(r.Context(), stID, &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AcademyHandler) HandleAddSubmissionComment(w http.ResponseWriter, r *http.Request) {
+	subIDStr := r.PathValue("id")
+	subID, err := strconv.Atoi(subIDStr)
+	if err != nil {
+		http.Error(w, "Invalid submission ID", http.StatusBadRequest)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	stID, _ := uuid.Parse(studentIDStr)
+
+	var req domain.SubmissionCommentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+
+	err = h.svc.AddSubmissionComment(r.Context(), stID, subID, req.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *AcademyHandler) HandleAdminCreateLab(w http.ResponseWriter, r *http.Request) {
+	var lab domain.BreakItLab
+	if err := json.NewDecoder(r.Body).Decode(&lab); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	err := h.svc.AdminCreateLab(r.Context(), &lab)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *AcademyHandler) HandleAdminUpdateLab(w http.ResponseWriter, r *http.Request) {
+	var lab domain.BreakItLab
+	if err := json.NewDecoder(r.Body).Decode(&lab); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	err := h.svc.AdminUpdateLab(r.Context(), &lab)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AcademyHandler) HandleAdminDeleteLab(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, _ := strconv.Atoi(idStr)
+	err := h.svc.AdminDeleteLab(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AcademyHandler) HandleAdminSetLabWinner(w http.ResponseWriter, r *http.Request) {
+	var req domain.SetLabWinnerRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+	err := h.svc.AdminSetLabWinner(r.Context(), &req)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusOK)
 }

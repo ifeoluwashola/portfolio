@@ -365,3 +365,66 @@ func (s *academyService) GetAdminSubmissions(ctx context.Context) ([]*domain.Ass
 func (s *academyService) GradeSubmission(ctx context.Context, req *domain.GradeAssignmentRequest) error {
 	return s.repo.UpdateAssignmentGrade(ctx, req.AssignmentID, req.Status, req.Feedback)
 }
+
+// Phase 5: Break-It Labs
+
+func (s *academyService) ListLabs(ctx context.Context) ([]*domain.BreakItLab, error) {
+	return s.repo.GetLabs(ctx)
+}
+
+func (s *academyService) GetLab(ctx context.Context, id int) (*domain.BreakItLab, error) {
+	lab, err := s.repo.GetLabByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch submissions and comments for the public/thread view
+	subs, err := s.repo.GetLabSubmissions(ctx, id)
+	if err == nil {
+		for _, sub := range subs {
+			comments, _ := s.repo.GetSubmissionComments(ctx, sub.ID)
+			sub.Comments = comments
+		}
+		lab.Submissions = subs
+	}
+
+	return lab, nil
+}
+
+func (s *academyService) AdminCreateLab(ctx context.Context, lab *domain.BreakItLab) error {
+	return s.repo.CreateLab(ctx, lab)
+}
+
+func (s *academyService) AdminUpdateLab(ctx context.Context, lab *domain.BreakItLab) error {
+	return s.repo.UpdateLab(ctx, lab)
+}
+
+func (s *academyService) AdminDeleteLab(ctx context.Context, id int) error {
+	return s.repo.DeleteLab(ctx, id)
+}
+
+func (s *academyService) SubmitLabFix(ctx context.Context, studentID uuid.UUID, req *domain.SubmitLabFixRequest) error {
+	sub := &domain.LabSubmission{
+		LabID:       req.LabID,
+		StudentID:   studentID,
+		ProposedFix: req.ProposedFix,
+	}
+	return s.repo.UpsertLabSubmission(ctx, sub)
+}
+
+func (s *academyService) ListLabSubmissions(ctx context.Context, labID int) ([]*domain.LabSubmission, error) {
+	return s.repo.GetLabSubmissions(ctx, labID)
+}
+
+func (s *academyService) AdminSetLabWinner(ctx context.Context, req *domain.SetLabWinnerRequest) error {
+	return s.repo.UpdateLabSubmissionWinner(ctx, req.SubmissionID, req.IsWinner)
+}
+
+func (s *academyService) AddSubmissionComment(ctx context.Context, studentID uuid.UUID, subID int, body string) error {
+	comm := &domain.SubmissionComment{
+		SubmissionID: subID,
+		StudentID:    studentID,
+		Body:         body,
+	}
+	return s.repo.CreateSubmissionComment(ctx, comm)
+}

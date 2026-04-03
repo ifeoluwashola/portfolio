@@ -77,6 +77,18 @@ type AcademyRepository interface {
 	GetAllAssignments(ctx context.Context) ([]*Assignment, error)
 	UpdateAssignmentGrade(ctx context.Context, id uuid.UUID, status, feedback string) error
 	GetAssignmentByWeek(ctx context.Context, studentID uuid.UUID, weekID int) (*Assignment, error)
+
+	// Phase 5: Break-It Labs
+	GetLabs(ctx context.Context) ([]*BreakItLab, error)
+	GetLabByID(ctx context.Context, id int) (*BreakItLab, error)
+	CreateLab(ctx context.Context, lab *BreakItLab) error
+	UpdateLab(ctx context.Context, lab *BreakItLab) error
+	DeleteLab(ctx context.Context, id int) error
+	UpsertLabSubmission(ctx context.Context, sub *LabSubmission) error
+	GetLabSubmissions(ctx context.Context, labID int) ([]*LabSubmission, error)
+	UpdateLabSubmissionWinner(ctx context.Context, subID int, isWinner bool) error
+	CreateSubmissionComment(ctx context.Context, comm *SubmissionComment) error
+	GetSubmissionComments(ctx context.Context, subID int) ([]*SubmissionComment, error)
 }
 
 type AcademyService interface {
@@ -95,6 +107,17 @@ type AcademyService interface {
 	GetStudentDashboardData(ctx context.Context, studentID uuid.UUID) (*StudentDashboardResponse, error)
 	GetAdminSubmissions(ctx context.Context) ([]*Assignment, error)
 	GradeSubmission(ctx context.Context, req *GradeAssignmentRequest) error
+
+	// Phase 5: Break-It Labs
+	ListLabs(ctx context.Context) ([]*BreakItLab, error)
+	GetLab(ctx context.Context, id int) (*BreakItLab, error)
+	AdminCreateLab(ctx context.Context, lab *BreakItLab) error
+	AdminUpdateLab(ctx context.Context, lab *BreakItLab) error
+	AdminDeleteLab(ctx context.Context, id int) error
+	SubmitLabFix(ctx context.Context, studentID uuid.UUID, req *SubmitLabFixRequest) error
+	ListLabSubmissions(ctx context.Context, labID int) ([]*LabSubmission, error)
+	AdminSetLabWinner(ctx context.Context, req *SetLabWinnerRequest) error
+	AddSubmissionComment(ctx context.Context, studentID uuid.UUID, subID int, body string) error
 }
 
 type CourseMaterial struct {
@@ -200,4 +223,49 @@ type AdminCohortStats struct {
 type AdminCohortResponse struct {
 	Metrics      AdminCohortStats    `json:"metrics"`
 	Applications []*CohortApplication `json:"applications"`
+}
+
+type BreakItLab struct {
+	ID           int              `json:"id"`
+	Title        string           `json:"title"`
+	Scenario     string           `json:"scenario"`
+	BrokenCode   string           `json:"broken_code"`
+	SolutionCode string           `json:"solution_code"`
+	Status       string           `json:"status"` // active, solved, archived
+	Submissions  []*LabSubmission `json:"submissions,omitempty"`
+	CreatedAt    time.Time        `json:"created_at"`
+}
+
+type LabSubmission struct {
+	ID          int                  `json:"id"`
+	LabID       int                  `json:"lab_id"`
+	StudentID   uuid.UUID            `json:"student_id"`
+	StudentName string               `json:"student_name,omitempty"`
+	ProposedFix string               `json:"proposed_fix"`
+	IsWinner    bool                 `json:"is_winner"`
+	Comments    []*SubmissionComment `json:"comments,omitempty"`
+	CreatedAt   time.Time            `json:"created_at"`
+}
+
+type SubmissionComment struct {
+	ID           int       `json:"id"`
+	SubmissionID int       `json:"submission_id"`
+	StudentID    uuid.UUID `json:"student_id"`
+	StudentName  string    `json:"student_name,omitempty"`
+	Body         string    `json:"body"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+type SubmitLabFixRequest struct {
+	LabID       int    `json:"lab_id"`
+	ProposedFix string `json:"proposed_fix"`
+}
+
+type SetLabWinnerRequest struct {
+	SubmissionID int  `json:"submission_id"`
+	IsWinner     bool `json:"is_winner"`
+}
+
+type SubmissionCommentRequest struct {
+	Body string `json:"body"`
 }
