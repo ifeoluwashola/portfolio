@@ -1,16 +1,23 @@
-import Link from "next/link";
 import { 
-  Users, 
   Terminal, 
   ArrowRight, 
   Linkedin, 
   Github, 
-  Globe, 
   ShieldCheck,
   ChevronRight,
   Code
 } from "lucide-react";
+import Link from "next/link";
 import { getAlumniList } from "@/app/academy/actions";
+
+interface AlumniMember {
+  id: number;
+  student_name: string;
+  slug: string;
+  cohort_name: string;
+  linkedin_url?: string;
+  github_url?: string;
+}
 
 export const metadata = {
   title: "Alumni Hall of Fame | Kybern Academy",
@@ -48,7 +55,7 @@ export default async function AlumniGridPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {alumni.map((member: any) => (
+            {alumni.map((member: AlumniMember) => (
               <Link 
                 key={member.id} 
                 href={`/academy/alumni/${member.slug}`}
@@ -87,7 +94,7 @@ export default async function AlumniGridPage() {
            <div className="lg:col-span-3">
               <h2 className="text-4xl font-bold tracking-tight mb-6 uppercase">Hiring Engineering <span className="text-yellow-500">Talent?</span></h2>
               <p className="text-slate-400 text-sm leading-relaxed max-w-xl">
-                 Kybern Academy graduates are rigorously vetted through real-world "Break-It" labs and full-stack infrastructure deployments. They are day-one ready for DevOps, Cloud, and platform engineering roles.
+                 Kybern Academy graduates are rigorously vetted through real-world &quot;Break-It&quot; labs and full-stack infrastructure deployments. They are day-one ready for DevOps, Cloud, and platform engineering roles.
               </p>
            </div>
            <div className="lg:col-span-2 flex flex-col gap-4">

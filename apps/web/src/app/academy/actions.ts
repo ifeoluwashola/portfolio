@@ -5,6 +5,22 @@ import { redirect } from "next/navigation";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
 
+interface AlumniProject {
+  project_title: string;
+  description: string;
+  architecture_diagram_url: string;
+  live_demo_url: string;
+  repo_url: string;
+}
+
+interface AlumniData {
+  student_id: string;
+  cohort_name: string;
+  linkedin_url: string;
+  github_url: string;
+  projects: AlumniProject[];
+}
+
 export async function login(formData: FormData) {
   const email = formData.get("email") as string;
   const password = formData.get("password") as string;
@@ -73,9 +89,6 @@ export async function changePassword(formData: FormData) {
       return { error: await res.text() };
     }
 
-    // After password change, we might want to log them out or refresh their token if the backend provides a new one.
-    // For now, let's keep them logged in but force a re-login for security if needed.
-    // Actually, the backend might have invalidated the token if we store is_first_login in it.
     (await cookies()).delete("academy_token");
     return { success: true };
   } catch {
@@ -219,8 +232,6 @@ export async function addLabComment(submissionId: number, body: string) {
   }
 }
 
-// Phase 6: Alumni Hall of Fame Actions
-
 export async function getEligibleStudents() {
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) return { error: "Unauthorized" };
@@ -238,7 +249,7 @@ export async function getEligibleStudents() {
   }
 }
 
-export async function graduateStudent(data: any) {
+export async function graduateStudent(data: AlumniData) {
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) return { error: "Unauthorized" };
 
@@ -260,7 +271,7 @@ export async function graduateStudent(data: any) {
   }
 }
 
-export async function updateAlumni(id: number, data: any) {
+export async function updateAlumni(id: number, data: AlumniData) {
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) return { error: "Unauthorized" };
 
@@ -284,10 +295,8 @@ export async function updateAlumni(id: number, data: any) {
 
 export async function getAlumniList() {
   const token = (await cookies()).get("auth_token")?.value;
-  // Admin list might need auth, but public list doesn't. 
-  // Let's check if we have a token (admin view) or not (public view)
   const url = token ? `${API_BASE_URL}/v1/admin/alumni` : `${API_BASE_URL}/v1/alumni`;
-  const headers: any = {};
+  const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
   try {
@@ -306,7 +315,7 @@ export async function getAlumniList() {
 export async function getAlumniProfile(slug: string) {
   try {
     const res = await fetch(`${API_BASE_URL}/v1/alumni/${slug}`, {
-      next: { revalidate: 3600 } // Cache for 1 hour
+      next: { revalidate: 3600 }
     });
     if (!res.ok) return null;
     return await res.json();
