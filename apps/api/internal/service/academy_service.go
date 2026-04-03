@@ -428,3 +428,134 @@ func (s *academyService) AddSubmissionComment(ctx context.Context, studentID uui
 	}
 	return s.repo.CreateSubmissionComment(ctx, comm)
 }
+
+// Phase 6: Alumni Hall of Fame
+
+func (s *academyService) GraduateStudent(ctx context.Context, req *domain.GraduateStudentRequest) error {
+	// 1. Get student info for slug
+	student, err := s.repo.GetStudentByID(ctx, req.StudentID)
+	if err != nil {
+		return fmt.Errorf("student not found: %w", err)
+	}
+
+	// 2. Generate slug
+	slug := generateSlug(fmt.Sprintf("%s %s", student.FirstName, student.LastName))
+
+	// 3. Create Profile
+	profile := &domain.AlumniProfile{
+		StudentID:   req.StudentID,
+		Slug:        slug,
+		CohortName:  req.CohortName,
+		LinkedInURL: req.LinkedInURL,
+		GitHubURL:   req.GitHubURL,
+	}
+
+	alumniID, err := s.repo.CreateAlumniProfile(ctx, profile)
+	if err != nil {
+		return fmt.Errorf("failed to create alumni profile: %w", err)
+	}
+
+	// 4. Create Projects
+	for _, pReq := range req.Projects {
+		project := &domain.CapstoneProject{
+			AlumniID:               alumniID,
+			ProjectTitle:           pReq.ProjectTitle,
+			Description:            pReq.Description,
+			ArchitectureDiagramURL: pReq.ArchitectureDiagramURL,
+			LiveDemoURL:            pReq.LiveDemoURL,
+			RepoURL:                pReq.RepoURL,
+		}
+		if err := s.repo.CreateCapstoneProject(ctx, project); err != nil {
+			log.Printf("Warning: failed to create capstone project %s: %v\n", project.ProjectTitle, err)
+		}
+	}
+
+	return nil
+}
+
+func (s *academyService) AdminUpdateAlumni(ctx context.Context, id int, req *domain.GraduateStudentRequest) error {
+	// 1. Update Profile
+	profile := &domain.AlumniProfile{
+		ID:          id,
+		CohortName:  req.CohortName,
+		LinkedInURL: req.LinkedInURL,
+		GitHubURL:   req.GitHubURL,
+	}
+
+	if err := s.repo.UpdateAlumniProfile(ctx, profile); err != nil {
+		return fmt.Errorf("failed to update alumni profile: %w", err)
+	}
+
+	// 2. Refresh Projects (Delete and Re-insert)
+	if err := s.repo.DeleteCapstoneProjectsByAlumni(ctx, id); err != nil {
+		return fmt.Errorf("failed to clear old projects: %w", err)
+	}
+
+	for _, pReq := range req.Projects {
+		project := &domain.CapstoneProject{
+			AlumniID:               id,
+			ProjectTitle:           pReq.ProjectTitle,
+			Description:            pReq.Description,
+			ArchitectureDiagramURL: pReq.ArchitectureDiagramURL,
+			LiveDemoURL:            pReq.LiveDemoURL,
+			RepoURL:                pReq.RepoURL,
+		}
+		if err := s.repo.CreateCapstoneProject(ctx, project); err != nil {
+			log.Printf("Warning: failed to create capstone project %s during update: %v\n", project.ProjectTitle, err)
+		}
+	}
+
+	return nil
+}
+
+func (s *academyService) ListAlumni(ctx context.Context) ([]*domain.AlumniProfile, error) {
+	profiles, err := s.repo.GetAlumniProfiles(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	for i := range profiles {
+		projects, err := s.repo.GetCapstoneProjectsByAlumni(ctx, profiles[i].ID)
+		if err != nil {
+			log.Printf("Warning: failed to fetch projects for alumni %d: %v", profiles[i].ID, err)
+			continue
+		}
+		profiles[i].Projects = projects
+	}
+
+	return profiles, nil
+}
+
+func (s *academyService) GetAlumniPortfolio(ctx context.Context, slug string) (*domain.AlumniProfile, error) {
+	profile, err := s.repo.GetAlumniBySlug(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+
+	projects, err := s.repo.GetCapstoneProjectsByAlumni(ctx, profile.ID)
+	if err == nil {
+		profile.Projects = projects
+	}
+
+	return profile, nil
+}
+
+func (s *academyService) GetEligibleStudents(ctx context.Context) ([]*domain.Student, error) {
+	return s.repo.GetGraduationEligibleStudents(ctx)
+}
+
+func generateSlug(name string) string {
+	// Simple slug generator: lowercase and hyphens
+	res := bytes.NewBufferString("")
+	for _, r := range name {
+		if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') {
+			res.WriteRune(r)
+		} else if r >= 'A' && r <= 'Z' {
+			res.WriteRune(r + ('a' - 'A'))
+		} else if r == ' ' || r == '-' {
+			res.WriteRune('-')
+		}
+	}
+	// Add unique suffix to be safe
+	return fmt.Sprintf("%s-%d", res.String(), time.Now().Unix()%10000)
+}

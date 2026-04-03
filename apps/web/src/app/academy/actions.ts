@@ -218,3 +218,101 @@ export async function addLabComment(submissionId: number, body: string) {
     return { error: "Connection to API failed" };
   }
 }
+
+// Phase 6: Alumni Hall of Fame Actions
+
+export async function getEligibleStudents() {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/alumni/eligible`, {
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return { error: "Failed to fetch eligible students" };
+    return await res.json();
+  } catch (err) {
+    console.error("Eligible students fetch error:", err);
+    return { error: "Connection failed" };
+  }
+}
+
+export async function graduateStudent(data: any) {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/alumni/graduate`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) return { error: await res.text() };
+    return { success: true };
+  } catch (err) {
+    console.error("Graduation error:", err);
+    return { error: "Graduation process failed" };
+  }
+}
+
+export async function updateAlumni(id: number, data: any) {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/alumni/${id}`, {
+      method: "PUT",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (!res.ok) return { error: await res.text() };
+    return { success: true };
+  } catch (err) {
+    console.error("Update alumni error:", err);
+    return { error: "Failed to update alumni profile" };
+  }
+}
+
+export async function getAlumniList() {
+  const token = (await cookies()).get("auth_token")?.value;
+  // Admin list might need auth, but public list doesn't. 
+  // Let's check if we have a token (admin view) or not (public view)
+  const url = token ? `${API_BASE_URL}/v1/admin/alumni` : `${API_BASE_URL}/v1/alumni`;
+  const headers: any = {};
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  try {
+    const res = await fetch(url, {
+      headers,
+      cache: "no-store"
+    });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (err) {
+    console.error("Alumni list fetch error:", err);
+    return [];
+  }
+}
+
+export async function getAlumniProfile(slug: string) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/alumni/${slug}`, {
+      next: { revalidate: 3600 } // Cache for 1 hour
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (err) {
+    console.error("Alumni profile fetch error:", err);
+    return null;
+  }
+}
+

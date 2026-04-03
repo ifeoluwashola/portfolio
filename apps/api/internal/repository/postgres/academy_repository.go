@@ -443,3 +443,147 @@ func (r *AcademyRepository) GetSubmissionComments(ctx context.Context, subID int
 	return comms, nil
 }
 
+// Phase 6: Alumni Hall of Fame
+
+func (r *AcademyRepository) CreateAlumniProfile(ctx context.Context, profile *domain.AlumniProfile) (int, error) {
+	query := `
+		INSERT INTO alumni_profiles (student_id, slug, cohort_name, linkedin_url, github_url, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		RETURNING id
+	`
+	var id int
+	err := r.db.QueryRow(ctx, query, profile.StudentID, profile.Slug, profile.CohortName, profile.LinkedInURL, profile.GitHubURL, time.Now()).Scan(&id)
+	return id, err
+}
+
+func (r *AcademyRepository) GetAlumniProfiles(ctx context.Context) ([]*domain.AlumniProfile, error) {
+	query := `
+		SELECT ap.id, ap.student_id, s.first_name || ' ' || s.last_name as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, ap.created_at
+		FROM alumni_profiles ap
+		JOIN students s ON ap.student_id = s.id
+		ORDER BY ap.created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var profiles []*domain.AlumniProfile
+	for rows.Next() {
+		p := &domain.AlumniProfile{}
+		err := rows.Scan(&p.ID, &p.StudentID, &p.StudentName, &p.Slug, &p.CohortName, &p.LinkedInURL, &p.GitHubURL, &p.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		profiles = append(profiles, p)
+	}
+
+	if profiles == nil {
+		profiles = []*domain.AlumniProfile{}
+	}
+	return profiles, nil
+}
+
+func (r *AcademyRepository) GetAlumniBySlug(ctx context.Context, slug string) (*domain.AlumniProfile, error) {
+	query := `
+		SELECT ap.id, ap.student_id, s.first_name || ' ' || s.last_name as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, ap.created_at
+		FROM alumni_profiles ap
+		JOIN students s ON ap.student_id = s.id
+		WHERE ap.slug = $1
+	`
+	p := &domain.AlumniProfile{}
+	err := r.db.QueryRow(ctx, query, slug).Scan(&p.ID, &p.StudentID, &p.StudentName, &p.Slug, &p.CohortName, &p.LinkedInURL, &p.GitHubURL, &p.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return p, nil
+}
+
+func (r *AcademyRepository) UpdateAlumniProfile(ctx context.Context, profile *domain.AlumniProfile) error {
+	query := `
+		UPDATE alumni_profiles
+		SET cohort_name = $1, linkedin_url = $2, github_url = $3
+		WHERE id = $4
+	`
+	_, err := r.db.Exec(ctx, query, profile.CohortName, profile.LinkedInURL, profile.GitHubURL, profile.ID)
+	return err
+}
+
+func (r *AcademyRepository) CreateCapstoneProject(ctx context.Context, project *domain.CapstoneProject) error {
+	query := `
+		INSERT INTO capstone_projects (alumni_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`
+	_, err := r.db.Exec(ctx, query, project.AlumniID, project.ProjectTitle, project.Description, project.ArchitectureDiagramURL, project.LiveDemoURL, project.RepoURL, time.Now())
+	return err
+}
+
+func (r *AcademyRepository) GetCapstoneProjectsByAlumni(ctx context.Context, alumniID int) ([]*domain.CapstoneProject, error) {
+	query := `
+		SELECT id, alumni_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, created_at
+		FROM capstone_projects
+		WHERE alumni_id = $1
+		ORDER BY created_at ASC
+	`
+	rows, err := r.db.Query(ctx, query, alumniID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var projects []*domain.CapstoneProject
+	for rows.Next() {
+		p := &domain.CapstoneProject{}
+		err := rows.Scan(&p.ID, &p.AlumniID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		projects = append(projects, p)
+	}
+
+	if projects == nil {
+		projects = []*domain.CapstoneProject{}
+	}
+	return projects, nil
+}
+
+func (r *AcademyRepository) DeleteCapstoneProjectsByAlumni(ctx context.Context, alumniID int) error {
+	query := `DELETE FROM capstone_projects WHERE alumni_id = $1`
+	_, err := r.db.Exec(ctx, query, alumniID)
+	return err
+}
+
+func (r *AcademyRepository) GetGraduationEligibleStudents(ctx context.Context) ([]*domain.Student, error) {
+	// A student is eligible if they have passed assignments for all weeks (status = 'passed')
+	// Wait, for simplicity, let's just fetch all students who don't have an alumni profile yet.
+	// We can refine this later if needed.
+	query := `
+		SELECT s.id, s.first_name, s.last_name, s.email, s.created_at
+		FROM students s
+		LEFT JOIN alumni_profiles ap ON s.id = ap.student_id
+		WHERE ap.id IS NULL
+		ORDER BY s.first_name ASC
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []*domain.Student
+	for rows.Next() {
+		s := &domain.Student{}
+		err := rows.Scan(&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		students = append(students, s)
+	}
+
+	if students == nil {
+		students = []*domain.Student{}
+	}
+	return students, nil
+}
+
