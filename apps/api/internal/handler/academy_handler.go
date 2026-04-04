@@ -486,18 +486,97 @@ func (h *AcademyHandler) HandleAdminSetLabWinner(w http.ResponseWriter, r *http.
 
 // Phase 6: Alumni Hall of Fame
 
-func (h *AcademyHandler) HandleGraduateStudent(w http.ResponseWriter, r *http.Request) {
-	var req domain.GraduateStudentRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
-		return
-	}
-	err := h.svc.GraduateStudent(r.Context(), &req)
+func (h *AcademyHandler) HandleListAllStudents(w http.ResponseWriter, r *http.Request) {
+	students, err := h.svc.ListAllStudents(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(students)
+}
+
+func (h *AcademyHandler) HandleWarnStudent(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid student id", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.WarnStudentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.AdminWarnStudent(r.Context(), id, req.Reason); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AcademyHandler) HandleDisqualifyStudent(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid student id", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.DisqualifyRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.AdminDisqualifyStudent(r.Context(), id, req.Reason); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *AcademyHandler) HandleSubmitCapstone(w http.ResponseWriter, r *http.Request) {
+	studentID := r.Context().Value("student_id").(uuid.UUID)
+
+	var req domain.CapstoneProjectRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.SubmitCapstone(r.Context(), studentID, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *AcademyHandler) HandleListPendingCapstones(w http.ResponseWriter, r *http.Request) {
+	caps, err := h.svc.GetPendingCapstones(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(caps)
+}
+
+func (h *AcademyHandler) HandleApproveCapstone(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, _ := strconv.Atoi(idStr)
+
+	var req domain.ApproveCapstoneRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.ApproveCapstone(r.Context(), id, &req); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func (h *AcademyHandler) HandleAdminUpdateAlumni(w http.ResponseWriter, r *http.Request) {

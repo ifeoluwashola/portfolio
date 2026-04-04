@@ -198,6 +198,7 @@ func (s *academyService) LoginStudent(ctx context.Context, req *domain.AcademyLo
 		"sub":            student.ID,
 		"email":          student.Email,
 		"is_first_login": student.IsFirstLogin,
+		"status":         student.Status,
 		"exp":            time.Now().Add(7 * 24 * time.Hour).Unix(),
 	})
 
@@ -311,6 +312,7 @@ func (s *academyService) UpdateCohortWeek(ctx context.Context, req *domain.Updat
 	week.RecordingURL = req.RecordingURL
 	week.Materials = req.Materials
 	week.Transcript = req.Transcript
+	week.AssignmentInstructions = req.AssignmentInstructions
 
 	return s.repo.UpdateWeek(ctx, week)
 }
@@ -429,48 +431,101 @@ func (s *academyService) AddSubmissionComment(ctx context.Context, studentID uui
 	return s.repo.CreateSubmissionComment(ctx, comm)
 }
 
-// Phase 6: Alumni Hall of Fame
+// Phase 6: Alumni Hall of Fame & Disciplinary
 
-func (s *academyService) GraduateStudent(ctx context.Context, req *domain.GraduateStudentRequest) error {
-	// 1. Get student info for slug
-	student, err := s.repo.GetStudentByID(ctx, req.StudentID)
+func (s *academyService) ListAllStudents(ctx context.Context) ([]*domain.Student, error) {
+	return s.repo.GetAllStudents(ctx)
+}
+
+func (s *academyService) AdminWarnStudent(ctx context.Context, id uuid.UUID, reason string) error {
+	student, err := s.repo.GetStudentByID(ctx, id)
 	if err != nil {
-		return fmt.Errorf("student not found: %w", err)
+		return err
 	}
 
-	// 2. Generate slug
-	slug := generateSlug(fmt.Sprintf("%s %s", student.FirstName, student.LastName))
+	newCount, err := s.repo.WarnStudent(ctx, id, reason)
+	if err != nil {
+		return err
+	}
 
-	// 3. Create Profile
+	// Trigger Email (Craft template)
+	_ = s.notification.SendStudentWarningEmail(student.FirstName, student.Email, reason, newCount)
+
+	return nil
+}
+
+func (s *academyService) AdminDisqualifyStudent(ctx context.Context, id uuid.UUID, reason string) error {
+	student, err := s.repo.GetStudentByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	err = s.repo.UpdateStudentStatus(ctx, id, "disqualified", reason)
+	if err != nil {
+		return err
+	}
+
+	// Trigger Email
+	_ = s.notification.SendStudentDisqualificationEmail(student.FirstName, student.Email, reason)
+
+	return nil
+}
+
+func (s *academyService) SubmitCapstone(ctx context.Context, studentID uuid.UUID, req *domain.CapstoneProjectRequest) error {
+	project := &domain.CapstoneProject{
+		StudentID:              studentID,
+		ProjectTitle:           req.ProjectTitle,
+		Description:            req.Description,
+		ArchitectureDiagramURL: req.ArchitectureDiagramURL,
+		LiveDemoURL:            req.LiveDemoURL,
+		RepoURL:                req.RepoURL,
+		Status:                 "pending",
+	}
+	_, err := s.repo.CreateCapstoneProject(ctx, project)
+	return err
+}
+
+func (s *academyService) GetPendingCapstones(ctx context.Context) ([]*domain.CapstoneProject, error) {
+	return s.repo.GetPendingCapstones(ctx)
+}
+
+func (s *academyService) ApproveCapstone(ctx context.Context, capstoneID int, req *domain.ApproveCapstoneRequest) error {
+	// 1. Get Capstone
+	capstone, err := s.repo.GetCapstoneByID(ctx, capstoneID)
+	if err != nil {
+		return err
+	}
+
+	// 2. Get Student
+	student, err := s.repo.GetStudentByID(ctx, capstone.StudentID)
+	if err != nil {
+		return err
+	}
+
+	// 3. Update Capstone Status
+	err = s.repo.UpdateCapstoneStatus(ctx, capstoneID, "approved")
+	if err != nil {
+		return err
+	}
+
+	// 4. Update Student Status to 'graduated'
+	err = s.repo.UpdateStudentStatus(ctx, student.ID, "graduated", "")
+	if err != nil {
+		return err
+	}
+
+	// 5. Create Alumni Profile
+	slug := generateSlug(fmt.Sprintf("%s %s", student.FirstName, student.LastName))
 	profile := &domain.AlumniProfile{
-		StudentID:   req.StudentID,
+		StudentID:   student.ID,
 		Slug:        slug,
 		CohortName:  req.CohortName,
 		LinkedInURL: req.LinkedInURL,
 		GitHubURL:   req.GitHubURL,
 	}
 
-	alumniID, err := s.repo.CreateAlumniProfile(ctx, profile)
-	if err != nil {
-		return fmt.Errorf("failed to create alumni profile: %w", err)
-	}
-
-	// 4. Create Projects
-	for _, pReq := range req.Projects {
-		project := &domain.CapstoneProject{
-			AlumniID:               alumniID,
-			ProjectTitle:           pReq.ProjectTitle,
-			Description:            pReq.Description,
-			ArchitectureDiagramURL: pReq.ArchitectureDiagramURL,
-			LiveDemoURL:            pReq.LiveDemoURL,
-			RepoURL:                pReq.RepoURL,
-		}
-		if err := s.repo.CreateCapstoneProject(ctx, project); err != nil {
-			log.Printf("Warning: failed to create capstone project %s: %v\n", project.ProjectTitle, err)
-		}
-	}
-
-	return nil
+	_, err = s.repo.CreateAlumniProfile(ctx, profile)
+	return err
 }
 
 func (s *academyService) AdminUpdateAlumni(ctx context.Context, id int, req *domain.GraduateStudentRequest) error {
@@ -491,16 +546,27 @@ func (s *academyService) AdminUpdateAlumni(ctx context.Context, id int, req *dom
 		return fmt.Errorf("failed to clear old projects: %w", err)
 	}
 
+	// We need the student_id to re-insert
+	alumni, _ := s.repo.GetAlumniProfiles(ctx)
+	var studentID uuid.UUID
+	for _, a := range alumni {
+		if a.ID == id {
+			studentID = a.StudentID
+			break
+		}
+	}
+
 	for _, pReq := range req.Projects {
 		project := &domain.CapstoneProject{
-			AlumniID:               id,
+			StudentID:              studentID,
 			ProjectTitle:           pReq.ProjectTitle,
 			Description:            pReq.Description,
 			ArchitectureDiagramURL: pReq.ArchitectureDiagramURL,
 			LiveDemoURL:            pReq.LiveDemoURL,
 			RepoURL:                pReq.RepoURL,
+			Status:                 "approved",
 		}
-		if err := s.repo.CreateCapstoneProject(ctx, project); err != nil {
+		if _, err := s.repo.CreateCapstoneProject(ctx, project); err != nil {
 			log.Printf("Warning: failed to create capstone project %s during update: %v\n", project.ProjectTitle, err)
 		}
 	}
@@ -526,7 +592,7 @@ func (s *academyService) ListAlumni(ctx context.Context) ([]*domain.AlumniProfil
 	return profiles, nil
 }
 
-func (s *academyService) GetAlumniPortfolio(ctx context.Context, slug string) (*domain.AlumniProfile, error) {
+func (s *academyService) GetAlumniPortfolio(ctx context.Context, slug string) (*domain.AlumniPortfolioResponse, error) {
 	profile, err := s.repo.GetAlumniBySlug(ctx, slug)
 	if err != nil {
 		return nil, err
@@ -537,7 +603,29 @@ func (s *academyService) GetAlumniPortfolio(ctx context.Context, slug string) (*
 		profile.Projects = projects
 	}
 
-	return profile, nil
+	// Fetch Milestones
+	assignments, _ := s.repo.GetStudentAssignments(ctx, profile.StudentID)
+	
+	// Fetch solved labs (Break-It)
+	allLabs, _ := s.repo.GetLabs(ctx)
+	var solvedLabs []*domain.LabSubmission
+	for _, lab := range allLabs {
+		subs, _ := s.repo.GetLabSubmissions(ctx, lab.ID)
+		for _, sub := range subs {
+			if sub.StudentID == profile.StudentID && sub.IsWinner {
+				sub.StudentName = lab.Title // Reuse field for lab title context
+				solvedLabs = append(solvedLabs, sub)
+			}
+		}
+	}
+
+	return &domain.AlumniPortfolioResponse{
+		Profile: profile,
+		Milestones: &domain.MilestoneData{
+			Assignments: assignments,
+			Labs:        solvedLabs,
+		},
+	}, nil
 }
 
 func (s *academyService) GetEligibleStudents(ctx context.Context) ([]*domain.Student, error) {

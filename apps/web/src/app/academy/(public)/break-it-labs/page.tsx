@@ -3,14 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
-  Terminal, 
-  ChevronRight, 
   Search, 
   ShieldAlert, 
   Code2, 
   Users, 
   Zap,
-  ArrowUpRight
+  ArrowUpRight,
+  ChevronRight
 } from "lucide-react";
 
 interface BreakItLab {
@@ -42,6 +41,7 @@ export default function LabsHubPage() {
       }
     }
     fetchLabs();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const filteredLabs = labs.filter(l => 
@@ -50,7 +50,6 @@ export default function LabsHubPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-yellow-500/30 font-mono pb-20">
-      {/* Search Header - Removed sticky to avoid clash with AcademyNavbar */}
       <div className="border-b border-slate-900 bg-slate-950/80 backdrop-blur-md z-40">
         <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -75,7 +74,6 @@ export default function LabsHubPage() {
       </div>
 
       <main className="max-w-7xl mx-auto px-6 py-12">
-        {/* Hub Strategy Banner */}
         <div className="mb-16 grid grid-cols-1 lg:grid-cols-3 gap-8">
            <div className="lg:col-span-2 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl p-8 relative overflow-hidden group">
               <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-yellow-500/10 blur-[60px] rounded-full group-hover:bg-yellow-500/20 transition-all duration-700" />
@@ -86,7 +84,7 @@ export default function LabsHubPage() {
                 </div>
                 <h2 className="text-3xl font-bold mb-4 tracking-tight leading-tight">These labs simulate real <span className="text-yellow-500">production catastrophes.</span></h2>
                 <p className="text-slate-400 text-sm leading-relaxed max-w-xl mb-6">
-                  Anyone can study the scenarios and browse the fix history. To submit a patch or review peer code, you must be an enrolled Kybern Academy student. 
+                  &quot;Break-It&quot; labs are high-stakes, real-world troubleshooting scenarios. You are given a broken production environment and must identify, document, and fix the root cause under pressure.
                 </p>
                 <div className="flex flex-wrap gap-4">
                    <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase bg-slate-900/50 px-3 py-1.5 rounded-full border border-slate-800">
@@ -143,7 +141,7 @@ export default function LabsHubPage() {
 
                 <h3 className="text-lg font-bold mb-3 group-hover:text-yellow-500 transition-colors uppercase tracking-tight line-clamp-1">{lab.title}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed line-clamp-3 mb-8">
-                  {lab.scenario}
+                   Anyone can study the scenarios and browse the fix history. To submit a patch or review peer code, you must be an enrolled Kybern Academy student. 
                 </p>
 
                 <div className="flex items-center justify-between pt-4 border-t border-slate-800/50">
