@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, use } from "react";
+import ReactMarkdown from "react-markdown";
 import { 
   PlayCircle, 
   Lock, 
@@ -29,6 +30,7 @@ interface CohortWeek {
   recording_url?: string;
   materials?: CourseMaterial[];
   transcript?: string;
+  assignment_instructions?: string;
 }
 
 interface Assignment {
@@ -208,6 +210,31 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
           </div>
 
           {/* Assignment & Resources Section */}
+          {week.assignment_instructions && (
+            <div className="bg-slate-900 border border-yellow-500/10 rounded-3xl p-8 space-y-6">
+              <div className="flex items-center gap-3">
+                <Terminal className="w-5 h-5 text-yellow-500" />
+                <h3 className="text-sm font-black uppercase tracking-[0.15em] text-yellow-500">{'>'}_ LAB SPECIFICATIONS</h3>
+              </div>
+              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 overflow-x-auto">
+                <div className="prose prose-invert prose-sm max-w-none
+                  prose-headings:text-yellow-500 prose-headings:font-bold prose-headings:tracking-tight prose-headings:uppercase
+                  prose-h2:text-base prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-2 prose-h2:mb-4
+                  prose-h3:text-xs prose-h3:tracking-[0.15em]
+                  prose-p:text-slate-400 prose-p:leading-relaxed prose-p:text-sm
+                  prose-strong:text-slate-200
+                  prose-code:text-yellow-500 prose-code:bg-yellow-500/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
+                  prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
+                  prose-li:text-slate-400 prose-li:text-sm
+                  prose-ul:space-y-1
+                  prose-a:text-yellow-500 prose-a:no-underline hover:prose-a:underline
+                ">
+                  <ReactMarkdown>{week.assignment_instructions}</ReactMarkdown>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-8">
               <div className="flex items-center justify-between">

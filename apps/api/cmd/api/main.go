@@ -112,6 +112,9 @@ func main() {
 	mux.HandleFunc("POST /api/v1/labs/{id}/submit", middleware.RequireStudentAuth(academyHandler.HandleSubmitLabFix))
 	mux.HandleFunc("POST /api/v1/labs/submissions/{id}/comments", middleware.RequireStudentAuth(academyHandler.HandleAddSubmissionComment))
 	
+	// Phase 6: Capstone PR (Student)
+	mux.HandleFunc("POST /api/v1/academy/capstone", middleware.RequireStudentAuth(academyHandler.HandleSubmitCapstone))
+	
 	// Phase 6: Alumni Hall of Fame (Public)
 	mux.HandleFunc("GET /api/v1/alumni", academyHandler.HandleListAlumni)
 	mux.HandleFunc("GET /api/v1/alumni/{slug}", academyHandler.HandleGetAlumniPortfolio)
@@ -146,9 +149,14 @@ func main() {
 	mux.HandleFunc("DELETE /api/v1/admin/labs/{id}", middleware.RequireAuth(academyHandler.HandleAdminDeleteLab))
 	mux.HandleFunc("POST /api/v1/admin/labs/winner", middleware.RequireAuth(academyHandler.HandleAdminSetLabWinner))
 	
-	// Phase 6: Admin Alumni Management
+	// Phase 6: Admin Alumni & Disciplinary Management
+	mux.HandleFunc("GET /api/v1/admin/students", middleware.RequireAuth(academyHandler.HandleListAllStudents))
+	mux.HandleFunc("POST /api/v1/admin/students/{id}/warn", middleware.RequireAuth(academyHandler.HandleWarnStudent))
+	mux.HandleFunc("POST /api/v1/admin/students/{id}/disqualify", middleware.RequireAuth(academyHandler.HandleDisqualifyStudent))
+	
 	mux.HandleFunc("GET /api/v1/admin/alumni/eligible", middleware.RequireAuth(academyHandler.HandleGetEligibleStudents))
-	mux.HandleFunc("POST /api/v1/admin/alumni/graduate", middleware.RequireAuth(academyHandler.HandleGraduateStudent))
+	mux.HandleFunc("GET /api/v1/admin/alumni/pending", middleware.RequireAuth(academyHandler.HandleListPendingCapstones))
+	mux.HandleFunc("POST /api/v1/admin/alumni/approve/{id}", middleware.RequireAuth(academyHandler.HandleApproveCapstone))
 	mux.HandleFunc("PUT /api/v1/admin/alumni/{id}", middleware.RequireAuth(academyHandler.HandleAdminUpdateAlumni))
 	mux.HandleFunc("GET /api/v1/admin/alumni", middleware.RequireAuth(academyHandler.HandleListAlumni))
 

@@ -11,7 +11,6 @@ import {
   Trophy,
   CheckCircle2,
   Terminal,
-  ChevronRight,
   Edit3,
   X
 } from "lucide-react";
@@ -87,7 +86,8 @@ export default function AdminLabsPage() {
 
   useEffect(() => {
     fetchLabs();
-  }, [fetchLabs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleSaveLab = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -157,7 +157,6 @@ export default function AdminLabsPage() {
 
       if (!res.ok) throw new Error("Failed to update status");
       
-      // Refresh current submissions view
       if (viewingSubmissions) {
         const updatedRes = await fetch(`${apiBase}/v1/labs/${viewingSubmissions}`);
         const updatedLab = await updatedRes.json();
@@ -181,9 +180,9 @@ export default function AdminLabsPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 flex items-center gap-3">
             <Terminal className="w-8 h-8 text-primary" />
-            Break-It Labs Manager
+            &quot;Break-It&quot; Labs Manager
           </h1>
-          <p className="text-muted-foreground">Orchestrate communal debugging scenarios and grade professional fixes.</p>
+          <p className="text-muted-foreground">&quot;Break-It&quot; labs are high-stakes, real-world troubleshooting scenarios. You are given a broken production environment and must identify, document, and fix the root cause under pressure.</p>
         </div>
         <button 
           onClick={() => { setSelectedLab(null); setIsModalOpen(true); }}

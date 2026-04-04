@@ -26,6 +26,7 @@ interface CohortWeek {
   recording_url?: string;
   materials?: CourseMaterial[];
   transcript?: string;
+  assignment_instructions?: string;
 }
 
 export default function CurriculumManager() {
@@ -262,6 +263,16 @@ export default function CurriculumManager() {
                     <p className="text-center py-4 border border-dashed border-border rounded-lg text-xs text-muted-foreground font-medium">No supplementary materials tagged to this module.</p>
                   )}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Assignment Instructions <span className="text-muted-foreground/50">(Markdown Supported)</span></label>
+                <textarea 
+                  className="w-full min-h-[160px] p-4 bg-background border border-border rounded-md text-sm font-mono leading-relaxed"
+                  placeholder={`## Objective\nDescribe the lab assignment here...\n\n### Requirements\n- Requirement 1\n- Requirement 2\n\n### Submission\nSubmit your PR link below.`}
+                  value={editingWeek.assignment_instructions || ""}
+                  onChange={(e) => setEditingWeek({...editingWeek, assignment_instructions: e.target.value})}
+                />
               </div>
 
               <div className="space-y-2">

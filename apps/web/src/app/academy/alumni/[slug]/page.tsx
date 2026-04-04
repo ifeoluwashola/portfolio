@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import { 
   Github, 
   Linkedin, 
@@ -10,14 +9,20 @@ import {
   Globe, 
   ChevronRight,
   ShieldCheck,
-  Code
+  Code,
+  CheckCircle2,
+  Trophy,
+  Activity,
+  History
 } from "lucide-react";
 import { getAlumniProfile } from "@/app/academy/actions";
+import { AcademyNavbar } from "@/components/academy/AcademyNavbar";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const profile = await getAlumniProfile(slug);
-  if (!profile) return { title: "Graduate Not Found" };
+  const data = await getAlumniProfile(slug);
+  if (!data?.profile) return { title: "Graduate Not Found" };
+  const { profile } = data;
   return {
     title: `${profile.student_name} | Cloud Native Portfolio`,
     description: `Capstone project and technical expertise of ${profile.student_name}, Kybern Academy Graduate.`,
@@ -26,15 +31,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function AlumniPortfolioPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const profile = await getAlumniProfile(slug);
+  const data = await getAlumniProfile(slug);
 
-  if (!profile) return notFound();
+  if (!data?.profile) return notFound();
+  const { profile, milestones } = data;
 
-  // For this phase, we assume the first project is the main capstone
   const capstone = profile.projects?.[0];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-yellow-500/30 font-mono pb-40">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-mono selection:bg-yellow-500/30 pb-40">
+      <AcademyNavbar />
+      
       {/* Premium Hero Header */}
       <section className="relative pt-40 pb-32 border-b border-slate-900 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(234,179,8,0.1),transparent_50%)]" />
@@ -87,7 +94,7 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
         </div>
       </section>
 
-      <main className="max-w-7xl mx-auto px-6 py-24">
+      <main className="max-w-7xl mx-auto px-6 py-24 space-y-32">
         {capstone ? (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-20">
             {/* Left: Project Technical Content */}
@@ -99,7 +106,6 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
                   </div>
                   <h2 className="text-4xl md:text-5xl font-bold mb-10 tracking-tight">{capstone.project_title}</h2>
                   
-                  {/* Action Buttons Hub */}
                   <div className="flex flex-wrap gap-6 mb-20">
                     {capstone.repo_url && (
                       <a 
@@ -122,16 +128,16 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
                   </div>
                </div>
 
-               {/* Design & Architecture Diagram */}
+               {/* Infrastructure Architecture Diagram */}
                <div className="mb-24 relative">
                   <div className="absolute inset-x-0 h-40 bg-gradient-to-t from-slate-950 to-transparent bottom-0 z-10 pointer-events-none" />
                   <div className="flex items-center justify-between mb-8">
                     <h3 className="text-lg font-bold uppercase tracking-widest flex items-center gap-2">
                        <ShieldCheck className="w-5 h-5 text-yellow-500" /> Infrastructure Architecture
                     </h3>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Asset v1.02_</span>
                   </div>
                   <div className="bg-slate-900 border border-slate-800 rounded-[32px] p-6 md:p-12 shadow-inner group overflow-hidden">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                        src={capstone.architecture_diagram_url} 
                        alt="Infrastructure Diagram" 
@@ -161,17 +167,7 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
                            </div>
                            <div>
                               <p className="text-[10px] text-slate-600 uppercase font-bold mb-1 tracking-widest">Training Intensity</p>
-                              <p className="text-sm font-bold text-yellow-500 uppercase">12 Weeks / 48 Labs</p>
-                           </div>
-                           <div>
-                              <p className="text-[10px] text-slate-600 uppercase font-bold mb-1 tracking-widest">Verified Slugs</p>
-                              <div className="flex flex-wrap gap-2 mt-3">
-                                 {["AWS", "K8s", "Docker", "Terraform", "GH-Actions", "Grafana"].map(skill => (
-                                    <span key={skill} className="px-2 py-1 bg-slate-950 border border-slate-800 rounded text-[9px] font-bold text-slate-500 uppercase tracking-tighter">
-                                       {skill}
-                                    </span>
-                                 ))}
-                              </div>
+                              <p className="text-sm font-bold text-yellow-500 uppercase">12 Weeks / High Stakes</p>
                            </div>
                         </div>
                         <div className="mt-8 pt-8 border-t border-slate-800">
@@ -190,6 +186,62 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
             <p className="text-slate-500 font-bold uppercase tracking-widest">Awaiting Project Deployment Logs_</p>
           </div>
         )}
+
+        {/* Verified Academy Milestones Section */}
+        <section className="space-y-12">
+           <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-3 text-yellow-500">
+                 <Trophy size={24} />
+                 <h2 className="text-3xl font-bold tracking-tight">Verified Academy Milestones</h2>
+              </div>
+              <p className="text-slate-500 max-w-2xl text-sm leading-relaxed">
+                 Proof of technical competence verified by through graded weekly assignments and high-intensity Break-It lab solutions. 
+                 Each milestone represents 10+ hours of deep engineering work.
+              </p>
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {/* Assignments Grid */}
+              {milestones?.assignments?.map((ass: { id: number; week_id: number; status: string; github_url: string }) => (
+                 <div key={ass.id} className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl space-y-4 hover:border-yellow-500/30 transition-all group">
+                    <div className="flex items-start justify-between">
+                       <CheckCircle2 className="text-emerald-500 group-hover:scale-110 transition-transform" size={20} />
+                       <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">M-LOG: {ass.week_id}</span>
+                    </div>
+                    <div className="space-y-1">
+                       <h4 className="text-white font-bold text-sm uppercase tracking-tight">Assignment Week {ass.week_id}</h4>
+                       <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold flex items-center gap-1">
+                          <Activity size={10} /> {ass.status} {/* GRADED */}
+                       </p>
+                    </div>
+                    <a 
+                      href={ass.github_url} 
+                      target="_blank"
+                      className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#eab308] uppercase tracking-widest hover:underline"
+                    >
+                       View Solution <ChevronRight size={12}/>
+                    </a>
+                 </div>
+              ))}
+
+              {/* Lab Solutions Grid */}
+              {milestones?.labs?.map((lab: { id: number; student_name: string }) => (
+                 <div key={lab.id} className="bg-[#020617] border border-[#eab308]/20 p-6 rounded-2xl space-y-4 hover:border-[#eab308]/50 transition-all group shadow-[0_0_20px_rgba(234,179,8,0.03)]">
+                    <div className="flex items-start justify-between">
+                       <History className="text-[#eab308] group-hover:rotate-12 transition-transform" size={20} />
+                       <span className="text-[10px] font-bold text-[#eab308]/40 uppercase tracking-widest">LAB_WINNER</span>
+                    </div>
+                    <div className="space-y-1">
+                       <h4 className="text-white font-bold text-sm uppercase tracking-tight truncate">{lab.student_name}</h4>
+                       <p className="text-[10px] text-[#eab308] uppercase tracking-widest font-bold">SOLVED_PRODUCTION_INCIDENT</p>
+                    </div>
+                    <div className="text-[9px] text-slate-600 font-mono italic">
+                       Verified solution for high-level security breach lab.
+                    </div>
+                 </div>
+              ))}
+           </div>
+        </section>
       </main>
     </div>
   );

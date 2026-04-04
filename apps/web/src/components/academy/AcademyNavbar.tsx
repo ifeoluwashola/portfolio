@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { ModeToggle } from "../ModeToggle";
-import { ChevronRight } from "lucide-react";
+import { LayoutDashboard, Brain, GraduationCap } from "lucide-react";
 
 export async function AcademyNavbar() {
   const cookieStore = await cookies();

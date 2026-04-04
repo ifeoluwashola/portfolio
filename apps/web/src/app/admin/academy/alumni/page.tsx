@@ -2,9 +2,8 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { 
-  Plus, 
-  Trash2, 
   Search, 
   GraduationCap, 
   ExternalLink, 
@@ -19,8 +18,6 @@ import {
 } from "lucide-react";
 import { 
   getAlumniList, 
-  getEligibleStudents, 
-  graduateStudent,
   updateAlumni
 } from "@/app/academy/actions";
 
@@ -45,18 +42,9 @@ interface AlumniProfile {
   created_at: string;
 }
 
-interface Student {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-}
-
 export default function AlumniManagerPage() {
   const [alumni, setAlumni] = useState<AlumniProfile[]>([]);
-  const [eligibleStudents, setEligibleStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [editingAlumni, setEditingAlumni] = useState<AlumniProfile | null>(null);
@@ -74,17 +62,12 @@ export default function AlumniManagerPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [alumniData, studentsData] = await Promise.all([
-      getAlumniList(),
-      getEligibleStudents()
-    ]);
+    const alumniData = await getAlumniList();
 
     if (Array.isArray(alumniData)) setAlumni(alumniData);
-    if (Array.isArray(studentsData)) setEligibleStudents(studentsData);
-    else if (studentsData?.error) setError(studentsData.error);
     
     setLoading(false);
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     fetchData();
@@ -137,16 +120,9 @@ export default function AlumniManagerPage() {
         projects: projects.filter(p => p.project_title.trim() !== "")
     };
 
-    let res;
-    if (editingAlumni) {
-        res = await updateAlumni(editingAlumni.id, payload);
-    } else {
-        if (!selectedStudentId) {
-            alert("Please select a student");
-            return;
-        }
-        res = await graduateStudent(payload);
-    }
+    if (!editingAlumni) return;
+
+    const res = await updateAlumni(editingAlumni.id, payload);
 
     if (res.success) {
       setIsModalOpen(false);
@@ -180,13 +156,15 @@ export default function AlumniManagerPage() {
             Manage graduates, capture capstone portfolios, and showcase excellence.
           </p>
         </div>
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
-        >
-          <GraduationCap className="w-4 h-4" />
-          Graduate Student
-        </button>
+        <div className="flex items-center gap-3">
+          <Link 
+            href="/admin/academy/graduations"
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:shadow-primary/20 transition-all active:scale-95"
+          >
+            <GraduationCap className="w-4 h-4" />
+            Graduation PR Queue
+          </Link>
+        </div>
       </div>
 
       <div className="relative">
@@ -281,25 +259,10 @@ export default function AlumniManagerPage() {
             <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Select Student_</label>
-                  <select 
-                    required
-                    disabled={!!editingAlumni}
-                    value={selectedStudentId}
-                    onChange={(e) => setSelectedStudentId(e.target.value)}
-                    className="w-full bg-muted/50 border border-border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/20 appearance-none disabled:opacity-50"
-                  >
-                    {editingAlumni ? (
-                        <option value={editingAlumni.student_id}>{editingAlumni.student_name}</option>
-                    ) : (
-                        <>
-                            <option value="">-- Choose Candidate --</option>
-                            {eligibleStudents.map(s => (
-                                <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.email})</option>
-                            ))}
-                        </>
-                    )}
-                  </select>
+                  <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Student Identity_</label>
+                  <div className="w-full bg-muted border border-border rounded-xl p-3 text-sm text-muted-foreground font-bold">
+                    {editingAlumni?.student_name}
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Cohort Designation_</label>

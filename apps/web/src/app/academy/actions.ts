@@ -143,8 +143,7 @@ export async function getDashboardData() {
 
     if (!res.ok) return { error: "Failed to fetch dashboard data" };
     return await res.json();
-  } catch (err) {
-    console.error("Dashboard data fetch error:", err);
+  } catch {
     return { error: "Connection to API failed" };
   }
 }
@@ -169,8 +168,7 @@ export async function submitAssignment(weekId: number, githubUrl: string) {
     }
 
     return { success: true };
-  } catch (err) {
-    console.error("Assignment submission error:", err);
+  } catch {
     return { error: "Connection to API failed" };
   }
 }
@@ -200,8 +198,7 @@ export async function submitLabFix(labId: string, proposedFix: string) {
     }
 
     return { success: true };
-  } catch (err) {
-    console.error("Lab submission error:", err);
+  } catch {
     return { error: "Connection to API failed" };
   }
 }
@@ -226,8 +223,7 @@ export async function addLabComment(submissionId: number, body: string) {
     }
 
     return { success: true };
-  } catch (err) {
-    console.error("Comment submission error:", err);
+  } catch {
     return { error: "Connection to API failed" };
   }
 }
@@ -243,18 +239,17 @@ export async function getEligibleStudents() {
     });
     if (!res.ok) return { error: "Failed to fetch eligible students" };
     return await res.json();
-  } catch (err) {
-    console.error("Eligible students fetch error:", err);
+  } catch {
     return { error: "Connection failed" };
   }
 }
 
-export async function graduateStudent(data: AlumniData) {
+export async function approveCapstone(capstoneId: number, data: { cohort_name: string; linkedin_url: string; github_url: string }) {
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) return { error: "Unauthorized" };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/alumni/graduate`, {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/alumni/approve/${capstoneId}`, {
       method: "POST",
       headers: { 
         "Content-Type": "application/json",
@@ -265,9 +260,8 @@ export async function graduateStudent(data: AlumniData) {
 
     if (!res.ok) return { error: await res.text() };
     return { success: true };
-  } catch (err) {
-    console.error("Graduation error:", err);
-    return { error: "Graduation process failed" };
+  } catch {
+    return { error: "Approval process failed" };
   }
 }
 
@@ -287,8 +281,7 @@ export async function updateAlumni(id: number, data: AlumniData) {
 
     if (!res.ok) return { error: await res.text() };
     return { success: true };
-  } catch (err) {
-    console.error("Update alumni error:", err);
+  } catch {
     return { error: "Failed to update alumni profile" };
   }
 }
@@ -306,8 +299,7 @@ export async function getAlumniList() {
     });
     if (!res.ok) return [];
     return await res.json();
-  } catch (err) {
-    console.error("Alumni list fetch error:", err);
+  } catch {
     return [];
   }
 }
@@ -319,9 +311,98 @@ export async function getAlumniProfile(slug: string) {
     });
     if (!res.ok) return null;
     return await res.json();
-  } catch (err) {
-    console.error("Alumni profile fetch error:", err);
+  } catch {
     return null;
   }
 }
+export async function getAllStudents() {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
 
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/students`, {
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return { error: "Failed to fetch students" };
+    return await res.json();
+  } catch {
+    return { error: "Connection failed" };
+  }
+}
+
+export async function warnStudent(id: string, reason: string) {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/students/${id}/warn`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify({ reason }),
+    });
+    if (!res.ok) return { error: await res.text() };
+    return { success: true };
+  } catch {
+    return { error: "Failed to warn student" };
+  }
+}
+
+export async function disqualifyStudent(id: string, reason: string) {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/students/${id}/disqualify`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify({ reason }),
+    });
+    if (!res.ok) return { error: await res.text() };
+    return { success: true };
+  } catch {
+    return { error: "Failed to disqualify student" };
+  }
+}
+
+export async function submitCapstone(data: Record<string, unknown>) {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/capstone`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}` 
+      },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) return { error: await res.text() };
+    return { success: true };
+  } catch {
+    return { error: "Failed to submit capstone" };
+  }
+}
+
+export async function getPendingCapstones() {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/alumni/pending`, {
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return { error: "Failed to fetch pending capstones" };
+    return await res.json();
+  } catch {
+    return { error: "Connection failed" };
+  }
+}
