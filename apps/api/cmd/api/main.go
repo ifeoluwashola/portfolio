@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -25,20 +25,30 @@ import (
 )
 
 func main() {
+	// 1. Initialize Structured Logger
+	var logger *slog.Logger
+	if os.Getenv("APP_ENV") == "production" || os.Getenv("LOG_FORMAT") == "json" {
+		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	} else {
+		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+	}
+	slog.SetDefault(logger)
+
 	// 1. Load Configuration (fatal if JWT_SECRET missing)
 	cfg := config.LoadConfig()
 
 	// 2. Setup Database Connection Pool
-	log.Println("Initializing database connection...")
+	logger.Info("Initializing database connection...")
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	
 	dbPool, err := database.NewPool(ctx, cfg.DatabaseURL)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		logger.Error("Failed to connect to database", slog.Any("error", err))
+		os.Exit(1)
 	}
 	defer dbPool.Close()
-	log.Println("Database connection established.")
+	logger.Info("Database connection established.")
 
 	// 3. Initialize Cache Layer (InMemory by default, Redis if URL provided)
 	var tokenCache cache.TokenCache
@@ -46,15 +56,15 @@ func main() {
 		var redisErr error
 		tokenCache, redisErr = cache.NewRedisCache(cfg.RedisURL)
 		if redisErr != nil {
-			log.Printf("WRN: Redis connectivity failure, falling back to in-memory: %v", redisErr)
+			logger.Warn("Redis connectivity failure, falling back to in-memory", slog.Any("error", redisErr))
 			tokenCache = cache.NewInMemoryCache()
-			log.Println("Token cache initialized (in-memory)")
+			logger.Info("Token cache initialized (in-memory)")
 		} else {
-			log.Println("Token cache initialized (Redis) — persistent session layer active")
+			logger.Info("Token cache initialized (Redis) — persistent session layer active")
 		}
 	} else {
 		tokenCache = cache.NewInMemoryCache()
-		log.Println("Token cache initialized (in-memory)")
+		logger.Info("Token cache initialized (in-memory)")
 	}
 
 	// 4. Initialize Repositories
@@ -214,10 +224,13 @@ func main() {
 		AllowedHeaders:   []string{"Content-Type", "Authorization"},
 		AllowCredentials: true,
 	})
-	finalHandler := c.Handler(mux)
+	
+	// Request Logger (apply before CORS)
+	loggingHandler := middleware.RequestLogger(logger)(mux)
+	finalHandler := c.Handler(loggingHandler)
 
 	// 10. Start Server
-	server := &http.Server{
+	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
 		Handler: finalHandler,
 	}
@@ -227,20 +240,22 @@ func main() {
 	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 
 	go func() {
-		log.Printf("Starting API Server on :%s\n", cfg.Port)
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.Fatalf("Server error: %v", err)
+		logger.Info("Starting API Server", slog.String("port", cfg.Port))
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			logger.Error("Could not listen", slog.Any("error", err))
+			os.Exit(1)
 		}
 	}()
 
 	<-stop
-	log.Println("Shutting down server...")
+	logger.Info("Shutting down server...")
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	if err := server.Shutdown(shutdownCtx); err != nil {
-		log.Fatalf("Server shutdown failed: %v", err)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		logger.Error("Server shutdown failed", slog.Any("error", err))
+		os.Exit(1)
 	}
-	log.Println("Server stopped gracefully")
+	logger.Info("Server stopped gracefully")
 }
