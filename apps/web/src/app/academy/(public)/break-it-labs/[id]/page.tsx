@@ -18,7 +18,8 @@ import {
   Zap,
   ChevronRight
 } from "lucide-react";
-import { getAcademySession, submitLabFix, addLabComment } from "../../../actions";
+import { getAcademySession, submitLabFix, addLabComment, getStudentStatus, logout } from "../../../actions";
+import { AlertModal } from "../../../../../components/AlertModal";
 
 interface SubmissionComment {
   id: number;
@@ -52,11 +53,21 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
   const [lab, setLab] = useState<BreakItLab | null>(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [studentStatus, setStudentStatus] = useState<string>("active");
   const [newFix, setNewFix] = useState("");
   const [commentingOn, setCommentingOn] = useState<number | null>(null);
   const [newComment, setNewComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // Modal State
+  const [modal, setModal] = useState({
+    isOpen: false,
+    title: "",
+    message: "",
+    type: "warning" as "error" | "warning" | "success",
+    onConfirm: undefined as (() => void) | undefined
+  });
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
 
@@ -75,15 +86,42 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
 
   useEffect(() => {
     getAcademySession().then(setIsAuthenticated);
+    getStudentStatus().then(res => {
+      if (res.status) setStudentStatus(res.status);
+    });
     fetchLab();
   }, [id]);
 
+  const showAlert = (title: string, message: string, type: "error" | "warning" | "success" = "warning", onConfirm?: () => void) => {
+    setModal({ isOpen: true, title, message, type, onConfirm });
+  };
+
+  const handleRevokedAccess = () => {
+    showAlert(
+      "Access Revoked", 
+      "Your academic standing has been downgraded to DISQUALIFIED. You have been restricted from all interactive environments. Please contact the Office of student Affairs.", 
+      "error",
+      () => logout()
+    );
+  };
+
   const handleSubmitFix = async () => {
     if (!newFix.trim()) return;
+    if (studentStatus === "disqualified") {
+      handleRevokedAccess();
+      return;
+    }
+
     setSubmitting(true);
     try {
       const res = await submitLabFix(id, newFix);
-      if (res.error) throw new Error(res.error);
+      if (res.error) {
+        if (res.error.includes("revoked")) {
+          handleRevokedAccess();
+          return;
+        }
+        throw new Error(res.error);
+      }
       
       setNewFix("");
       fetchLab();
@@ -91,7 +129,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
       setTimeout(() => setShowSuccess(false), 5000);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Submission failed";
-      alert(msg);
+      showAlert("System Error", msg, "error");
     } finally {
       setSubmitting(false);
     }
@@ -99,16 +137,27 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
 
   const handleAddComment = async (subID: number) => {
     if (!newComment.trim()) return;
+    if (studentStatus === "disqualified") {
+      handleRevokedAccess();
+      return;
+    }
+
     try {
       const res = await addLabComment(subID, newComment);
-      if (res.error) throw new Error(res.error);
+      if (res.error) {
+        if (res.error.includes("revoked")) {
+          handleRevokedAccess();
+          return;
+        }
+        throw new Error(res.error);
+      }
       
       setNewComment("");
       setCommentingOn(null);
       fetchLab();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Comment failed";
-      alert(msg);
+      showAlert("System Error", msg, "error");
     }
   };
 
@@ -179,15 +228,16 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
                    value={newFix}
                    onChange={(e) => setNewFix(e.target.value)}
                    rows={6}
-                   className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 font-mono text-sm text-emerald-400 focus:ring-1 focus:ring-yellow-500/50 outline-none transition-all placeholder:text-slate-700"
-                   placeholder="Paste your optimized kubernetes manifest or bash fix here..."
+                   disabled={studentStatus === "disqualified"}
+                   className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 font-mono text-sm text-emerald-400 focus:ring-1 focus:ring-yellow-500/50 outline-none transition-all placeholder:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                   placeholder={studentStatus === "disqualified" ? "ACCESS_REVOKED: Submission terminal disabled by administrative order." : "Paste your optimized kubernetes manifest or bash fix here..."}
                  />
                  <button 
                    onClick={handleSubmitFix}
-                   disabled={submitting || !newFix.trim()}
-                   className="bg-yellow-500 text-slate-950 px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-[0.2em] hover:bg-yellow-400 transition-all shadow-[0_0_20px_rgba(234,179,8,0.1)] disabled:opacity-50 flex items-center gap-3"
+                   disabled={submitting || !newFix.trim() || studentStatus === "disqualified"}
+                   className="bg-yellow-500 text-slate-950 px-8 py-3 rounded-xl font-bold text-xs uppercase tracking-[0.2em] hover:bg-yellow-400 transition-all shadow-[0_0_20px_rgba(234,179,8,0.1)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
                  >
-                   Deploy Fix to Repository <Send className="w-3 h-3" />
+                   {studentStatus === "disqualified" ? "Awaiting Review" : "Deploy Fix to Repository"} <Send className="w-3 h-3" />
                  </button>
 
                  {showSuccess && (
@@ -280,13 +330,14 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
                          <div className="pt-6 border-t border-slate-900/50">
                             {commentingOn === sub.id ? (
                                <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                                  <textarea 
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                    rows={3}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-[11px] text-slate-300 focus:ring-1 focus:ring-yellow-500/50 outline-none transition-all placeholder:text-slate-800"
-                                    placeholder="Add your technical review or suggest improvements..."
-                                  />
+                                   <textarea 
+                                     value={newComment}
+                                     onChange={(e) => setNewComment(e.target.value)}
+                                     rows={3}
+                                     disabled={studentStatus === "disqualified"}
+                                     className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-[11px] text-slate-300 focus:ring-1 focus:ring-yellow-500/50 outline-none transition-all placeholder:text-slate-800 disabled:opacity-50"
+                                     placeholder={studentStatus === "disqualified" ? "Comments restricted." : "Add your technical review or suggest improvements..."}
+                                   />
                                   <div className="flex justify-end gap-3">
                                      <button 
                                        onClick={() => setCommentingOn(null)}
@@ -372,6 +423,15 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
           </div>
         </div>
       )}
+      {/* Alert Modal */}
+      <AlertModal 
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        type={modal.type}
+        onConfirm={modal.onConfirm}
+      />
     </div>
   );
 }

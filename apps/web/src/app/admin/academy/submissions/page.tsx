@@ -36,11 +36,7 @@ export default function SubmissionsHub() {
 
   const fetchSubmissions = useCallback(async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/v1/admin/academy/submissions`, {
-        headers: {
-          Authorization: `Bearer ${getCookie("auth_token")}`,
-        },
-      });
+      const res = await fetch("/api/admin/proxy/v1/admin/academy/submissions");
       if (res.ok) {
         const data = await res.json();
         setSubmissions(data || []);
@@ -61,11 +57,10 @@ export default function SubmissionsHub() {
     setIsGrading(true);
     
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/v1/admin/academy/submissions/grade`, {
+      const res = await fetch("/api/admin/proxy/v1/admin/academy/submissions/grade", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getCookie("auth_token")}`,
         },
         body: JSON.stringify({
           assignment_id: gradingSub.id,
@@ -86,12 +81,7 @@ export default function SubmissionsHub() {
     }
   }
 
-  function getCookie(name: string) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(";").shift();
-    return null;
-  }
+
 
   if (loading) return <div className="p-8 animate-pulse text-muted-foreground font-mono italic">Scanning student repos...</div>;
 

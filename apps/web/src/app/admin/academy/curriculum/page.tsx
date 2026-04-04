@@ -37,11 +37,7 @@ export default function CurriculumManager() {
 
   const fetchWeeks = useCallback(async () => {
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api"}/v1/admin/academy/weeks`, {
-        headers: {
-          Authorization: `Bearer ${getCookie("auth_token")}`,
-        },
-      });
+      const res = await fetch("/api/admin/proxy/v1/admin/academy/weeks");
       if (res.ok) {
         const data = await res.json();
         setWeeks(data);
@@ -63,11 +59,10 @@ export default function CurriculumManager() {
 
     setIsUpdating(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api"}/v1/admin/academy/weeks`, {
+      const res = await fetch("/api/admin/proxy/v1/admin/academy/weeks", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${getCookie("auth_token")}`,
         },
         body: JSON.stringify(editingWeek),
       });
@@ -102,12 +97,7 @@ export default function CurriculumManager() {
     setEditingWeek({ ...editingWeek, materials: newMaterials });
   };
 
-  function getCookie(name: string) {
-    const value = `; ${document.cookie}`;
-    const parts = value.split(`; ${name}=`);
-    if (parts.length === 2) return parts.pop()?.split(";").shift();
-    return null;
-  }
+
 
   if (loading) return <div className="p-8 animate-pulse text-muted-foreground font-bold tracking-tight">Initializing curriculum manager...</div>;
 

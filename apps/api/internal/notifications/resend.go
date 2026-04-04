@@ -256,6 +256,73 @@ func (n *ResendNotifier) SendStudentWarningEmail(firstName, email, reason string
     return err
 }
 
+func (n *ResendNotifier) SendAdminInviteEmail(firstName, email, tempPassword string) error {
+    subject := "You've Been Invited to the Admin Panel"
+    sender := "Kybern Platform <admin@kyberncloud.com>"
+    
+    htmlTemplate := `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: "Courier New", Consolas, monospace; line-height: 1.6; color: #94a3b8; margin: 0; padding: 20px; background-color: #020617; }
+                .wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 6px; overflow: hidden; }
+                .header { background-color: #1e293b; padding: 20px; border-bottom: 2px solid #3b82f6; }
+                .header-text { color: #3b82f6; font-size: 16px; font-weight: bold; margin: 0; letter-spacing: 1px; }
+                .content { padding: 30px; }
+                .greeting { color: #f8fafc; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+                .credentials-box { background-color: #020617; border: 1px solid #334155; padding: 20px; margin: 25px 0; border-radius: 4px; }
+                .cred-label { color: #64748b; font-size: 11px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; display: block; }
+                .cred-value { color: #3b82f6; font-size: 16px; font-weight: bold; font-family: monospace; margin-bottom: 15px; display: block; }
+                .warning-box { background-color: rgba(234, 179, 8, 0.1); border-left: 4px solid #eab308; padding: 12px 15px; margin: 25px 0; }
+                .warning-text { color: #eab308; font-size: 13px; font-weight: bold; }
+                .body-text { color: #f8fafc !important; font-size: 14px; }
+                .footer { background-color: #020617; padding: 20px; text-align: center; border-top: 1px solid #1e293b; font-size: 12px; color: #64748b; }
+            </style>
+        </head>
+        <body>
+            <div class="wrapper">
+                <div class="header">
+                    <p class="header-text">> ADMIN_ACCESS_GRANTED</p>
+                </div>
+                <div class="content">
+                    <div class="greeting">Hello %s,</div>
+                    <p class="body-text">You have been invited to join the Kybern Platform as an administrator. Use the credentials below to log in for the first time.</p>
+                    
+                    <div class="credentials-box">
+                        <span class="cred-label">Email</span>
+                        <span class="cred-value">%s</span>
+                        <span class="cred-label">Temporary Password</span>
+                        <span class="cred-value">%s</span>
+                    </div>
+
+                    <div class="warning-box">
+                        <div class="warning-text">You will be required to change your password upon first login. Do not share these credentials.</div>
+                    </div>
+
+                    <p class="body-text">Navigate to the admin login page to get started.</p>
+                </div>
+                <div class="footer">
+                    Kybern Platform Administration<br/>
+                    <span style="font-size: 10px; opacity: 0.5; margin-top: 10px; display: block;">AUTOMATED INFRASTRUCTURE MESSAGE</span>
+                </div>
+            </div>
+        </body>
+        </html>
+    `
+    
+    htmlBody := fmt.Sprintf(htmlTemplate, firstName, email, tempPassword)
+    params := &resend.SendEmailRequest{
+        From:    sender,
+        To:      []string{email},
+        Subject: subject,
+        Html:    htmlBody,
+    }
+
+    _, err := n.client.Emails.Send(params)
+    return err
+}
+
 func (n *ResendNotifier) SendStudentDisqualificationEmail(firstName, email, reason string) error {
     subject := "TERMINATION NOTICE: Academy Access Revoked"
     sender := "Kybern Academy Admin <academy@kyberncloud.com>"

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart, Eye, Heart, MessageSquare } from "lucide-react";
-import Cookies from "js-cookie";
+
 
 interface BlogStats {
   slug: string;
@@ -20,12 +20,7 @@ export default function AdminBlogsPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const token = Cookies.get("auth_token");
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/admin/blog/stats`, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        });
+        const res = await fetch("/api/admin/proxy/admin/blog/stats");
 
         if (res.ok) {
           const data = await res.json();

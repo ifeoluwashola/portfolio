@@ -13,13 +13,7 @@ interface Project {
   caseStudyUrl?: string;
 }
 
-// Helper to get cookie value
-function getCookie(name: string) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift();
-  return null;
-}
+
 
 export default function AdminProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -39,7 +33,7 @@ export default function AdminProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/projects`);
+      const res = await fetch("/api/admin/proxy/projects");
       if (!res.ok) throw new Error("Failed to fetch projects");
       const data = await res.json();
       setProjects(data || []);
@@ -82,11 +76,7 @@ export default function AdminProjectsPage() {
     setError("");
     setIsSubmitting(true);
 
-    const token = getCookie("auth_token");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
+
 
     const payload = {
       title,
@@ -98,16 +88,15 @@ export default function AdminProjectsPage() {
 
     try {
       const url = editingProjectId 
-        ? `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/projects/${editingProjectId}`
-        : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/projects`;
+        ? `/api/admin/proxy/projects/${editingProjectId}`
+        : `/api/admin/proxy/projects`;
       
       const method = editingProjectId ? "PUT" : "POST";
 
       const res = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload)
       });
@@ -135,18 +124,11 @@ export default function AdminProjectsPage() {
   const handleDeleteProject = async (id: number) => {
     if (!confirm("Are you sure you want to delete this project?")) return;
 
-    const token = getCookie("auth_token");
-    if (!token) {
-      router.push("/admin/login");
-      return;
-    }
+
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/projects/${id}`, {
+      const res = await fetch(`/api/admin/proxy/projects/${id}`, {
         method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`
-        }
       });
 
       if (!res.ok) {
