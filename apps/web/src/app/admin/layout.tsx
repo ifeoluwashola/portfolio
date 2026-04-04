@@ -6,32 +6,22 @@ import { usePathname, useRouter } from "next/navigation";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Menu, ChevronDown, GraduationCap, Users, BookOpen, Send, Terminal } from "lucide-react";
+import { Menu, ChevronDown, GraduationCap, Users, BookOpen, Send, Terminal, Settings, LogOut } from "lucide-react";
+import { adminLogout } from "./actions";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [academyOpen, setAcademyOpen] = useState(pathname.includes("/admin/academy") || pathname === "/admin/cohort");
 
-  const isAuthPage = pathname === "/admin/login" || pathname === "/admin/register";
+  const isAuthPage = pathname === "/admin/login" || pathname === "/admin/change-password";
 
   if (isAuthPage) {
     return <>{children}</>;
   }
 
   const handleLogout = async () => {
-    try {
-      await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/admin/logout`, {
-        method: "POST",
-      });
-    } catch (e) {
-      console.error(e);
-    }
-    
-    document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    
-    router.push("/");
-    router.refresh();
+    await adminLogout();
   };
 
   const navLinks = [
@@ -39,6 +29,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/contacts", label: "Consultation Requests", icon: <Send className="h-4 w-4" /> },
     { href: "/admin/projects", label: "Manage Projects", icon: <BookOpen className="h-4 w-4" /> },
     { href: "/admin/blogs", label: "Blog Analytics", icon: <BookOpen className="h-4 w-4" /> },
+    { href: "/admin/invite", label: "Invite Admin", icon: <Settings className="h-4 w-4" /> },
   ];
 
   const academyLinks = [
@@ -117,8 +108,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="p-4 border-t border-border flex items-center justify-between">
               <button 
                 onClick={handleLogout}
-                className="text-sm font-medium text-destructive hover:underline"
+                className="flex items-center gap-2 text-sm font-medium text-destructive hover:underline"
               >
+                <LogOut className="h-4 w-4" />
                 Sign Out
               </button>
               <ModeToggle />
@@ -164,8 +156,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="p-4 border-t border-border flex items-center justify-between">
           <button 
             onClick={handleLogout}
-            className="text-sm font-medium text-destructive hover:underline"
+            className="flex items-center gap-2 text-sm font-medium text-destructive hover:underline"
           >
+            <LogOut className="h-4 w-4" />
             Sign Out
           </button>
           <ModeToggle />

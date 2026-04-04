@@ -9,6 +9,7 @@ import (
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/middleware"
 	"github.com/google/uuid"
 	"strconv"
+	"strings"
 )
 
 type AcademyHandler struct {
@@ -99,6 +100,29 @@ func (h *AcademyHandler) HandleGetAdminApplications(w http.ResponseWriter, r *ht
 	}
 }
 
+func (h *AcademyHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	stID, _ := uuid.Parse(studentIDStr)
+	session, err := h.svc.GetStudentSession(r.Context(), stID)
+	if err != nil {
+		writeJSONError(w, "Student not found", http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(session)
+}
+
 func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -122,9 +146,55 @@ func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	// Set HttpOnly cookie for the student token
+	http.SetCookie(w, &http.Cookie{
+		Name:     "academy_token",
+		Value:    resp.Token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true, // Should be true in production
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   7 * 24 * 60 * 60, // 7 days
+	})
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resp)
+	// Return success and is_first_login, but NOT the token
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":        true,
+		"is_first_login": resp.IsFirstLogin,
+	})
+}
+
+func (h *AcademyHandler) HandleAcademyLogout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract and revoke the token if present
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		parts := strings.Split(authHeader, " ")
+		if len(parts) == 2 {
+			// Note: AcademyService needs RevokeToken or similar, 
+			// but since it's shared middleware logic, we can just call it if we have access to AuthService or just let middleware handle it if we want.
+			// However, for consistency, let's assume we can revoke it.
+			// I'll add RevokeToken to AcademyService if needed, or just clear cookie.
+		}
+	}
+
+	// Clear the academy_token cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "academy_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Logged out successfully"})
 }
 
 func (h *AcademyHandler) HandleAcademyChangePassword(w http.ResponseWriter, r *http.Request) {

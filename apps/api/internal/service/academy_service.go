@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -139,7 +138,7 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 		}
 
 		// Auto-provision Student account
-		tempPassword := generateTempPassword(8)
+		tempPassword, _ := generateTempPassword(8)
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
 		if err != nil {
 			log.Printf("ERROR: Failed to hash temp password: %v\n", err)
@@ -169,14 +168,7 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 	return nil
 }
 
-func generateTempPassword(length int) string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	b := make([]byte, length)
-	for i := range b {
-		b[i] = charset[time.Now().UnixNano()%int64(len(charset))]
-	}
-	return string(b)
-}
+// generateTempPassword is defined in auth_service.go (shared across the service package)
 
 func (s *academyService) LoginStudent(ctx context.Context, req *domain.AcademyLoginRequest) (*domain.AcademyAuthResponse, error) {
 	student, err := s.repo.GetStudentByEmail(ctx, req.Email)
@@ -189,20 +181,17 @@ func (s *academyService) LoginStudent(ctx context.Context, req *domain.AcademyLo
 		return nil, errors.New("invalid email or password")
 	}
 
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "default_unsafe_secret_for_dev_only"
-	}
-
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":            student.ID,
 		"email":          student.Email,
 		"is_first_login": student.IsFirstLogin,
 		"status":         student.Status,
+		"type":           "student",
 		"exp":            time.Now().Add(7 * 24 * time.Hour).Unix(),
+		"iat":            time.Now().Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(secret))
+	tokenString, err := token.SignedString([]byte(s.config.JWTSecret))
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign token: %w", err)
 	}
@@ -357,6 +346,7 @@ func (s *academyService) GetStudentDashboardData(ctx context.Context, studentID 
 		Weeks:        weeks,
 		Assignments:  asses,
 		IsFirstLogin: student.IsFirstLogin,
+		Status:       student.Status,
 	}, nil
 }
 
@@ -630,6 +620,18 @@ func (s *academyService) GetAlumniPortfolio(ctx context.Context, slug string) (*
 
 func (s *academyService) GetEligibleStudents(ctx context.Context) ([]*domain.Student, error) {
 	return s.repo.GetGraduationEligibleStudents(ctx)
+}
+
+func (s *academyService) GetStudentSession(ctx context.Context, studentID uuid.UUID) (*domain.StudentSessionResponse, error) {
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.StudentSessionResponse{
+		StudentID: student.ID,
+		Status:    student.Status,
+	}, nil
 }
 
 func generateSlug(name string) string {

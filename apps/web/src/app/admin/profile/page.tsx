@@ -47,12 +47,7 @@ export interface ProfileData {
   technical_skills: string[];
 }
 
-function getCookie(name: string) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift();
-  return null;
-}
+
 
 export default function AdminProfilePage() {
   const router = useRouter();
@@ -82,7 +77,7 @@ export default function AdminProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/profile`);
+      const res = await fetch("/api/admin/proxy/profile");
       if (!res.ok) throw new Error("Failed to load profile");
       const data = await res.json();
       
@@ -121,18 +116,13 @@ export default function AdminProfilePage() {
     setError("");
     setSuccessMsg("");
 
-    const token = getCookie("auth_token");
-    if (!token) {
-      router.push("/admin/login");
-      return false;
-    }
+
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/profile`, {
+      const res = await fetch("/api/admin/proxy/profile", {
         method: "PUT",
         headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
+          "Content-Type": "application/json"
         },
         body: JSON.stringify(payload)
       });

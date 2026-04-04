@@ -2,92 +2,204 @@ package service
 
 import (
 	"context"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
-	"os"
+	"math/big"
 	"time"
 
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/cache"
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
-	repo domain.UserRepository
+	repo         domain.UserRepository
+	cfg          *config.Config
+	cache        cache.TokenCache
+	notification domain.NotificationService
 }
 
-func NewAuthService(repo domain.UserRepository) domain.AuthService {
+func NewAuthService(repo domain.UserRepository, cfg *config.Config, tokenCache cache.TokenCache, notification domain.NotificationService) domain.AuthService {
 	return &AuthService{
-		repo: repo,
+		repo:         repo,
+		cfg:          cfg,
+		cache:        tokenCache,
+		notification: notification,
 	}
 }
 
-func (s *AuthService) RegisterUser(ctx context.Context, username, email, password, firstName, lastName string) (*domain.User, error) {
-	if username == "" || email == "" || password == "" {
-		return nil, errors.New("username, email, and password are required")
-	}
-
-	// Check if user exists (ignoring errors for simplicity, we just check if it returns a user)
-	if existing, _ := s.repo.GetUserByEmail(ctx, email); existing != nil {
-		return nil, errors.New("user with that email already exists")
-	}
-	if existing, _ := s.repo.GetUserByUsername(ctx, username); existing != nil {
-		return nil, errors.New("user with that username already exists")
-	}
-
-	// Hash password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
-	}
-
-	user := &domain.User{
-		Username:     username,
-		Email:        email,
-		FirstName:    firstName,
-		LastName:     lastName,
-		PasswordHash: string(hashedPassword),
-	}
-
-	err = s.repo.CreateUser(ctx, user)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create user in database: %w", err)
-	}
-
-	return user, nil
-}
-
-func (s *AuthService) LoginUser(ctx context.Context, email, password string) (string, *domain.User, error) {
+func (s *AuthService) LoginUser(ctx context.Context, email, password string) (*domain.AdminAuthResponse, error) {
 	if email == "" || password == "" {
-		return "", nil, errors.New("email and password are required")
+		return nil, errors.New("email and password are required")
 	}
 
 	user, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
-		return "", nil, errors.New("invalid email or password")
+		return nil, errors.New("invalid email or password")
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password))
 	if err != nil {
-		return "", nil, errors.New("invalid email or password")
-	}
-
-	// Generate JWT
-	secret := os.Getenv("JWT_SECRET")
-	if secret == "" {
-		secret = "default_unsafe_secret_for_dev_only" // Fallback for local testing
+		return nil, errors.New("invalid email or password")
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":      user.ID,
+		"email":    user.Email,
 		"username": user.Username,
-		"exp":      time.Now().Add(time.Hour * 24).Unix(), // 24 hours expiry
+		"role":     user.Role,
+		"type":     "admin",
+		"exp":      time.Now().Add(24 * time.Hour).Unix(),
+		"iat":      time.Now().Unix(),
 	})
 
-	tokenString, err := token.SignedString([]byte(secret))
+	tokenString, err := token.SignedString([]byte(s.cfg.JWTSecret))
 	if err != nil {
-		return "", nil, fmt.Errorf("failed to generate token: %w", err)
+		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
-	return tokenString, user, nil
+	return &domain.AdminAuthResponse{
+		Token:        tokenString,
+		IsFirstLogin: user.IsFirstLogin,
+		Role:         user.Role,
+		User:         user,
+	}, nil
+}
+
+func (s *AuthService) InviteAdmin(ctx context.Context, inviterID int, req *domain.InviteAdminRequest) error {
+	if req.Email == "" || req.FirstName == "" || req.LastName == "" {
+		return errors.New("email, first_name, and last_name are required")
+	}
+
+	// Check if user already exists
+	if existing, _ := s.repo.GetUserByEmail(ctx, req.Email); existing != nil {
+		return errors.New("an admin with this email already exists")
+	}
+
+	// Generate a secure temporary password
+	tempPassword, err := generateTempPassword(16)
+	if err != nil {
+		return fmt.Errorf("failed to generate temporary password: %w", err)
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	// Generate username from email prefix
+	username := req.Email[:findAtIndex(req.Email)]
+
+	user := &domain.User{
+		Username:     username,
+		Email:        req.Email,
+		FirstName:    req.FirstName,
+		LastName:     req.LastName,
+		PasswordHash: string(hashedPassword),
+		Role:         "admin",
+		IsFirstLogin: true,
+	}
+
+	err = s.repo.CreateUser(ctx, user)
+	if err != nil {
+		return fmt.Errorf("failed to create admin user: %w", err)
+	}
+
+	// Send invite email with temporary password
+	if s.notification != nil {
+		_ = s.notification.SendAdminInviteEmail(req.FirstName, req.Email, tempPassword)
+	}
+
+	return nil
+}
+
+func (s *AuthService) ChangeAdminPassword(ctx context.Context, userID int, req *domain.ChangeAdminPasswordRequest) error {
+	if req.NewPassword == "" || len(req.NewPassword) < 8 {
+		return errors.New("password must be at least 8 characters")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return fmt.Errorf("failed to hash password: %w", err)
+	}
+
+	return s.repo.UpdateUserPassword(ctx, userID, string(hashedPassword))
+}
+
+func (s *AuthService) RevokeToken(ctx context.Context, rawToken string) error {
+	hash := hashToken(rawToken)
+
+	// Parse the token to get expiry for TTL
+	token, _ := jwt.Parse(rawToken, func(token *jwt.Token) (interface{}, error) {
+		return []byte(s.cfg.JWTSecret), nil
+	})
+
+	var ttl time.Duration = 24 * time.Hour // default
+	if token != nil {
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			if exp, ok := claims["exp"].(float64); ok {
+				remaining := time.Until(time.Unix(int64(exp), 0))
+				if remaining > 0 {
+					ttl = remaining
+				}
+			}
+		}
+	}
+
+	// Write to cache (fast path)
+	_ = s.cache.Revoke(ctx, hash, ttl)
+
+	// Write to DB (persistent fallback)
+	return s.repo.RevokeToken(ctx, hash, time.Now().Add(ttl))
+}
+
+func (s *AuthService) GetAdminSession(ctx context.Context, userID int) (*domain.AdminSessionResponse, error) {
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.AdminSessionResponse{
+		UserID:       user.ID,
+		Role:         user.Role,
+		IsFirstLogin: user.IsFirstLogin,
+	}, nil
+}
+
+// hashToken creates a SHA-256 hash of a JWT for storage (never store raw tokens)
+func hashToken(rawToken string) string {
+	h := sha256.Sum256([]byte(rawToken))
+	return hex.EncodeToString(h[:])
+}
+
+// HashToken is exported for use by middleware
+func HashToken(rawToken string) string {
+	return hashToken(rawToken)
+}
+
+func generateTempPassword(length int) (string, error) {
+	const charset = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%"
+	result := make([]byte, length)
+	for i := range result {
+		idx, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
+		if err != nil {
+			return "", err
+		}
+		result[i] = charset[idx.Int64()]
+	}
+	return string(result), nil
+}
+
+func findAtIndex(email string) int {
+	for i, c := range email {
+		if c == '@' {
+			return i
+		}
+	}
+	return len(email)
 }

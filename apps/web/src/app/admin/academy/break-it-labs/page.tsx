@@ -43,12 +43,7 @@ interface BreakItLab {
   created_at: string;
 }
 
-function getCookie(name: string) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(";").shift();
-  return null;
-}
+
 
 export default function AdminLabsPage() {
   const [labs, setLabs] = useState<BreakItLab[]>([]);
@@ -60,19 +55,11 @@ export default function AdminLabsPage() {
   const [viewingSubmissions, setViewingSubmissions] = useState<number | null>(null);
 
   const router = useRouter();
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
+
 
   const fetchLabs = useCallback(async () => {
     try {
-      const token = getCookie("auth_token");
-      if (!token) {
-        router.push("/admin/login");
-        return;
-      }
-
-      const res = await fetch(`${apiBase}/v1/labs`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch("/api/admin/proxy/v1/labs");
 
       if (!res.ok) throw new Error("Failed to fetch labs");
       const data = await res.json();
@@ -82,7 +69,7 @@ export default function AdminLabsPage() {
     } finally {
       setLoading(false);
     }
-  }, [router, apiBase]);
+  }, [router]);
 
   useEffect(() => {
     fetchLabs();
@@ -101,9 +88,9 @@ export default function AdminLabsPage() {
     };
 
     try {
-      const token = getCookie("auth_token");
+
       const method = selectedLab ? "PUT" : "POST";
-      const url = selectedLab ? `${apiBase}/v1/admin/labs/${selectedLab.id}` : `${apiBase}/v1/admin/labs`;
+      const url = selectedLab ? `/api/admin/proxy/v1/admin/labs/${selectedLab.id}` : "/api/admin/proxy/v1/admin/labs";
       
       const payload = selectedLab ? { ...labData, id: selectedLab.id } : labData;
 
@@ -111,7 +98,6 @@ export default function AdminLabsPage() {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -130,10 +116,8 @@ export default function AdminLabsPage() {
     if (!confirm("Are you sure you want to delete this lab? All submissions will be lost.")) return;
 
     try {
-      const token = getCookie("auth_token");
-      const res = await fetch(`${apiBase}/v1/admin/labs/${id}`, {
+      const res = await fetch(`/api/admin/proxy/v1/admin/labs/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error("Failed to delete lab");
@@ -145,12 +129,10 @@ export default function AdminLabsPage() {
 
   const toggleWinner = async (subID: number, isWinner: boolean) => {
     try {
-      const token = getCookie("auth_token");
-      const res = await fetch(`${apiBase}/v1/admin/labs/winner`, {
+      const res = await fetch("/api/admin/proxy/v1/admin/labs/winner", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ submission_id: subID, is_winner: isWinner }),
       });
@@ -158,7 +140,7 @@ export default function AdminLabsPage() {
       if (!res.ok) throw new Error("Failed to update status");
       
       if (viewingSubmissions) {
-        const updatedRes = await fetch(`${apiBase}/v1/labs/${viewingSubmissions}`);
+        const updatedRes = await fetch(`/api/admin/proxy/v1/labs/${viewingSubmissions}`);
         const updatedLab = await updatedRes.json();
         setLabs(labs.map(l => l.id === viewingSubmissions ? updatedLab : l));
       }
@@ -265,7 +247,7 @@ export default function AdminLabsPage() {
             <div className="mt-6 flex flex-col justify-end">
                 <button 
                   onClick={async () => {
-                    const res = await fetch(`${apiBase}/v1/labs/${lab.id}`);
+                    const res = await fetch(`/api/admin/proxy/v1/labs/${lab.id}`);
                     const fullLab = await res.json();
                     setLabs(labs.map(l => l.id === lab.id ? fullLab : l));
                     setViewingSubmissions(viewingSubmissions === lab.id ? null : lab.id);

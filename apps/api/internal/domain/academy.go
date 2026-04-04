@@ -118,6 +118,12 @@ type AcademyService interface {
 	SubmitCapstone(ctx context.Context, studentID uuid.UUID, req *CapstoneProjectRequest) error
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
 	ApproveCapstone(ctx context.Context, id int, req *ApproveCapstoneRequest) error
+	GetStudentSession(ctx context.Context, studentID uuid.UUID) (*StudentSessionResponse, error)
+}
+
+type StudentSessionResponse struct {
+	StudentID uuid.UUID `json:"student_id"`
+	Status    string    `json:"status"`
 }
 
 type NotificationService interface {
@@ -125,6 +131,7 @@ type NotificationService interface {
 	SendPasswordResetEmail(email, token string) error
 	SendStudentWarningEmail(firstName, email, reason string, warningCount int) error
 	SendStudentDisqualificationEmail(firstName, email, reason string) error
+	SendAdminInviteEmail(firstName, email, tempPassword string) error
 }
 
 type AcademyApplyRequest struct {
@@ -267,6 +274,7 @@ type StudentDashboardResponse struct {
 	Weeks        []*CohortWeek `json:"weeks"`
 	Assignments  []*Assignment `json:"assignments"`
 	IsFirstLogin bool          `json:"is_first_login"`
+	Status       string        `json:"status"`
 }
 
 type BreakItLab struct {

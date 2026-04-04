@@ -14,13 +14,7 @@ interface ContactLead {
   created_at: string;
 }
 
-// Helper to get cookie value
-function getCookie(name: string) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(';').shift();
-  return null;
-}
+
 
 export default function AdminContactsPage() {
   const [contacts, setContacts] = useState<ContactLead[]>([]);
@@ -31,17 +25,7 @@ export default function AdminContactsPage() {
   useEffect(() => {
     async function fetchContacts() {
       try {
-        const token = getCookie("auth_token");
-        if (!token) {
-          router.push("/admin/login");
-          return;
-        }
-
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/contacts`, {
-          headers: {
-            "Authorization": `Bearer ${token}`
-          }
-        });
+        const res = await fetch("/api/admin/proxy/contacts");
 
         if (!res.ok) {
           if (res.status === 401) {

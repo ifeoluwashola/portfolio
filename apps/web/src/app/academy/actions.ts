@@ -42,8 +42,20 @@ export async function login(formData: FormData) {
       return { error: errorText || "Invalid credentials" };
     }
 
+    // Extract token from Go API's Set-Cookie header
+    const setCookieHeader = res.headers.get("Set-Cookie");
+    let token = "";
+    if (setCookieHeader) {
+      const match = setCookieHeader.match(/academy_token=([^;]+)/);
+      if (match) token = match[1];
+    }
+
     const data = await res.json();
-    const { token, is_first_login } = data;
+    const { is_first_login } = data;
+
+    if (!token) {
+       return { error: "Security protocol failure: Session negotiation failed." };
+    }
 
     // Set HttpOnly cookie
     (await cookies()).set("academy_token", token, {
@@ -62,6 +74,21 @@ export async function login(formData: FormData) {
 }
 
 export async function logout() {
+  const token = (await cookies()).get("academy_token")?.value;
+
+  if (token) {
+    try {
+      await fetch(`${API_BASE_URL}/v1/academy/logout`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+    } catch {
+      // Best-effort
+    }
+  }
+
   (await cookies()).delete("academy_token");
   redirect("/academy/login");
 }
@@ -143,6 +170,26 @@ export async function getDashboardData() {
 
     if (!res.ok) return { error: "Failed to fetch dashboard data" };
     return await res.json();
+  } catch {
+    return { error: "Connection to API failed" };
+  }
+}
+
+export async function getStudentStatus() {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/dashboard`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) return { error: "Failed to fetch student status" };
+    const data = await res.json();
+    return { status: data.status };
   } catch {
     return { error: "Connection to API failed" };
   }

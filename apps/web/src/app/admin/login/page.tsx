@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Eye, EyeOff } from "lucide-react";
+import { adminLogin } from "../actions";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,25 +20,22 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api"}/admin/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
+      const formData = new FormData();
+      formData.set("email", email);
+      formData.set("password", password);
 
-      const data = await res.json();
+      const result = await adminLogin(formData);
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to login");
+      if (result.error) {
+        throw new Error(result.error);
       }
 
-      // Save token in cookie
-      // max-age=86400 is 24 hours
-      document.cookie = `auth_token=${data.token}; path=/; max-age=86400; SameSite=Strict`;
-      
-      // Redirect to admin dashboard
-      router.push("/admin/projects");
-      router.refresh(); // Important to trigger middleware re-evaluation
+      if (result.is_first_login) {
+        router.push("/admin/change-password");
+      } else {
+        router.push("/admin/projects");
+      }
+      router.refresh();
     } catch (err: unknown) {
       if (err instanceof Error) setError(err.message);
       else setError(String(err));
@@ -66,23 +63,23 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground">Email</label>
+            <label className="text-sm font-medium leading-none text-foreground">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               required
             />
           </div>
           <div className="space-y-2 relative">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-foreground">Password</label>
+            <label className="text-sm font-medium leading-none text-foreground">Password</label>
             <div className="relative">
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 required
               />
               <button
@@ -102,13 +99,6 @@ export default function LoginPage() {
             {loading ? "Signing in..." : "Sign In"}
           </button>
         </form>
-
-        <div className="mt-6 text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
-          <Link href="/admin/register" className="text-primary hover:underline font-medium">
-            Register here
-          </Link>
-        </div>
       </div>
     </div>
   );

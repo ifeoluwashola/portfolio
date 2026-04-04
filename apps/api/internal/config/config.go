@@ -16,12 +16,19 @@ type Config struct {
 	NotificationEmail string
 	PaystackSecretKey string
 	FrontendURL       string
+	JWTSecret         string
+	RedisURL          string
 }
 
 func LoadConfig() *Config {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No .env file found, using system environment variables")
+	}
+
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("FATAL: JWT_SECRET environment variable is required but not set")
 	}
 
 	return &Config{
@@ -35,6 +42,8 @@ func LoadConfig() *Config {
 		NotificationEmail: getEnv("NOTIFICATION_EMAIL", ""),
 		PaystackSecretKey: getEnv("PAYSTACK_SECRET_KEY", ""),
 		FrontendURL:       getEnv("FRONTEND_URL", "http://localhost:3000"),
+		JWTSecret:         jwtSecret,
+		RedisURL:          getEnv("REDIS_URL", ""),
 	}
 }
 
