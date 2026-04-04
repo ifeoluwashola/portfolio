@@ -158,6 +158,19 @@ func (s *AuthService) RevokeToken(ctx context.Context, rawToken string) error {
 	return s.repo.RevokeToken(ctx, hash, time.Now().Add(ttl))
 }
 
+func (s *AuthService) GetAdminSession(ctx context.Context, userID int) (*domain.AdminSessionResponse, error) {
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.AdminSessionResponse{
+		UserID:       user.ID,
+		Role:         user.Role,
+		IsFirstLogin: user.IsFirstLogin,
+	}, nil
+}
+
 // hashToken creates a SHA-256 hash of a JWT for storage (never store raw tokens)
 func hashToken(rawToken string) string {
 	h := sha256.Sum256([]byte(rawToken))

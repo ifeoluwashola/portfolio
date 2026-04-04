@@ -108,6 +108,7 @@ func main() {
 	// Admin Auth (public: login only — NO register endpoint)
 	mux.HandleFunc("POST /api/admin/login", authHandler.HandleLogin)
 	mux.HandleFunc("POST /api/admin/logout", authMW.RequireAuth(authHandler.HandleLogout))
+	mux.HandleFunc("GET /api/v1/auth/session", authMW.RequireAuth(authHandler.HandleGetSession))
 
 	// Blog API Routes (public)
 	mux.HandleFunc("GET /api/blog/{slug}", blogHandler.GetPostData)
@@ -120,6 +121,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/paystack/webhook", academyHandler.HandlePaystackWebhook)
 	mux.HandleFunc("POST /api/v1/academy/login", academyHandler.HandleAcademyLogin)
 	mux.HandleFunc("POST /api/v1/academy/logout", authMW.RequireStudentAuth(academyHandler.HandleAcademyLogout))
+	mux.HandleFunc("GET /api/v1/academy/session", authMW.RequireStudentAuth(academyHandler.HandleGetSession))
 	mux.HandleFunc("POST /api/v1/academy/forgot-password", academyHandler.HandleAcademyForgotPassword)
 	mux.HandleFunc("POST /api/v1/academy/reset-password", academyHandler.HandleAcademyResetPassword)
 

@@ -36,6 +36,13 @@ type AuthService interface {
 	InviteAdmin(ctx context.Context, inviterID int, req *InviteAdminRequest) error
 	ChangeAdminPassword(ctx context.Context, userID int, req *ChangeAdminPasswordRequest) error
 	RevokeToken(ctx context.Context, rawToken string) error
+	GetAdminSession(ctx context.Context, userID int) (*AdminSessionResponse, error)
+}
+
+type AdminSessionResponse struct {
+	UserID       int    `json:"user_id"`
+	Role         string `json:"role"`
+	IsFirstLogin bool   `json:"is_first_login"`
 }
 
 type InviteAdminRequest struct {

@@ -118,6 +118,12 @@ type AcademyService interface {
 	SubmitCapstone(ctx context.Context, studentID uuid.UUID, req *CapstoneProjectRequest) error
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
 	ApproveCapstone(ctx context.Context, id int, req *ApproveCapstoneRequest) error
+	GetStudentSession(ctx context.Context, studentID uuid.UUID) (*StudentSessionResponse, error)
+}
+
+type StudentSessionResponse struct {
+	StudentID uuid.UUID `json:"student_id"`
+	Status    string    `json:"status"`
 }
 
 type NotificationService interface {

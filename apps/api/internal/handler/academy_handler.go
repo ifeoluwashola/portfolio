@@ -100,6 +100,29 @@ func (h *AcademyHandler) HandleGetAdminApplications(w http.ResponseWriter, r *ht
 	}
 }
 
+func (h *AcademyHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	stID, _ := uuid.Parse(studentIDStr)
+	session, err := h.svc.GetStudentSession(r.Context(), stID)
+	if err != nil {
+		writeJSONError(w, "Student not found", http.StatusUnauthorized)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(session)
+}
+
 func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

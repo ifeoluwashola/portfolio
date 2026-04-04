@@ -622,6 +622,18 @@ func (s *academyService) GetEligibleStudents(ctx context.Context) ([]*domain.Stu
 	return s.repo.GetGraduationEligibleStudents(ctx)
 }
 
+func (s *academyService) GetStudentSession(ctx context.Context, studentID uuid.UUID) (*domain.StudentSessionResponse, error) {
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &domain.StudentSessionResponse{
+		StudentID: student.ID,
+		Status:    student.Status,
+	}, nil
+}
+
 func generateSlug(name string) string {
 	// Simple slug generator: lowercase and hyphens
 	res := bytes.NewBufferString("")
