@@ -6,3 +6,4 @@ out/
 apps/api/api
 apps/web/.next/
 apps/web/node_modules/
+.terraform*

@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    env_file:
+      - /opt/vars/kybern-env
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - kybern_net
+
+  postgres:
+    image: postgres:18-alpine
+    env_file:
+      - /opt/vars/kybern-env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - kybern_net
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass Martsplaza2025
+    volumes:
+      - redis_data:/data
+    networks:
+      - kybern_net
+
+networks:
+  kybern_net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:

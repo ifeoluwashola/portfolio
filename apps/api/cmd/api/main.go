@@ -50,6 +50,12 @@ func main() {
 	defer dbPool.Close()
 	logger.Info("Database connection established.")
 
+	// 2.1. Run Database Migrations
+	if err := database.RunMigrations(ctx, cfg.DatabaseURL); err != nil {
+		logger.Error("Database migrations failed", slog.Any("error", err))
+		os.Exit(1)
+	}
+
 	// 3. Initialize Cache Layer (InMemory by default, Redis if URL provided)
 	var tokenCache cache.TokenCache
 	if cfg.RedisURL != "" {
