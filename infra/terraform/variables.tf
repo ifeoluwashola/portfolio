@@ -13,7 +13,7 @@ variable "instance_type" {
 variable "github_repo" {
   description = "GitHub repository (e.g., 'your-org/your-repo')"
   type        = string
-  default     = "Ifeoluwashola/portfolio"
+  default     = "ifeoluwashola/portfolio"
 }
 
 variable "project_name" {
