@@ -60,8 +60,8 @@ jobs:
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Pull latest image
-            docker pull ghcr.io/${{ github.repository_owner }}/kybern-api:latest
+            docker pull ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
             
             # Update standard container
             # Assuming docker-compose.yml is in the root directory
-            cd ~/portfolio && docker-compose up -d --no-deps --build api
+            docker-compose up -d --no-deps --build api
