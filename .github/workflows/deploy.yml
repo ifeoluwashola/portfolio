@@ -64,4 +64,4 @@ jobs:
             
             # Update standard container
             # Assuming docker-compose.yml is in the root directory
-            docker-compose up -d --no-deps --build api
+            docker compose up -d --no-deps --build api
