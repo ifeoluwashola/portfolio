@@ -6,7 +6,11 @@ on:
       - 'apps/api/**'
     branches:
       - main
-
+  pull_request:
+    paths:
+      - 'apps/api/**'
+    branches:
+      - main
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
