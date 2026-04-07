@@ -29,7 +29,8 @@ export function BlogInteractivity({ slug }: { slug: string }) {
   const [commentContent, setCommentContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
+  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
+  const API_URL = apiBase;
 
   useEffect(() => {
     let isMounted = true;
@@ -108,8 +109,8 @@ export function BlogInteractivity({ slug }: { slug: string }) {
       });
 
       if (res.ok) {
-        const newComment = await res.json();
-        setData(prev => prev ? { ...prev, comments: [newComment, ...prev.comments] } : null);
+        const data = await res.json();
+        setData(prev => prev ? { ...prev, comments: [data, ...prev.comments] } : null);
         setDisplayName("");
         setCommentContent("");
       }

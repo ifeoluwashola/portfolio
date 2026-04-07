@@ -3,7 +3,8 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+import { API_BASE_URL } from "@/lib/api-config";
+// const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
 
 interface AlumniProject {
   project_title: string;
@@ -30,12 +31,17 @@ export async function login(formData: FormData) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/login`, {
+    const targetUrl = `${API_BASE_URL}/v1/academy/login`;
+    console.log(`[Server Action] Login attempting fetch to: ${targetUrl}`);
+    
+    const res = await fetch(targetUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
       cache: "no-store",
     });
+
+    console.log(`[Server Action] Login response status: ${res.status}`);
 
     if (!res.ok) {
       const errorText = await res.text();

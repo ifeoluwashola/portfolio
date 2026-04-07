@@ -20,7 +20,8 @@ export async function Footer() {
   let profile = defaultProfile;
 
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8081/api"}/profile`, {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8081/api";
+    const res = await fetch(`${apiBase}/profile`, {
       next: { revalidate: 10 } // Revalidate caching periodically
     });
     if (res.ok) {
