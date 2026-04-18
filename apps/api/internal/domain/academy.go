@@ -186,6 +186,7 @@ type NotificationService interface {
 	SendAdminInviteEmail(firstName, email, tempPassword string) error
 	SendBillingReminderEmail(email string, dueDate time.Time, amountKobo int) error
 	SendAccountSuspendedEmail(email string, minAmountKobo int, remainingBalanceKobo int) error
+	SendPaymentConfirmationEmail(email string, amountKobo int, remainingKobo int) error
 }
 
 type AcademyApplyRequest struct {

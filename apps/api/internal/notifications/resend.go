@@ -523,3 +523,94 @@ func (n *ResendNotifier) SendAccountSuspendedEmail(email string, minAmountKobo i
 	_, err := n.client.Emails.Send(params)
 	return err
 }
+
+func (n *ResendNotifier) SendPaymentConfirmationEmail(email string, amountKobo int, remainingKobo int) error {
+	subject := "Payment Confirmed — Kybern Academy"
+	sender := "Kybern Academy Billing <billing@kyberncloud.com>"
+
+	amountNaira := float64(amountKobo) / 100.0
+	remainingNaira := float64(remainingKobo) / 100.0
+
+	var statusHeader string
+	var statusColor string
+	var statusMsg string
+
+	if remainingKobo <= 0 {
+		statusHeader = "FEES FULLY PAID"
+		statusColor = "#facc15" // Cyber Yellow
+		statusMsg = "Congratulations! Your tuition is now fully paid. You have unrestricted lifetime access to all current and future curriculum updates for this cohort."
+	} else {
+		statusHeader = "PAYMENT CONFIRMED"
+		statusColor = "#22c55e" // Green
+		statusMsg = "We've successfully updated your ledger. Your account remains in good standing."
+	}
+
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Inter", -apple-system, sans-serif; line-height: 1.6; color: #cbd5e1; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+				.header { background-color: #020617; padding: 30px; text-align: center; border-bottom: 1px solid #1e293b; }
+				.status-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; background-color: rgba(250, 204, 21, 0.1); color: %s; border: 1px solid %s; }
+				.content { padding: 40px 30px; }
+				.amount-hero { text-align: center; margin: 20px 0 40px 0; }
+				.amount-label { color: #64748b; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+				.amount-value { color: #f8fafc; font-size: 48px; font-weight: 900; margin: 10px 0; }
+				.ledger-box { background-color: #020617; border: 1px solid #1e293b; border-radius: 8px; padding: 20px; margin: 30px 0; }
+				.ledger-row { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 13px; }
+				.ledger-label { color: #64748b; }
+				.ledger-value { color: #cbd5e1; font-weight: bold; }
+				.footer { background-color: #020617; padding: 30px; text-align: center; font-size: 11px; color: #475569; }
+				.button { display: inline-block; background-color: #facc15; color: #020617 !important; font-weight: 900; padding: 14px 28px; border-radius: 8px; text-decoration: none; margin: 20px 0; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<div class="status-badge">%s</div>
+				</div>
+				<div class="content">
+					<div class="amount-hero">
+						<span class="amount-label">Payment Received</span>
+						<p class="amount-value">₦%0.2f</p>
+					</div>
+
+					<p style="font-size: 15px; color: #94a3b8; text-align: center;">%s</p>
+
+					<div class="ledger-box">
+						<div class="ledger-row" style="border-bottom: 1px solid #1e293b; padding-bottom: 10px; margin-bottom: 15px;">
+							<span class="ledger-label">Transaction Type</span>
+							<span class="ledger-value">Academy Tuition Payment</span>
+						</div>
+						<div class="ledger-row">
+							<span class="ledger-label">Outstanding Balance</span>
+							<span class="ledger-value" style="color: %s;">₦%0.2f</span>
+						</div>
+					</div>
+
+					<div style="text-align: center;">
+						<a href="%s/academy/dashboard/billing" class="button">View Billing Hub</a>
+					</div>
+				</div>
+				<div class="footer">
+					KYBERN ACADEMY · CLOUD NATIVE MENTORSHIP<br/>
+					THIS IS AN AUTOMATED TRANSACTION RECEIPT
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+
+	htmlBody := fmt.Sprintf(htmlTemplate, statusColor, statusColor, statusHeader, amountNaira, statusMsg, statusColor, remainingNaira, n.frontendURL)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}

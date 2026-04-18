@@ -168,7 +168,7 @@ export default function AcademyLandingPage() {
                 {" "}From day one, you operate like a professional — provisioning live infrastructure, debugging production failures, and communicating architectural decisions in writing.
               </p>
               <p>
-                There are no lecture recordings to catch up on. If you miss a live session, you fall behind — by design. This is how real engineering teams operate, and it is precisely how you develop the{" "}
+                Every session is recorded and instantly deployed to your dashboard for revision. However, we maintain a live-first, high-accountability culture. If you miss the live interaction, you miss the critical logic-building phase. This is how real engineering teams operate, and it is precisely how you develop the{" "}
                 <span className="text-yellow-400 font-semibold">instincts that employers pay for.</span>
               </p>
             </div>
@@ -340,7 +340,7 @@ export default function AcademyLandingPage() {
                 </span>
               </h2>
               <p className="text-slate-400 text-lg leading-relaxed">
-                Kybern is designed for{" "}
+                Kybern Academy Training is designed for{" "}
                 <span className="text-slate-200 font-semibold">ambitious people who are willing to work hard, not passive learners </span>
                 looking for structured entertainment. The only admissions criterion that truly matters is{" "}
                 <span className="text-yellow-400 font-semibold">grit.</span>

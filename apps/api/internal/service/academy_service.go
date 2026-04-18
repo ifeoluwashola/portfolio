@@ -233,6 +233,10 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 		log.Printf("[Webhook] Student %s paid %d kobo. Next due: %s\n", targetStudentID, event.Data.Amount, nextDue.Format(time.RFC3339))
 	}
 
+	// 7. Trigger Confirmation Email (Fire and forget)
+	remaining := totalDueKobo - newTotal
+	_ = s.notification.SendPaymentConfirmationEmail(studentEmail, event.Data.Amount, remaining)
+
 	return nil
 }
 
