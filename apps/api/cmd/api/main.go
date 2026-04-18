@@ -180,6 +180,10 @@ func main() {
 	mux.HandleFunc("POST /api/v1/labs/{id}/submit", authMW.RequireStudentAuth(academyHandler.HandleSubmitLabFix))
 	mux.HandleFunc("POST /api/v1/labs/submissions/{id}/comments", authMW.RequireStudentAuth(academyHandler.HandleAddSubmissionComment))
 	mux.HandleFunc("POST /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleSubmitCapstone))
+	// Billing & Installments
+	mux.HandleFunc("GET /api/v1/academy/billing", authMW.RequireStudentAuth(academyHandler.HandleGetBillingStatus))
+	mux.HandleFunc("GET /api/v1/academy/billing/hub", authMW.RequireStudentAuth(academyHandler.HandleGetBillingHub))
+	mux.HandleFunc("POST /api/v1/academy/billing/pay", authMW.RequireStudentAuth(academyHandler.HandleInitiateInstallmentPayment))
 
 	// === ADMIN PROTECTED ROUTES ===
 	// Admin management
@@ -235,6 +239,11 @@ func main() {
 	loggingHandler := middleware.RequestLogger(logger)(mux)
 	finalHandler := c.Handler(loggingHandler)
 
+	// Launch payment lock cron as a background goroutine.
+	// It respects context cancellation for graceful shutdown.
+	cronCtx, cronCancel := context.WithCancel(context.Background())
+	go academySvc.RunPaymentLockCron(cronCtx)
+
 	// 10. Start Server
 	srv := &http.Server{
 		Addr:    ":" + cfg.Port,
@@ -255,6 +264,7 @@ func main() {
 
 	<-stop
 	logger.Info("Shutting down server...")
+	cronCancel() // Stop the cron worker gracefully
 
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

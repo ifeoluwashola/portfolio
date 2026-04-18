@@ -459,3 +459,148 @@ export async function getPendingCapstones() {
     return { error: "Connection failed" };
   }
 }
+
+// ─── Billing & Installments ────────────────────────────────────────────────────
+
+export interface StudentBilling {
+  student_id: string;
+  total_due: number;       // in kobo
+  total_paid: number;      // in kobo
+  next_payment_due_date: string | null;
+  billing_status: "good_standing" | "payment_locked" | "paid_in_full";
+}
+
+export interface PaymentHistoryItem {
+  id: number;
+  student_id: string;
+  amount_paid: number;    // in kobo
+  gateway: string;
+  reference_id: string;
+  created_at: string;
+}
+
+export interface BillingHub {
+  billing: StudentBilling;
+  payment_history: PaymentHistoryItem[];
+  payment_count: number;
+}
+
+/**
+ * Fetches the current billing ledger for the logged-in student.
+ * Returns kobo amounts; the UI divides by 100 for display.
+ */
+export async function getBillingStatus(): Promise<StudentBilling | { error: string }> {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/billing`, {
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return { error: "Failed to fetch billing status" };
+    return await res.json() as StudentBilling;
+  } catch {
+    return { error: "Connection to API failed" };
+  }
+}
+
+/**
+ * Fetches the full billing hub aggregate (billing + payment_history + count).
+ * This is the primary action used by the /academy/billing page.
+ */
+export async function getBillingHub(): Promise<BillingHub | { error: string }> {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/billing/hub`, {
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return { error: "Failed to fetch billing hub" };
+    return await res.json() as BillingHub;
+  } catch {
+    return { error: "Connection to API failed" };
+  }
+}
+
+
+/**
+ * Initiates an installment payment from the billing dashboard.
+ * @param amountNaira - The amount in Naira (not kobo); the backend handles conversion.
+ */
+export async function initiateBillingPayment(
+  amountNaira: number
+): Promise<{ authorization_url: string; reference: string } | { error: string }> {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/billing/pay`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      },
+      body: JSON.stringify({ amount_naira: amountNaira }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      return { error: errorText || "Payment initialization failed" };
+    }
+
+    const data = await res.json();
+    return {
+      authorization_url: data.authorization_url,
+      reference: data.reference,
+    };
+  } catch {
+    return { error: "Connection to API failed" };
+  }
+}
+
+/**
+ * Initializes a new registration checkout.
+ * paymentPlan: "full" (₦250,000) | "installment" (₦100,000 deposit)
+ */
+export async function initializeApplication(formData: FormData, paymentPlan: "full" | "installment" = "full") {
+  const firstName = formData.get("first_name") as string;
+  const lastName = formData.get("last_name") as string;
+  const email = formData.get("email") as string;
+  const phone = formData.get("phone") as string;
+  const currentRole = formData.get("current_role") as string;
+  const goal = formData.get("goal") as string;
+
+  if (!firstName || !lastName || !email) {
+    return { error: "First name, last name, and email are required" };
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/apply`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        phone,
+        current_role: currentRole,
+        goal,
+        payment_plan: paymentPlan,
+      }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      return { error: errorText || "Application initialization failed" };
+    }
+
+    const data = await res.json();
+    return { authorization_url: data.authorization_url, reference: data.reference };
+  } catch {
+    return { error: "Connection to API failed" };
+  }
+}
+

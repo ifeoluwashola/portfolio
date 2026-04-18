@@ -704,3 +704,139 @@ func (r *AcademyRepository) GetGraduationEligibleStudents(ctx context.Context) (
 	return students, nil
 }
 
+// ─── Billing & Installments ────────────────────────────────────────────────────
+
+// CreateStudentBilling initialises a billing record for a new student.
+func (r *AcademyRepository) CreateStudentBilling(ctx context.Context, studentID uuid.UUID) error {
+	query := `
+		INSERT INTO student_billing (student_id, total_due, total_paid, billing_status, created_at, updated_at)
+		VALUES ($1, 25000000, 0, 'good_standing', NOW(), NOW())
+		ON CONFLICT (student_id) DO NOTHING
+	`
+	_, err := r.db.Exec(ctx, query, studentID)
+	return err
+}
+
+// GetStudentBilling retrieves the billing record for a student.
+func (r *AcademyRepository) GetStudentBilling(ctx context.Context, studentID uuid.UUID) (*domain.StudentBilling, error) {
+	query := `
+		SELECT student_id, total_due, total_paid, next_payment_due_date, billing_status, created_at, updated_at
+		FROM student_billing
+		WHERE student_id = $1
+	`
+	b := &domain.StudentBilling{}
+	err := r.db.QueryRow(ctx, query, studentID).Scan(
+		&b.StudentID, &b.TotalDue, &b.TotalPaid, &b.NextPaymentDueDate, &b.BillingStatus, &b.CreatedAt, &b.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
+}
+
+// InsertPaymentHistory records a successful charge. The UNIQUE constraint on
+// reference_id makes this naturally idempotent (duplicate webhooks are ignored).
+func (r *AcademyRepository) InsertPaymentHistory(ctx context.Context, ph *domain.PaymentHistory) error {
+	query := `
+		INSERT INTO payment_history (student_id, amount_paid, gateway, reference_id, created_at)
+		VALUES ($1, $2, $3, $4, NOW())
+		ON CONFLICT (reference_id) DO NOTHING
+	`
+	_, err := r.db.Exec(ctx, query, ph.StudentID, ph.AmountPaid, ph.Gateway, ph.ReferenceID)
+	return err
+}
+
+// IncrementBillingPaid adds amountKobo to total_paid and returns the new total.
+func (r *AcademyRepository) IncrementBillingPaid(ctx context.Context, studentID uuid.UUID, amountKobo int) (int, error) {
+	query := `
+		UPDATE student_billing
+		SET total_paid = total_paid + $2, updated_at = NOW()
+		WHERE student_id = $1
+		RETURNING total_paid
+	`
+	var newTotal int
+	err := r.db.QueryRow(ctx, query, studentID, amountKobo).Scan(&newTotal)
+	return newTotal, err
+}
+
+// SetBillingStatus updates the billing_status for a student.
+func (r *AcademyRepository) SetBillingStatus(ctx context.Context, studentID uuid.UUID, status string) error {
+	query := `UPDATE student_billing SET billing_status = $2, updated_at = NOW() WHERE student_id = $1`
+	_, err := r.db.Exec(ctx, query, studentID, status)
+	return err
+}
+
+// SetNextPaymentDue sets (or clears) the next payment due date.
+func (r *AcademyRepository) SetNextPaymentDue(ctx context.Context, studentID uuid.UUID, dueDate *time.Time) error {
+	query := `UPDATE student_billing SET next_payment_due_date = $2, updated_at = NOW() WHERE student_id = $1`
+	_, err := r.db.Exec(ctx, query, studentID, dueDate)
+	return err
+}
+
+// GetOverdueBillings returns all billing records whose next_payment_due_date
+// has passed and are not yet paid in full.
+func (r *AcademyRepository) GetOverdueBillings(ctx context.Context) ([]*domain.StudentBilling, error) {
+	query := `
+		SELECT student_id, total_due, total_paid, next_payment_due_date, billing_status, created_at, updated_at
+		FROM student_billing
+		WHERE next_payment_due_date < NOW()
+		  AND billing_status = 'good_standing'
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*domain.StudentBilling
+	for rows.Next() {
+		b := &domain.StudentBilling{}
+		if err := rows.Scan(&b.StudentID, &b.TotalDue, &b.TotalPaid, &b.NextPaymentDueDate, &b.BillingStatus, &b.CreatedAt, &b.UpdatedAt); err != nil {
+			return nil, err
+		}
+		results = append(results, b)
+	}
+	if results == nil {
+		results = []*domain.StudentBilling{}
+	}
+	return results, nil
+}
+
+// GetPaymentCount returns the number of payments a student has made.
+func (r *AcademyRepository) GetPaymentCount(ctx context.Context, studentID uuid.UUID) (int, error) {
+	query := `SELECT COUNT(*) FROM payment_history WHERE student_id = $1`
+	var count int
+	err := r.db.QueryRow(ctx, query, studentID).Scan(&count)
+	return count, err
+}
+
+// GetStudentPaymentHistory returns all payment ledger entries for a student,
+// ordered by most recent first, for the billing hub transaction table.
+func (r *AcademyRepository) GetStudentPaymentHistory(ctx context.Context, studentID uuid.UUID) ([]*domain.PaymentHistory, error) {
+	query := `
+		SELECT id, student_id, amount_paid, gateway, reference_id, created_at
+		FROM payment_history
+		WHERE student_id = $1
+		ORDER BY created_at DESC
+	`
+	rows, err := r.db.Query(ctx, query, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*domain.PaymentHistory
+	for rows.Next() {
+		ph := &domain.PaymentHistory{}
+		if err := rows.Scan(&ph.ID, &ph.StudentID, &ph.AmountPaid, &ph.Gateway, &ph.ReferenceID, &ph.CreatedAt); err != nil {
+			return nil, err
+		}
+		results = append(results, ph)
+	}
+	if results == nil {
+		results = []*domain.PaymentHistory{}
+	}
+	return results, nil
+}
+
+

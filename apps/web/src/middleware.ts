@@ -7,6 +7,7 @@ interface SessionData {
   role?: string;
   status?: string;
   is_first_login?: boolean;
+  billing_status?: string;
 }
 
 // Next.js fetch extension type
@@ -90,6 +91,11 @@ export async function middleware(request: NextRequest) {
   }
 
   // ===== STUDENT PORTAL ROUTING =====
+  // Redirect old /academy/billing → new /academy/dashboard/billing
+  if (pathname === '/academy/billing') {
+    return NextResponse.redirect(new URL('/academy/dashboard/billing', request.url));
+  }
+
   if (pathname.startsWith('/academy/dashboard')) {
     const studentToken = request.cookies.get('academy_token');
     if (!studentToken) {
@@ -106,12 +112,20 @@ export async function middleware(request: NextRequest) {
     if (session.status === 'disqualified') {
       return NextResponse.redirect(new URL('/academy/access-revoked', request.url));
     }
+
+    // If payment is overdue and they are not already on the billing page, lock them there
+    if (
+      session.billing_status === 'payment_locked' &&
+      !pathname.startsWith('/academy/dashboard/billing')
+    ) {
+      return NextResponse.redirect(new URL('/academy/dashboard/billing', request.url));
+    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/academy/dashboard/:path*'],
+  matcher: ['/admin/:path*', '/academy/dashboard/:path*', '/academy/billing'],
 };
 

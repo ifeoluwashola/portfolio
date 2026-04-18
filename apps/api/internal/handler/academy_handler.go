@@ -701,3 +701,112 @@ func (h *AcademyHandler) HandleGetAlumniPortfolio(w http.ResponseWriter, r *http
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(portfolio)
 }
+
+// ─── Billing & Installments ───────────────────────────────────────────────────
+
+// HandleGetBillingStatus returns the student's billing ledger state.
+// GET /api/v1/academy/billing
+func (h *AcademyHandler) HandleGetBillingStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	billing, err := h.svc.GetBillingStatus(r.Context(), studentID)
+	if err != nil {
+		writeJSONError(w, "Billing record not found", http.StatusNotFound)
+		return
+	}
+
+	// Enrich with payment count for the frontend installment logic
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(billing)
+}
+
+// HandleInitiateInstallmentPayment creates a new Paystack checkout for an
+// installment payment initiated from the billing dashboard.
+// POST /api/v1/academy/billing/pay
+func (h *AcademyHandler) HandleInitiateInstallmentPayment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.BillingPaymentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.AmountNaira <= 0 {
+		writeJSONError(w, "Amount must be greater than zero", http.StatusBadRequest)
+		return
+	}
+
+	// Convert Naira → Kobo for Paystack
+	amountKobo := req.AmountNaira * 100
+
+	resp, err := h.svc.InitializeInstallmentPayment(r.Context(), studentID, amountKobo)
+	if err != nil {
+		writeJSONError(w, "Payment initialization failed: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(resp)
+}
+
+// HandleGetBillingHub returns the full billing aggregate (billing state +
+// payment history + payment count) for the billing dashboard page.
+// GET /api/v1/academy/billing/hub
+func (h *AcademyHandler) HandleGetBillingHub(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	hub, err := h.svc.GetBillingHub(r.Context(), studentID)
+	if err != nil {
+		writeJSONError(w, "Billing record not found", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(hub)
+}
+
+

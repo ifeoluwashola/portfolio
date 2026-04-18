@@ -7,6 +7,30 @@ import (
 	"github.com/google/uuid"
 )
 
+// ─── Billing Domain ────────────────────────────────────────────────────────────
+
+// StudentBilling tracks the installment plan state for a single student.
+// All monetary values are in kobo (NGN × 100).
+type StudentBilling struct {
+	StudentID          uuid.UUID  `json:"student_id"`
+	TotalDue           int        `json:"total_due"`
+	TotalPaid          int        `json:"total_paid"`
+	NextPaymentDueDate *time.Time `json:"next_payment_due_date"`
+	BillingStatus      string     `json:"billing_status"` // good_standing | payment_locked | paid_in_full
+	CreatedAt          time.Time  `json:"created_at"`
+	UpdatedAt          time.Time  `json:"updated_at"`
+}
+
+// PaymentHistory is an immutable ledger entry for every successful charge.
+type PaymentHistory struct {
+	ID          int       `json:"id"`
+	StudentID   uuid.UUID `json:"student_id"`
+	AmountPaid  int       `json:"amount_paid"`
+	Gateway     string    `json:"gateway"`
+	ReferenceID string    `json:"reference_id"`
+	CreatedAt   time.Time `json:"created_at"`
+}
+
 type Student struct {
 	ID                     uuid.UUID `json:"id"`
 	FirstName              string    `json:"first_name"`
@@ -47,7 +71,7 @@ type AcademyRepository interface {
 	UpdateAlumniProfile(ctx context.Context, profile *AlumniProfile) error
 	DeleteCapstoneProjectsByAlumni(ctx context.Context, alumniID int) error
 	GetCapstoneProjectsByAlumni(ctx context.Context, alumniID int) ([]*CapstoneProject, error)
-	
+
 	CreateCapstoneProject(ctx context.Context, project *CapstoneProject) (int, error)
 	GetCapstoneByID(ctx context.Context, id int) (*CapstoneProject, error)
 	GetCapstoneByStudentID(ctx context.Context, studentID uuid.UUID) (*CapstoneProject, error)
@@ -62,7 +86,7 @@ type AcademyRepository interface {
 	GetStudentAssignments(ctx context.Context, studentID uuid.UUID) ([]*Assignment, error)
 	GetAllAssignments(ctx context.Context) ([]*Assignment, error)
 	UpdateAssignmentGrade(ctx context.Context, id uuid.UUID, status, feedback string) error
-	
+
 	// Break-It Labs
 	GetLabs(ctx context.Context) ([]*BreakItLab, error)
 	GetLabByID(ctx context.Context, id int) (*BreakItLab, error)
@@ -76,6 +100,17 @@ type AcademyRepository interface {
 	// Comments
 	CreateSubmissionComment(ctx context.Context, comment *SubmissionComment) error
 	GetSubmissionComments(ctx context.Context, submissionID int) ([]*SubmissionComment, error)
+
+	// Billing & Installments
+	CreateStudentBilling(ctx context.Context, studentID uuid.UUID) error
+	GetStudentBilling(ctx context.Context, studentID uuid.UUID) (*StudentBilling, error)
+	InsertPaymentHistory(ctx context.Context, ph *PaymentHistory) error
+	IncrementBillingPaid(ctx context.Context, studentID uuid.UUID, amountKobo int) (int, error)
+	SetBillingStatus(ctx context.Context, studentID uuid.UUID, status string) error
+	SetNextPaymentDue(ctx context.Context, studentID uuid.UUID, dueDate *time.Time) error
+	GetOverdueBillings(ctx context.Context) ([]*StudentBilling, error)
+	GetPaymentCount(ctx context.Context, studentID uuid.UUID) (int, error)
+	GetStudentPaymentHistory(ctx context.Context, studentID uuid.UUID) ([]*PaymentHistory, error)
 }
 
 type AcademyService interface {
@@ -86,14 +121,14 @@ type AcademyService interface {
 	ChangePassword(ctx context.Context, studentID uuid.UUID, req *AcademyChangePasswordRequest) error
 	ForgotPassword(ctx context.Context, req *AcademyForgotPasswordRequest) error
 	ResetPassword(ctx context.Context, req *AcademyResetPasswordRequest) error
-	
+
 	GetCurriculum(ctx context.Context) ([]*CohortWeek, error)
 	UpdateCohortWeek(ctx context.Context, req *UpdateWeekRequest) error
 	GetStudentDashboardData(ctx context.Context, studentID uuid.UUID) (*StudentDashboardResponse, error)
 	SubmitAssignment(ctx context.Context, studentID uuid.UUID, req *SubmitAssignmentRequest) error
 	GetAdminSubmissions(ctx context.Context) ([]*Assignment, error)
 	GradeSubmission(ctx context.Context, req *GradeAssignmentRequest) error
-	
+
 	// Break-It Labs
 	ListLabs(ctx context.Context) ([]*BreakItLab, error)
 	GetLab(ctx context.Context, id int) (*BreakItLab, error)
@@ -103,7 +138,7 @@ type AcademyService interface {
 	SubmitLabFix(ctx context.Context, studentID uuid.UUID, req *SubmitLabFixRequest) error
 	ListLabSubmissions(ctx context.Context, labID int) ([]*LabSubmission, error)
 	AdminSetLabWinner(ctx context.Context, req *SetLabWinnerRequest) error
-	
+
 	// Comments
 	AddSubmissionComment(ctx context.Context, studentID uuid.UUID, subID int, body string) error
 
@@ -119,11 +154,26 @@ type AcademyService interface {
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
 	ApproveCapstone(ctx context.Context, id int, req *ApproveCapstoneRequest) error
 	GetStudentSession(ctx context.Context, studentID uuid.UUID) (*StudentSessionResponse, error)
+
+	// Billing & Installments
+	GetBillingStatus(ctx context.Context, studentID uuid.UUID) (*StudentBilling, error)
+	GetBillingHub(ctx context.Context, studentID uuid.UUID) (*BillingHubResponse, error)
+	InitializeInstallmentPayment(ctx context.Context, studentID uuid.UUID, amountKobo int) (*AcademyApplyResponse, error)
+	RunPaymentLockCron(ctx context.Context)
+}
+
+// BillingHubResponse is the aggregate returned by the billing hub endpoint.
+// It bundles billing state + full payment ledger in one round-trip.
+type BillingHubResponse struct {
+	Billing        *StudentBilling  `json:"billing"`
+	PaymentHistory []*PaymentHistory `json:"payment_history"`
+	PaymentCount   int              `json:"payment_count"`
 }
 
 type StudentSessionResponse struct {
-	StudentID uuid.UUID `json:"student_id"`
-	Status    string    `json:"status"`
+	StudentID     uuid.UUID `json:"student_id"`
+	Status        string    `json:"status"`
+	BillingStatus string    `json:"billing_status,omitempty"`
 }
 
 type NotificationService interface {
@@ -141,6 +191,14 @@ type AcademyApplyRequest struct {
 	Phone       string `json:"phone"`
 	CurrentRole string `json:"current_role"`
 	Goal        string `json:"goal"`
+	// PaymentPlan: "full" (₦250,000) or "installment" (₦100,000 deposit)
+	PaymentPlan string `json:"payment_plan"`
+}
+
+// BillingPaymentRequest is used by the billing dashboard to initiate a new payment.
+type BillingPaymentRequest struct {
+	// AmountNaira is the human-facing amount in Naira; the backend converts to kobo.
+	AmountNaira int `json:"amount_naira"`
 }
 
 type AcademyApplyResponse struct {

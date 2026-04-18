@@ -3,13 +3,14 @@
 import { useRegistrationPhase } from "@/hooks/useRegistrationPhase";
 import { useState } from "react";
 import { AlertCircle, Terminal, CheckCircle } from "lucide-react";
+import { initializeApplication } from "@/app/academy/actions";
 
 export function AcademyRegistrationForm() {
   const { phase, isMounted } = useRegistrationPhase();
   const [agreed, setAgreed] = useState(false);
   const [emailWaitlist, setEmailWaitlist] = useState("");
   const [submittedWaitlist, setSubmittedWaitlist] = useState(false);
-  
+
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,14 +18,13 @@ export function AcademyRegistrationForm() {
   const [role, setRole] = useState("");
   const [otherRole, setOtherRole] = useState("");
   const [goal, setGoal] = useState("");
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [isSubmitting, setIsSubmitting] = useState<"full" | "installment" | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
 
   if (!isMounted) return null;
 
-  const handleApply = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleApply = async (plan: "full" | "installment") => {
     setErrorMsg("");
 
     const finalRole = role === "other" ? otherRole : role;
@@ -33,40 +33,29 @@ export function AcademyRegistrationForm() {
       return;
     }
 
-    setIsSubmitting(true);
+    setIsSubmitting(plan);
     try {
-      // NEXT_PUBLIC_API_URL should point to Go backend, e.g. http://localhost:8080/api/v1
-      const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
-      const API_URL = `${apiBase}/v1`;
-      const response = await fetch(`${API_URL}/academy/apply`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          phone,
-          current_role: finalRole,
-          goal,
-        }),
-      });
+      const formData = new FormData();
+      formData.set("first_name", firstName);
+      formData.set("last_name", lastName);
+      formData.set("email", email);
+      formData.set("phone", phone);
+      formData.set("current_role", finalRole);
+      formData.set("goal", goal);
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to initialize payment");
+      const result = await initializeApplication(formData, plan);
+
+      if ("error" in result) {
+        setErrorMsg(result.error ?? "An unexpected error occurred.");
+        setIsSubmitting(null);
+        return;
       }
 
-      // Redirect securely to Paystack Checkout URL
-      window.location.href = data.authorization_url;
-    } catch (err: unknown) {
-      if (err instanceof Error) {
-        setErrorMsg(err.message || "An unexpected error occurred.");
-      } else {
-        setErrorMsg("An unexpected error occurred.");
-      }
-      setIsSubmitting(false);
+      // Redirect to Paystack checkout
+      window.location.href = result.authorization_url;
+    } catch {
+      setErrorMsg("An unexpected error occurred. Please try again.");
+      setIsSubmitting(null);
     }
   };
 
@@ -149,7 +138,7 @@ export function AcademyRegistrationForm() {
           Cohort 1 Application
         </h2>
 
-        <form className="space-y-6" onSubmit={handleApply}>
+        <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
           {errorMsg && (
             <div className="bg-red-500/10 border border-red-500/50 text-red-500 p-4 rounded-xl text-sm font-medium">
               {errorMsg}
@@ -225,19 +214,60 @@ export function AcademyRegistrationForm() {
             </label>
           </div>
 
-          <button
-            type="submit"
-            disabled={!agreed || phase === "pre-launch" || isSubmitting}
-            className={`w-full flex items-center justify-center py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 ${
-              phase === "pre-launch"
-                ? "bg-secondary text-muted-foreground border border-border cursor-not-allowed"
-                : agreed && !isSubmitting
-                  ? "bg-yellow-500 text-black hover:bg-yellow-400 hover:shadow-[0_0_20px_rgba(234,179,8,0.3)] shadow-[0_0_10px_rgba(234,179,8,0.2)] transform active:scale-[0.99]" 
-                  : "bg-secondary text-muted-foreground border border-border cursor-not-allowed opacity-70"
-            }`}
-          >
-            {phase === "pre-launch" ? "Registration Opens April 2" : isSubmitting ? "Processing..." : "Proceed to Payment (₦10,000)"}
-          </button>
+          {/* ── Dual Payment Plan Buttons ── */}
+          <div className="space-y-3 pt-2">
+            <p className="text-xs text-muted-foreground text-center font-medium uppercase tracking-wider mb-4">Select a payment plan to proceed</p>
+
+            {/* Full Payment */}
+            <button
+              id="apply-full-btn"
+              type="button"
+              onClick={() => handleApply("full")}
+              disabled={!agreed || phase === "pre-launch" || isSubmitting !== null}
+              className={`w-full flex items-center justify-between py-4 px-6 rounded-xl font-bold text-base transition-all duration-300 border ${
+                !agreed || phase === "pre-launch" || isSubmitting !== null
+                  ? "bg-secondary text-muted-foreground border-border cursor-not-allowed opacity-60"
+                  : "bg-gradient-to-r from-yellow-500/10 to-yellow-400/5 border-yellow-500/40 text-yellow-300 hover:border-yellow-400/60 hover:from-yellow-500/15 hover:shadow-[0_0_20px_rgba(234,179,8,0.15)]"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                {isSubmitting === "full" ? (
+                  <span className="w-4 h-4 border-2 border-yellow-400/30 border-t-yellow-400 rounded-full animate-spin" />
+                ) : (
+                  <span className="text-yellow-400">◆</span>
+                )}
+                {isSubmitting === "full" ? "Processing…" : "Pay in Full"}
+              </span>
+              <span className="text-yellow-400 font-mono text-sm tracking-tight">₦250,000</span>
+            </button>
+
+            {/* Installment Plan */}
+            <button
+              id="apply-installment-btn"
+              type="button"
+              onClick={() => handleApply("installment")}
+              disabled={!agreed || phase === "pre-launch" || isSubmitting !== null}
+              className={`w-full flex items-center justify-between py-4 px-6 rounded-xl font-bold text-base transition-all duration-300 border ${
+                !agreed || phase === "pre-launch" || isSubmitting !== null
+                  ? "bg-secondary text-muted-foreground border-border cursor-not-allowed opacity-60"
+                  : "bg-gradient-to-r from-cyan-500/10 to-cyan-400/5 border-cyan-500/30 text-cyan-300 hover:border-cyan-400/50 hover:from-cyan-500/15 hover:shadow-[0_0_20px_rgba(6,182,212,0.12)]"
+              }`}
+            >
+              <span className="flex items-center gap-2">
+                {isSubmitting === "installment" ? (
+                  <span className="w-4 h-4 border-2 border-cyan-400/30 border-t-cyan-400 rounded-full animate-spin" />
+                ) : (
+                  <span className="text-cyan-400">◇</span>
+                )}
+                {isSubmitting === "installment" ? "Processing…" : "Start Installment Plan"}
+              </span>
+              <span className="text-cyan-400 font-mono text-sm tracking-tight">₦100,000 deposit</span>
+            </button>
+
+            <p className="text-xs text-muted-foreground text-center pt-2">
+              Installment: ₦100k deposit → up to 2 more payments over 60 days
+            </p>
+          </div>
         </form>
       </div>
     </div>
