@@ -27,7 +27,6 @@ export async function AcademyNavbar() {
         {/* Desktop nav links */}
         <div className="hidden md:flex flex-1 justify-center gap-8 items-center text-[10px] font-bold text-slate-500 font-mono tracking-[0.15em] uppercase">
           <Link href="/academy" className="hover:text-yellow-400 transition-colors">Home</Link>
-          <Link href="/academy/register" className="hover:text-yellow-400 transition-colors">Pricing</Link>
           <Link href="/academy/break-it-labs" className="hover:text-yellow-400 transition-colors">Labs</Link>
           <Link href="/academy/alumni" className="hover:text-yellow-400 transition-colors">Alumni</Link>
           <Link href="/academy/materials" className="hover:text-yellow-400 transition-colors">Resources</Link>

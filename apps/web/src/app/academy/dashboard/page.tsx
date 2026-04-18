@@ -125,7 +125,7 @@ export default async function StudentDashboard() {
               <div className="flex flex-wrap items-center gap-6 p-6 bg-slate-950/50 border border-slate-800/50 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-yellow-500" />
-                  <span className="text-slate-200">Start Date: <span className="text-yellow-400 font-bold">April 16th</span></span>
+                  <span className="text-slate-200">Start Date: <span className="text-yellow-400 font-bold">May 4th</span></span>
                 </div>
                 <div className="h-4 w-px bg-slate-800 hidden sm:block" />
                 <div className="flex items-center gap-3">
