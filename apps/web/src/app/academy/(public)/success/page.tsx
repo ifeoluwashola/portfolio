@@ -25,7 +25,7 @@ export default function AcademySuccessPage() {
         
         <div className="space-y-4">
           <Link 
-            href="/"
+            href="/academy"
             className="flex items-center justify-center w-full py-4 px-6 rounded-xl font-bold bg-secondary hover:bg-secondary/80 text-foreground border border-border transition-colors"
           >
             Return to Homepage

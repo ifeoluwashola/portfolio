@@ -3,6 +3,7 @@ package notifications
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
@@ -388,4 +389,137 @@ func (n *ResendNotifier) SendStudentDisqualificationEmail(firstName, email, reas
 
     _, err := n.client.Emails.Send(params)
     return err
+}
+func (n *ResendNotifier) SendBillingReminderEmail(email string, dueDate time.Time, amountKobo int) error {
+	subject := "SYSTEM_LEDGER: INVOICE_PENDING"
+	sender := "Kybern Academy Ledger <academy@kyberncloud.com>"
+	
+	amountNaira := float64(amountKobo) / 100.0
+	dateStr := dueDate.Format("Jan 02, 2006")
+	
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Courier New", Consolas, monospace; line-height: 1.6; color: #94a3b8; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #334155; border-radius: 6px; overflow: hidden; }
+				.header { background-color: #1e293b; padding: 20px; border-bottom: 2px solid #eab308; }
+				.header-text { color: #eab308; font-size: 16px; font-weight: bold; margin: 0; letter-spacing: 1px; }
+				.content { padding: 30px; }
+				.data-box { background-color: #020617; border: 1px solid #334155; padding: 20px; margin: 25px 0; border-radius: 4px; }
+				.label { color: #64748b; font-size: 11px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; display: block; }
+				.value { color: #eab308; font-size: 18px; font-weight: bold; font-family: monospace; display: block; margin-bottom: 12px; }
+				.warning-text { color: #f8fafc; font-size: 14px; margin-bottom: 20px; }
+				.critical-text { color: #ef4444; font-weight: bold; }
+				.button { display: inline-block; background-color: #eab308; color: #020617 !important; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 20px 0; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+				.footer { background-color: #020617; padding: 20px; text-align: center; border-top: 1px solid #1e293b; font-size: 10px; color: #64748b; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<p class="header-text">> SYSTEM_LEDGER: INVOICE_PENDING</p>
+				</div>
+				<div class="content">
+					<p class="warning-text">This is an automated notification from the Kybern Academy Ledger. Your next installment is due soon to maintain active enrollment.</p>
+					
+					<div class="data-box">
+						<span class="label">Amount Due</span>
+						<span class="value">₦%0.2f</span>
+						<span class="label">Due Date</span>
+						<span class="value">%s</span>
+					</div>
+
+					<p class="warning-text">Failure to settle this balance by <span class="critical-text">23:59 WAT on the due date</span> will result in an automatic hard-lock of your student dashboard and curriculum access.</p>
+					
+					<a href="%s/academy/dashboard/billing" class="button">Pay Now via Ledger</a>
+				</div>
+				<div class="footer">
+					KYBERN ACADEMY FINANCIAL INFRASTRUCTURE<br/>
+					DO NOT REPLY TO THIS AUTOMATED SYSTEM MAIL
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+	
+	htmlBody := fmt.Sprintf(htmlTemplate, amountNaira, dateStr, n.frontendURL)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}
+
+func (n *ResendNotifier) SendAccountSuspendedEmail(email string, minAmountKobo int, remainingBalanceKobo int) error {
+	subject := "CRITICAL: ACCOUNT_SUSPENDED"
+	sender := "Kybern Academy Security <academy@kyberncloud.com>"
+	
+	minNaira := float64(minAmountKobo) / 100.0
+	totalNaira := float64(remainingBalanceKobo) / 100.0
+	
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Courier New", Consolas, monospace; line-height: 1.6; color: #fca5a5; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #ef4444; border-radius: 6px; overflow: hidden; }
+				.header { background-color: #450a0a; padding: 20px; border-bottom: 2px solid #ef4444; }
+				.header-text { color: #ef4444; font-size: 16px; font-weight: bold; margin: 0; letter-spacing: 1px; }
+				.content { padding: 30px; }
+				.alert-box { background-color: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; padding: 15px; margin: 25px 0; }
+				.alert-detail { color: #f8fafc; font-size: 14px; }
+				.data-box { background-color: #020617; border: 1px solid #334155; padding: 20px; margin: 25px 0; border-radius: 4px; }
+				.label { color: #64748b; font-size: 11px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; display: block; }
+				.value { color: #ef4444; font-size: 18px; font-weight: bold; font-family: monospace; display: block; margin-bottom: 15px; }
+				.button { display: inline-block; background-color: #ef4444; color: #ffffff !important; font-weight: bold; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 20px 0; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
+				.footer { background-color: #020617; padding: 20px; text-align: center; border-top: 1px solid #450a0a; font-size: 10px; color: #64748b; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<p class="header-text">> CRITICAL: ACCOUNT_SUSPENDED</p>
+				</div>
+				<div class="content">
+					<div class="alert-box">
+						<p class="alert-detail">Your curriculum and lab access has been revoked due to an overdue balance on your flexible ledger.</p>
+					</div>
+					
+					<div class="data-box">
+						<span class="label">Minimum to Unlock Access</span>
+						<span class="value">₦%0.2f</span>
+						<span class="label">Total Remaining Tuition</span>
+						<span class="value">₦%0.2f</span>
+					</div>
+
+					<p style="color: #cbd5e1; font-size: 14px;">Once the minimum payment is processed, your account will be automatically restored by the system.</p>
+					
+					<a href="%s/academy/dashboard/billing" class="button">Pay Now to Unlock Account</a>
+				</div>
+				<div class="footer">
+					KYBERN ACADEMY SECURITY INFRASTRUCTURE<br/>
+					AUTOMATED LOCKDOWN INITIATED
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+	
+	htmlBody := fmt.Sprintf(htmlTemplate, minNaira, totalNaira, n.frontendURL)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
 }

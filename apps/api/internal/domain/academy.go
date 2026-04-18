@@ -64,6 +64,19 @@ type AcademyRepository interface {
 	GetApplicationByReference(ctx context.Context, reference string) (*CohortApplication, error)
 	GetAdminCohortApplications(ctx context.Context) ([]*CohortApplication, error)
 
+	// Billing & Installments
+	CreateStudentBilling(ctx context.Context, studentID uuid.UUID) error
+	GetStudentBilling(ctx context.Context, studentID uuid.UUID) (*StudentBilling, error)
+	InsertPaymentHistory(ctx context.Context, ph *PaymentHistory) error
+	IncrementBillingPaid(ctx context.Context, studentID uuid.UUID, amountKobo int) (int, error)
+	SetBillingStatus(ctx context.Context, studentID uuid.UUID, status string) error
+	SetNextPaymentDue(ctx context.Context, studentID uuid.UUID, dueDate *time.Time) error
+	GetOverdueBillings(ctx context.Context) ([]*StudentBilling, error)
+	GetPaymentCount(ctx context.Context, studentID uuid.UUID) (int, error)
+	GetStudentPaymentHistory(ctx context.Context, studentID uuid.UUID) ([]*PaymentHistory, error)
+	GetBillingsDueIn(ctx context.Context, days int) ([]*StudentBilling, error)
+	GetStudentsByIDs(ctx context.Context, ids []uuid.UUID) ([]*Student, error)
+
 	// Alumni & Capstone
 	CreateAlumniProfile(ctx context.Context, profile *AlumniProfile) (int, error)
 	GetAlumniProfiles(ctx context.Context) ([]*AlumniProfile, error)
@@ -100,17 +113,6 @@ type AcademyRepository interface {
 	// Comments
 	CreateSubmissionComment(ctx context.Context, comment *SubmissionComment) error
 	GetSubmissionComments(ctx context.Context, submissionID int) ([]*SubmissionComment, error)
-
-	// Billing & Installments
-	CreateStudentBilling(ctx context.Context, studentID uuid.UUID) error
-	GetStudentBilling(ctx context.Context, studentID uuid.UUID) (*StudentBilling, error)
-	InsertPaymentHistory(ctx context.Context, ph *PaymentHistory) error
-	IncrementBillingPaid(ctx context.Context, studentID uuid.UUID, amountKobo int) (int, error)
-	SetBillingStatus(ctx context.Context, studentID uuid.UUID, status string) error
-	SetNextPaymentDue(ctx context.Context, studentID uuid.UUID, dueDate *time.Time) error
-	GetOverdueBillings(ctx context.Context) ([]*StudentBilling, error)
-	GetPaymentCount(ctx context.Context, studentID uuid.UUID) (int, error)
-	GetStudentPaymentHistory(ctx context.Context, studentID uuid.UUID) ([]*PaymentHistory, error)
 }
 
 type AcademyService interface {
@@ -182,6 +184,8 @@ type NotificationService interface {
 	SendStudentWarningEmail(firstName, email, reason string, warningCount int) error
 	SendStudentDisqualificationEmail(firstName, email, reason string) error
 	SendAdminInviteEmail(firstName, email, tempPassword string) error
+	SendBillingReminderEmail(email string, dueDate time.Time, amountKobo int) error
+	SendAccountSuspendedEmail(email string, minAmountKobo int, remainingBalanceKobo int) error
 }
 
 type AcademyApplyRequest struct {
@@ -191,7 +195,10 @@ type AcademyApplyRequest struct {
 	Phone       string `json:"phone"`
 	CurrentRole string `json:"current_role"`
 	Goal        string `json:"goal"`
-	// PaymentPlan: "full" (₦250,000) or "installment" (₦100,000 deposit)
+	// ExperienceLevel: Absolute Beginner | Basic IT | Intermediate
+	ExperienceLevel string `json:"experience_level"`
+	HasLaptop       bool   `json:"has_laptop"`
+	// PaymentPlan: "full" (250,000) or "installment" (100,000 deposit)
 	PaymentPlan string `json:"payment_plan"`
 }
 
@@ -219,25 +226,33 @@ type PaystackInitResponse struct {
 type PaystackWebhookEvent struct {
 	Event string `json:"event"`
 	Data  struct {
-		Reference string `json:"reference"`
-		Amount    int    `json:"amount"`
+		Reference string            `json:"reference"`
+		Amount    int               `json:"amount"`
 		Customer  struct {
 			Email string `json:"email"`
 		} `json:"customer"`
+		Metadata PaystackMetadata `json:"metadata"`
 	} `json:"data"`
 }
 
+type PaystackMetadata struct {
+	PaymentType string `json:"payment_type"`
+	StudentID   string `json:"student_id,omitempty"`
+}
+
 type CohortApplication struct {
-	ID            uuid.UUID `json:"id"`
-	FirstName     string    `json:"first_name"`
-	LastName      string    `json:"last_name"`
-	Email         string    `json:"email"`
-	Phone         string    `json:"phone"`
-	CurrentRole   string    `json:"current_role"`
-	Goal          string    `json:"goal"`
-	PaymentStatus string    `json:"payment_status"`
-	Reference     string    `json:"reference"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID              uuid.UUID `json:"id"`
+	FirstName       string    `json:"first_name"`
+	LastName        string    `json:"last_name"`
+	Email           string    `json:"email"`
+	Phone           string    `json:"phone"`
+	CurrentRole     string    `json:"current_role"`
+	Goal            string    `json:"goal"`
+	ExperienceLevel string    `json:"experience_level"`
+	HasLaptop       bool      `json:"has_laptop"`
+	PaymentStatus   string    `json:"payment_status"`
+	Reference       string    `json:"reference"`
+	CreatedAt       time.Time `json:"created_at"`
 }
 
 type AcademyLoginRequest struct {

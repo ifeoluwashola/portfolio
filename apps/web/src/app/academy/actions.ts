@@ -572,6 +572,8 @@ export async function initializeApplication(formData: FormData, paymentPlan: "fu
   const phone = formData.get("phone") as string;
   const currentRole = formData.get("current_role") as string;
   const goal = formData.get("goal") as string;
+  const experienceLevel = formData.get("experience_level") as string;
+  const hasLaptop = formData.get("has_laptop") === "on";
 
   if (!firstName || !lastName || !email) {
     return { error: "First name, last name, and email are required" };
@@ -588,6 +590,8 @@ export async function initializeApplication(formData: FormData, paymentPlan: "fu
         phone,
         current_role: currentRole,
         goal,
+        experience_level: experienceLevel,
+        has_laptop: hasLaptop,
         payment_plan: paymentPlan,
       }),
     });

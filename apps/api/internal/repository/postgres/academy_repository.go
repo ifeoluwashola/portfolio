@@ -19,10 +19,10 @@ func NewAcademyRepository(db *pgxpool.Pool) domain.AcademyRepository {
 
 func (r *AcademyRepository) CreateApplication(ctx context.Context, app *domain.CohortApplication) error {
 	query := `
-		INSERT INTO cohort_applications (id, first_name, last_name, email, phone, role, goal, reference, payment_status, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO cohort_applications (id, first_name, last_name, email, phone, role, goal, experience_level, has_laptop, reference, payment_status, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
-	_, err := r.db.Exec(ctx, query, app.ID, app.FirstName, app.LastName, app.Email, app.Phone, app.CurrentRole, app.Goal, app.Reference, app.PaymentStatus, app.CreatedAt)
+	_, err := r.db.Exec(ctx, query, app.ID, app.FirstName, app.LastName, app.Email, app.Phone, app.CurrentRole, app.Goal, app.ExperienceLevel, app.HasLaptop, app.Reference, app.PaymentStatus, app.CreatedAt)
 	return err
 }
 
@@ -38,14 +38,14 @@ func (r *AcademyRepository) UpdatePaymentStatus(ctx context.Context, reference, 
 
 func (r *AcademyRepository) GetApplicationByReference(ctx context.Context, reference string) (*domain.CohortApplication, error) {
 	query := `
-		SELECT id, first_name, last_name, email, phone, role, goal, reference, payment_status, created_at
+		SELECT id, first_name, last_name, email, phone, role, goal, experience_level, has_laptop, reference, payment_status, created_at
 		FROM cohort_applications
 		WHERE reference = $1
 	`
 	app := &domain.CohortApplication{}
 	err := r.db.QueryRow(ctx, query, reference).Scan(
 		&app.ID, &app.FirstName, &app.LastName, &app.Email, &app.Phone, &app.CurrentRole,
-		&app.Goal, &app.Reference, &app.PaymentStatus, &app.CreatedAt,
+		&app.Goal, &app.ExperienceLevel, &app.HasLaptop, &app.Reference, &app.PaymentStatus, &app.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func (r *AcademyRepository) GetApplicationByReference(ctx context.Context, refer
 
 func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*domain.CohortApplication, error) {
 	query := `
-		SELECT id, first_name, last_name, email, phone, role, goal, reference, payment_status, created_at
+		SELECT id, first_name, last_name, email, phone, role, goal, experience_level, has_laptop, reference, payment_status, created_at
 		FROM cohort_applications
 		ORDER BY created_at DESC
 	`
@@ -70,7 +70,7 @@ func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*
 		app := &domain.CohortApplication{}
 		err := rows.Scan(
 			&app.ID, &app.FirstName, &app.LastName, &app.Email, &app.Phone, &app.CurrentRole,
-			&app.Goal, &app.Reference, &app.PaymentStatus, &app.CreatedAt,
+			&app.Goal, &app.ExperienceLevel, &app.HasLaptop, &app.Reference, &app.PaymentStatus, &app.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -839,4 +839,57 @@ func (r *AcademyRepository) GetStudentPaymentHistory(ctx context.Context, studen
 	return results, nil
 }
 
+// GetBillingsDueIn returns all billings with a due date arriving in exactly 'days' days.
+func (r *AcademyRepository) GetBillingsDueIn(ctx context.Context, days int) ([]*domain.StudentBilling, error) {
+	query := `
+		SELECT student_id, total_due, total_paid, next_payment_due_date, billing_status, created_at, updated_at
+		FROM student_billing
+		WHERE DATE(next_payment_due_date) = CURRENT_DATE + $1 * INTERVAL '1 day'
+		  AND billing_status = 'good_standing'
+	`
+	rows, err := r.db.Query(ctx, query, days)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
+	var results []*domain.StudentBilling
+	for rows.Next() {
+		b := &domain.StudentBilling{}
+		if err := rows.Scan(&b.StudentID, &b.TotalDue, &b.TotalPaid, &b.NextPaymentDueDate, &b.BillingStatus, &b.CreatedAt, &b.UpdatedAt); err != nil {
+			return nil, err
+		}
+		results = append(results, b)
+	}
+	return results, nil
+}
+
+// GetStudentsByIDs fetches a list of students by their UUIDs.
+func (r *AcademyRepository) GetStudentsByIDs(ctx context.Context, ids []uuid.UUID) ([]*domain.Student, error) {
+	if len(ids) == 0 {
+		return []*domain.Student{}, nil
+	}
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, reset_token, reset_token_expires_at, created_at
+		FROM students WHERE id = ANY($1)
+	`
+	rows, err := r.db.Query(ctx, query, ids)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []*domain.Student
+	for rows.Next() {
+		s := &domain.Student{}
+		err := rows.Scan(
+			&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.PasswordHash, &s.IsFirstLogin,
+			&s.Status, &s.WarningCount, &s.DisqualificationReason, &s.ResetToken, &s.ResetTokenExpiresAt, &s.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		students = append(students, s)
+	}
+	return students, nil
+}

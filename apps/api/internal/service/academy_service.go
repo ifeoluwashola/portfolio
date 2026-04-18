@@ -55,16 +55,18 @@ func (s *academyService) InitializeApplication(ctx context.Context, req *domain.
 	}
 
 	cohortApp := &domain.CohortApplication{
-		ID:            appID,
-		FirstName:     req.FirstName,
-		LastName:      req.LastName,
-		Email:         req.Email,
-		Phone:         req.Phone,
-		CurrentRole:   req.CurrentRole,
-		Goal:          req.Goal,
-		Reference:     reference,
-		PaymentStatus: "Pending",
-		CreatedAt:     time.Now(),
+		ID:              appID,
+		FirstName:       req.FirstName,
+		LastName:        req.LastName,
+		Email:           req.Email,
+		Phone:           req.Phone,
+		CurrentRole:     req.CurrentRole,
+		Goal:            req.Goal,
+		ExperienceLevel: req.ExperienceLevel,
+		HasLaptop:       req.HasLaptop,
+		Reference:       reference,
+		PaymentStatus:   "Pending",
+		CreatedAt:       time.Now(),
 	}
 
 	if err := s.repo.CreateApplication(ctx, cohortApp); err != nil {
@@ -78,6 +80,9 @@ func (s *academyService) InitializeApplication(ctx context.Context, req *domain.
 		"amount":       amountKobo,
 		"reference":    reference,
 		"callback_url": callbackURL,
+		"metadata": map[string]string{
+			"payment_type": "initial_registration",
+		},
 	}
 
 	bodyBytes, err := json.Marshal(paystackReqBody)
@@ -136,99 +141,96 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 		return nil
 	}
 
-	// 2. Mark application as Paid
-	if err := s.repo.UpdatePaymentStatus(ctx, event.Data.Reference, "Paid"); err != nil {
-		return fmt.Errorf("failed to update payment status: %w", err)
+	// 2. Determine payment context from Metadata (Primary Path)
+	var targetStudentID uuid.UUID
+	var isProvisioningRequired bool
+	var studentEmail string
+	var firstName string
+
+	metadata := event.Data.Metadata
+	if metadata.PaymentType == "installment" && metadata.StudentID != "" {
+		parsedID, err := uuid.Parse(metadata.StudentID)
+		if err == nil {
+			targetStudentID = parsedID
+			// Fetch student to get email for history/logs
+			student, _ := s.repo.GetStudentByID(ctx, targetStudentID)
+			if student != nil {
+				studentEmail = student.Email
+				firstName = student.FirstName
+			}
+		}
 	}
 
-	// 3. Fetch the application to get student context
-	app, err := s.repo.GetApplicationByReference(ctx, event.Data.Reference)
-	if err != nil {
-		log.Printf("ERROR: Could not fetch application for ref %s: %v\n", event.Data.Reference, err)
-		return nil
+	// 3. Fallback to Cohort Application check (Legacy/Initial Path)
+	if targetStudentID == uuid.Nil {
+		app, err := s.repo.GetApplicationByReference(ctx, event.Data.Reference)
+		if err == nil {
+			// Found an application — this is a registration
+			targetStudentID = app.ID
+			studentEmail = app.Email
+			firstName = app.FirstName
+			
+			// Update the application record itself
+			_ = s.repo.UpdatePaymentStatus(ctx, event.Data.Reference, "Paid")
+			
+			// Check if we need to provision a new account
+			_, studentErr := s.repo.GetStudentByEmail(ctx, studentEmail)
+			if studentErr != nil {
+				isProvisioningRequired = true
+			}
+		} else {
+			log.Printf("ERROR: Unidentified transaction ref %s (No application found and no student_id in metadata)\n", event.Data.Reference)
+			return nil
+		}
 	}
 
-	// 4. Determine if this is the FIRST payment (student provisioning)
-	//    We check if the student record already exists.
-	existingStudent, studentErr := s.repo.GetStudentByEmail(ctx, app.Email)
-
-	if studentErr != nil {
-		// Student does not exist yet — provision them
+	// 4. Provision Student Account if required (Registration Phase)
+	if isProvisioningRequired {
 		tempPassword, _ := generateTempPassword(8)
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
-		if err != nil {
-			log.Printf("ERROR: Failed to hash temp password: %v\n", err)
-			return nil
-		}
-
-		student := &domain.Student{
-			ID:           app.ID,
-			FirstName:    app.FirstName,
-			LastName:     app.LastName,
-			Email:        app.Email,
-			PasswordHash: string(hashedPassword),
-			IsFirstLogin: true,
-			CreatedAt:    time.Now(),
-		}
-		if err = s.repo.CreateStudent(ctx, student); err != nil {
-			log.Printf("ERROR: Failed to provision student account: %v\n", err)
-			return nil
-		}
-
-		// Initialise the billing ledger for the new student
-		if err = s.repo.CreateStudentBilling(ctx, student.ID); err != nil {
-			log.Printf("ERROR: Failed to create billing record for student %s: %v\n", student.ID, err)
-		}
-
-		existingStudent = student
-
-		// Send welcome email
-		if err = s.notification.SendStudentWelcomeEmail(app.FirstName, app.Email, tempPassword); err != nil {
-			log.Printf("ERROR: Failed to send welcome email to %s: %v\n", app.Email, err)
+		if err == nil {
+			student := &domain.Student{
+				ID:           targetStudentID,
+				FirstName:    firstName,
+				LastName:     "Student", // Default if not from app
+				Email:        studentEmail,
+				PasswordHash: string(hashedPassword),
+				IsFirstLogin: true,
+				CreatedAt:    time.Now(),
+			}
+			if err = s.repo.CreateStudent(ctx, student); err == nil {
+				_ = s.repo.CreateStudentBilling(ctx, student.ID)
+				_ = s.notification.SendStudentWelcomeEmail(firstName, studentEmail, tempPassword)
+			}
 		}
 	}
 
-	// 5. Record the payment in the immutable ledger (idempotent)
+	// 5. Record the payment in the immutable ledger
 	ph := &domain.PaymentHistory{
-		StudentID:   existingStudent.ID,
-		AmountPaid:  event.Data.Amount, // already in kobo from Paystack
+		StudentID:   targetStudentID,
+		AmountPaid:  event.Data.Amount,
 		Gateway:     "paystack",
 		ReferenceID: event.Data.Reference,
 	}
-	if err := s.repo.InsertPaymentHistory(ctx, ph); err != nil {
-		log.Printf("ERROR: Failed to insert payment history for ref %s: %v\n", event.Data.Reference, err)
-		// Non-fatal: log and continue
-	}
+	_ = s.repo.InsertPaymentHistory(ctx, ph)
 
 	// 6. Update billing totals
-	newTotal, err := s.repo.IncrementBillingPaid(ctx, existingStudent.ID, event.Data.Amount)
+	newTotal, err := s.repo.IncrementBillingPaid(ctx, targetStudentID, event.Data.Amount)
 	if err != nil {
-		log.Printf("ERROR: Failed to increment billing for student %s: %v\n", existingStudent.ID, err)
+		log.Printf("ERROR: Failed to increment billing for student %s: %v\n", targetStudentID, err)
 		return nil
 	}
 
 	const totalDueKobo = 25_000_000 // ₦250,000
-
 	if newTotal >= totalDueKobo {
-		// 7a. Fully paid — clear due date, mark as paid_in_full
-		if err := s.repo.SetBillingStatus(ctx, existingStudent.ID, "paid_in_full"); err != nil {
-			log.Printf("ERROR: Failed to set paid_in_full for student %s: %v\n", existingStudent.ID, err)
-		}
-		if err := s.repo.SetNextPaymentDue(ctx, existingStudent.ID, nil); err != nil {
-			log.Printf("ERROR: Failed to clear next_payment_due_date for student %s: %v\n", existingStudent.ID, err)
-		}
-		log.Printf("Student %s has completed full payment of ₦250,000\n", existingStudent.ID)
+		_ = s.repo.SetBillingStatus(ctx, targetStudentID, "paid_in_full")
+		_ = s.repo.SetNextPaymentDue(ctx, targetStudentID, nil)
+		log.Printf("[Webhook] Student %s fully paid (ref: %s)\n", targetStudentID, event.Data.Reference)
 	} else {
-		// 7b. Balance remains — set next due date to 30 days from now
 		nextDue := time.Now().Add(30 * 24 * time.Hour)
-		if err := s.repo.SetNextPaymentDue(ctx, existingStudent.ID, &nextDue); err != nil {
-			log.Printf("ERROR: Failed to set next_payment_due_date for student %s: %v\n", existingStudent.ID, err)
-		}
-		if err := s.repo.SetBillingStatus(ctx, existingStudent.ID, "good_standing"); err != nil {
-			log.Printf("ERROR: Failed to set good_standing for student %s: %v\n", existingStudent.ID, err)
-		}
-		log.Printf("Student %s paid %d kobo. Balance remaining: %d kobo. Next due: %s\n",
-			existingStudent.ID, event.Data.Amount, totalDueKobo-newTotal, nextDue.Format(time.RFC3339))
+		_ = s.repo.SetNextPaymentDue(ctx, targetStudentID, &nextDue)
+		_ = s.repo.SetBillingStatus(ctx, targetStudentID, "good_standing")
+		log.Printf("[Webhook] Student %s paid %d kobo. Next due: %s\n", targetStudentID, event.Data.Amount, nextDue.Format(time.RFC3339))
 	}
 
 	return nil
@@ -778,6 +780,10 @@ func (s *academyService) InitializeInstallmentPayment(ctx context.Context, stude
 		"amount":       amountKobo,
 		"reference":    reference,
 		"callback_url": callbackURL,
+		"metadata": map[string]string{
+			"payment_type": "installment",
+			"student_id":   studentID.String(),
+		},
 	}
 
 	bodyBytes, err := json.Marshal(paystackReqBody)
@@ -823,11 +829,13 @@ func (s *academyService) RunPaymentLockCron(ctx context.Context) {
 
 	// Run immediately on start as well
 	s.runLockPass(ctx)
+	s.runBillingReminderPass(ctx)
 
 	for {
 		select {
 		case <-ticker.C:
 			s.runLockPass(ctx)
+			s.runBillingReminderPass(ctx)
 		case <-ctx.Done():
 			log.Println("[Cron] Payment lock worker shutting down")
 			return
@@ -841,11 +849,62 @@ func (s *academyService) runLockPass(ctx context.Context) {
 		log.Printf("[Cron] Failed to query overdue billings: %v\n", err)
 		return
 	}
+	if len(overdue) == 0 {
+		return
+	}
+
 	for _, b := range overdue {
 		if lockErr := s.repo.SetBillingStatus(ctx, b.StudentID, "payment_locked"); lockErr != nil {
 			log.Printf("[Cron] Failed to lock student %s: %v\n", b.StudentID, lockErr)
+			continue
+		}
+
+		log.Printf("[Cron] Locked student %s (overdue since %v)\n", b.StudentID, b.NextPaymentDueDate)
+
+		// Send Critical suspension email
+		student, err := s.repo.GetStudentByID(ctx, b.StudentID)
+		if err != nil {
+			log.Printf("[Cron] Failed to fetch student %s for suspension email: %v\n", b.StudentID, err)
+			continue
+		}
+
+		remaining := b.TotalDue - b.TotalPaid
+		minToUnlock := 7500000 // ₦75,000 standard
+		if remaining < minToUnlock {
+			minToUnlock = remaining
+		}
+
+		if err := s.notification.SendAccountSuspendedEmail(student.Email, minToUnlock, remaining); err != nil {
+			log.Printf("[Cron] Failed to send suspension email to %s: %v\n", student.Email, err)
+		}
+	}
+}
+
+func (s *academyService) runBillingReminderPass(ctx context.Context) {
+	// Find students due in exactly 3 days
+	dueIn3, err := s.repo.GetBillingsDueIn(ctx, 3)
+	if err != nil {
+		log.Printf("[Cron] Failed to query billings due in 3 days: %v\n", err)
+		return
+	}
+
+	for _, b := range dueIn3 {
+		student, err := s.repo.GetStudentByID(ctx, b.StudentID)
+		if err != nil {
+			log.Printf("[Cron] Failed to fetch student %s for reminder email: %v\n", b.StudentID, err)
+			continue
+		}
+
+		amountDue := 7500000 // ₦75,000 standard
+		remaining := b.TotalDue - b.TotalPaid
+		if remaining < amountDue {
+			amountDue = remaining
+		}
+
+		if err := s.notification.SendBillingReminderEmail(student.Email, *b.NextPaymentDueDate, amountDue); err != nil {
+			log.Printf("[Cron] Failed to send billing reminder to %s: %v\n", student.Email, err)
 		} else {
-			log.Printf("[Cron] Locked student %s (overdue since %v)\n", b.StudentID, b.NextPaymentDueDate)
+			log.Printf("[Cron] Sent billing reminder to %s (due %v)\n", student.Email, *b.NextPaymentDueDate)
 		}
 	}
 }
