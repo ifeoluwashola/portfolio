@@ -16,7 +16,7 @@ export default function AcademySuccessPage() {
         </div>
         
         <h1 className="text-3xl sm:text-4xl font-extrabold mb-4 tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-sky-400">
-          Payment Successful.<br />Seat Secured.
+          Payment Successful.<br />Enrollment Confirmed.
         </h1>
         
         <p className="text-muted-foreground text-lg mb-8 leading-relaxed">

@@ -119,7 +119,7 @@ export default async function StudentDashboard() {
               </h2>
               
               <p className="text-muted-foreground leading-relaxed text-lg max-w-2xl mb-10">
-                Seats are locked. Access granted. You are now officially enrolled in the specialized Cloud Native Mentorship program. Complete your pre-flight checks below.
+                Enrollment confirmed. Access granted. You are now officially enrolled in the specialized Cloud Native Mentorship program. Complete your pre-flight checks below.
               </p>
               
               <div className="flex flex-wrap items-center gap-6 p-6 bg-background/50 border border-border/50 rounded-2xl">

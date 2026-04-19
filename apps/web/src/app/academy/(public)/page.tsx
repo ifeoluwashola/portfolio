@@ -97,7 +97,7 @@ export default function AcademyLandingPage() {
         {/* Subheadline */}
         <p className="relative z-10 max-w-2xl text-lg sm:text-xl text-muted-foreground leading-relaxed mb-12">
           A rigorous, <span className="text-yellow-600 dark:text-yellow-400 font-bold">16-week</span> immersive mentorship in Cloud Native Engineering.{" "}
-          <span className="text-foreground font-semibold">Zero tech background required</span>
+          <span className="">Zero tech background required</span>
           {" "}— just absolute dedication.
         </p>
 
@@ -176,7 +176,7 @@ export default function AcademyLandingPage() {
             <div className="space-y-4">
               {[
                 { icon: <Zap className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />, title: "The High-Frequency Schedule", desc: "Thu/Fri 9-11 PM (Core). Sat 10 AM-12 PM (Q&A). All sessions recorded & deployed instantly." },
-                { icon: <Users className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />, title: "Cohort-Capped at 20", desc: "Every student gets direct access to Lead Engineers. We deliberately reject scale for quality." },
+                { icon: <Users className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />, title: "Direct Instructor Access", desc: "Every student gets direct access to Lead Engineers. We prioritize quality oversight and personalized feedback for every participant." },
                 { icon: <Server className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />, title: "You Run Real Infra", desc: "Your AWS and GCP accounts. Your Terraform state. Your Kubernetes cluster. Real costs, real stakes." },
               ].map(({ icon, title, desc }) => (
                   <div key={title} className="flex gap-4 p-5 bg-card/60 border border-border rounded-2xl hover:border-yellow-500/20 transition-colors">
@@ -411,7 +411,7 @@ export default function AcademyLandingPage() {
                 {[
                   "Complete access to the 16-week program",
                   "Live recordings instantly available-on-demand",
-                  "Priority cohort seat confirmation",
+                  "Priority enrollment confirmation",
                   "Lifetime alumni network access",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
@@ -438,12 +438,12 @@ export default function AcademyLandingPage() {
                   Kybern Flexible Ledger
                 </span>
                 <p className="text-4xl font-black text-cyan-600 dark:text-cyan-300 font-mono mt-4">₦100,000</p>
-                <p className="text-muted-foreground/60 text-sm mt-2 font-bold uppercase tracking-widest">Initial deposit to secure your seat.</p>
+                <p className="text-muted-foreground/60 text-sm mt-2 font-bold uppercase tracking-widest">Initial deposit for program admission.</p>
               </div>
 
               <ul className="space-y-3 flex-1">
                 {[
-                  "Secure your cohort seat immediately",
+                  "Confirm your enrollment immediately",
                   "Full portal & recording access from day one",
                   "Pay remaining ₦150k over installments",
                   "4-Week Advanced Capstone Phase included",
@@ -506,29 +506,29 @@ export default function AcademyLandingPage() {
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-6 font-black uppercase tracking-[0.3em]">
-            ⚡ Limited Enrollment
+            ⚡ Enrollment Open
           </p>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-6">
-            Seats for Cohort 1 are strictly<br />
-            <span className="text-muted-foreground/30">limited to ensure</span>{" "}
+            Admission for Cohort 1 is<br />
+            <span className="text-muted-foreground/30">curated to ensure</span>{" "}
             <span className="text-yellow-500 dark:text-yellow-400">high-quality mentorship.</span>
           </h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto leading-relaxed">
-            We cap every cohort at 20 engineers. When the seats are gone, they are gone. The next opening is Cohort 2 — with no confirmed date yet.
+            Join a community of high-performing engineers. Our roadmap is designed for those ready to master live infrastructure and professional DevOps workflows.
           </p>
 
           <Link
             href="/academy/register"
             className="group inline-flex items-center gap-4 px-10 py-5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-base uppercase tracking-widest rounded-2xl transition-all duration-200 shadow-[0_0_50px_rgba(234,179,8,0.4)] hover:shadow-[0_0_80px_rgba(234,179,8,0.6)] active:scale-[0.99]"
           >
-            Secure Your Seat
+            Confirm Enrollment
             <ArrowRight className="w-6 h-6 group-hover:translate-x-1.5 transition-transform" />
           </Link>
 
           {/* Trust signals */}
           <div className="flex flex-wrap justify-center gap-8 mt-16 pt-10 border-t border-border text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
             <span className="flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-muted-foreground/30" /> SSL Secured Payments</span>
-            <span className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-muted-foreground/30" /> Max 20 Students / Cohort</span>
+            <span className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-muted-foreground/30" /> Direct Instructor Access</span>
             <span className="flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-muted-foreground/30" /> Live Engineering Sessions</span>
           </div>
 

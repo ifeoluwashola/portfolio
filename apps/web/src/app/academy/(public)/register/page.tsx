@@ -72,8 +72,8 @@ export default function RegisterPage() {
             </h1>
 
             <p className="text-muted-foreground/80 text-lg leading-relaxed mb-10">
-              Admission to Kybern Academy is restricted to 20 seats. We prioritise candidates 
-              demonstrating high commitment to the 16-week immersive schedule.
+              Admission to Kybern Academy prioritises candidates demonstrating
+              high commitment to the 16-week immersive schedule.
             </p>
 
             <div className="space-y-6">
