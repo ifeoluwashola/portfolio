@@ -912,3 +912,85 @@ func (s *academyService) runBillingReminderPass(ctx context.Context) {
 		}
 	}
 }
+
+// ─── Admin Command Center ───────────────────────────────────────────────────
+
+func (s *academyService) GetBillingOverview(ctx context.Context) (*domain.BillingOverview, error) {
+	return s.repo.GetBillingOverview(ctx)
+}
+
+func (s *academyService) GetAllStudentBillings(ctx context.Context) ([]*domain.AdminStudentBilling, error) {
+	return s.repo.GetAllStudentBillings(ctx)
+}
+
+func (s *academyService) ProcessManualPayment(ctx context.Context, req *domain.ManualPaymentRequest) error {
+	student, err := s.repo.GetStudentByID(ctx, req.StudentID)
+	if err != nil {
+		return err
+	}
+
+	billing, err := s.repo.GetStudentBilling(ctx, req.StudentID)
+	if err != nil {
+		return err
+	}
+
+	// 1. Generate Automatic Reference
+	reference := fmt.Sprintf("MANUAL-%d-%s", time.Now().Unix(), uuid.New().String()[:8])
+
+	// 2. Insert into Ledger
+	ph := &domain.PaymentHistory{
+		StudentID:   req.StudentID,
+		AmountPaid:  req.Amount,
+		Gateway:     "manual",
+		ReferenceID: reference,
+	}
+	if err := s.repo.InsertPaymentHistory(ctx, ph); err != nil {
+		return err
+	}
+
+	// 3. Update Totals
+	newTotal, err := s.repo.IncrementBillingPaid(ctx, req.StudentID, req.Amount)
+	if err != nil {
+		return err
+	}
+
+	// 4. Update Status Logic
+	if newTotal >= billing.TotalDue {
+		_ = s.repo.SetBillingStatus(ctx, req.StudentID, "paid_in_full")
+		_ = s.repo.SetNextPaymentDue(ctx, req.StudentID, nil)
+	} else if billing.BillingStatus == "payment_locked" {
+		// Unlock account if they've made a payment (even partial manual for now)
+		_ = s.repo.SetBillingStatus(ctx, req.StudentID, "good_standing")
+	}
+
+	// 5. Success Email (Fire and forget)
+	remaining := billing.TotalDue - newTotal
+	_ = s.notification.SendPaymentConfirmationEmail(student.Email, req.Amount, remaining)
+
+	return nil
+}
+
+func (s *academyService) UpdateStudentStatus(ctx context.Context, id uuid.UUID, req *domain.UpdateStudentStatusRequest) error {
+	student, err := s.repo.GetStudentByID(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	// 1. Handle Academic Status transition
+	if req.AcademicStatus != student.Status {
+		err := s.repo.UpdateStudentStatus(ctx, id, req.AcademicStatus, "")
+		if err != nil {
+			return err
+		}
+
+		// Notifications
+		if req.AcademicStatus == "probation" {
+			_ = s.notification.SendAcademicProbationEmail(student.FirstName, student.Email, "Academic underperformance or policy violation")
+		} else if req.AcademicStatus == "disqualified" {
+			_ = s.notification.SendStudentDisqualificationEmail(student.FirstName, student.Email, "Violation of platform terms")
+		}
+	}
+
+	// 2. Handle Portal Lock
+	return s.repo.SetManualLock(ctx, id, req.IsManuallyLocked)
+}

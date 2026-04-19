@@ -809,4 +809,99 @@ func (h *AcademyHandler) HandleGetBillingHub(w http.ResponseWriter, r *http.Requ
 	json.NewEncoder(w).Encode(hub)
 }
 
+// ─── Admin Command Center ───────────────────────────────────────────────────
+
+func (h *AcademyHandler) HandleGetAdminBillingOverview(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	overview, err := h.svc.GetBillingOverview(r.Context())
+	if err != nil {
+		writeJSONError(w, "Failed to retrieve billing overview: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(overview)
+}
+
+func (h *AcademyHandler) HandleGetAllStudentBillings(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	billings, err := h.svc.GetAllStudentBillings(r.Context())
+	if err != nil {
+		writeJSONError(w, "Failed to retrieve student billings: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(billings)
+}
+
+func (h *AcademyHandler) HandleManualPayment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req domain.ManualPaymentRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if req.StudentID == uuid.Nil || req.Amount <= 0 {
+		writeJSONError(w, "Missing student_id or valid amount", http.StatusBadRequest)
+		return
+	}
+
+	err := h.svc.ProcessManualPayment(r.Context(), &req)
+	if err != nil {
+		writeJSONError(w, "Failed to process manual payment: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func (h *AcademyHandler) HandleUpdateStudentStatus(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract ID from URL (Assumes /api/v1/admin/students/:id/status)
+	pathParts := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+	if len(pathParts) < 4 {
+		writeJSONError(w, "Invalid student ID in path", http.StatusBadRequest)
+		return
+	}
+	studentID, err := uuid.Parse(pathParts[3])
+	if err != nil {
+		writeJSONError(w, "Invalid student UUID", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.UpdateStudentStatusRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	err = h.svc.UpdateStudentStatus(r.Context(), studentID, &req)
+	if err != nil {
+		writeJSONError(w, "Failed to update student status: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
 

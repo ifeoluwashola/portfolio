@@ -165,11 +165,29 @@ export default function RegisterPage() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Phone</label>
                   <input 
-                    name="phone"
+                    name="phone" required
                     className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors"
                     placeholder="+234..."
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Current Role / Student Status</label>
+                <input 
+                  name="current_role" required
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors"
+                  placeholder="e.g. Frontend Developer, Final Year Student..."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Why do you want to join Kybern Academy?</label>
+                <textarea 
+                  name="goal" required
+                  className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors min-h-[80px]"
+                  placeholder="Briefly describe your professional goals..."
+                />
               </div>
 
               {/* Hardware / Readiness */}

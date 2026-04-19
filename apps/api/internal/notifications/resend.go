@@ -390,6 +390,72 @@ func (n *ResendNotifier) SendStudentDisqualificationEmail(firstName, email, reas
     _, err := n.client.Emails.Send(params)
     return err
 }
+
+func (n *ResendNotifier) SendAcademicProbationEmail(firstName, email, reason string) error {
+    subject := "OFFICIAL NOTICE: Academic Probation Status"
+    sender := "Kybern Academy Admin <academy@kyberncloud.com>"
+
+    htmlTemplate := `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <style>
+                body { font-family: "Courier New", Consolas, monospace; line-height: 1.6; color: #94a3b8; margin: 0; padding: 20px; background-color: #020617; }
+                .wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #eab308; border-radius: 6px; overflow: hidden; }
+                .header { background-color: rgba(234, 179, 8, 0.1); padding: 20px; border-bottom: 2px solid #eab308; }
+                .header-text { color: #eab308; font-size: 16px; font-weight: bold; margin: 0; letter-spacing: 1px; }
+                .content { padding: 30px; }
+                .greeting { color: #f8fafc; font-size: 16px; font-weight: bold; margin-bottom: 15px; }
+                .probation-box { background-color: rgba(234, 179, 8, 0.05); border-left: 4px solid #eab308; padding: 15px; margin: 25px 0; }
+                .probation-title { color: #eab308; font-weight: bold; font-size: 14px; margin-bottom: 5px; }
+                .probation-detail { color: #f8fafc; font-size: 14px; }
+                .reason-container { margin: 25px 0; }
+                .reason-label { color: #f8fafc; font-size: 12px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; display: block; }
+                .reason-box { background-color: #020617; border: 1px solid #1e293b; padding: 15px; color: #cbd5e1; font-size: 14px; white-space: pre-wrap; border-radius: 4px; }
+                .footer { background-color: #020617; padding: 20px; text-align: center; border-top: 1px solid #1e293b; font-size: 12px; color: #64748b; }
+            </style>
+        </head>
+        <body>
+            <div class="wrapper">
+                <div class="header">
+                    <p class="header-text">> WARNING: ACADEMIC_PROBATION_NOTICE</p>
+                </div>
+                <div class="content">
+                    <div class="greeting">Hello %s,</div>
+                    <p>This is an official notice that your academic status at Kybern Academy has been changed to <strong>Probation</strong>.</p>
+                    
+                    <div class="probation-box">
+                        <div class="probation-title">STATUS: PROBATIONARY HOLD</div>
+                        <div class="probation-detail">While you still have access to the curriculum, your performance and participation will be closely monitored for the next 2 weeks.</div>
+                    </div>
+
+                    <div class="reason-container">
+                        <span class="reason-label">Reason for Probation:</span>
+                        <div class="reason-box">%s</div>
+                    </div>
+
+                    <p>Failure to meet the required standards during this period may lead to disqualification. Please reach out to the instructional team to discuss your recovery plan.</p>
+                </div>
+                <div class="footer">
+                    Kybern Academy Instruction Team<br/>
+                    <span style="font-size: 10px; opacity: 0.5; margin-top: 10px; display: block;">OFFICIAL ACADEMY CORRESPONDENCE</span>
+                </div>
+            </div>
+        </body>
+        </html>
+    `
+
+    htmlBody := fmt.Sprintf(htmlTemplate, firstName, reason)
+    params := &resend.SendEmailRequest{
+        From:    sender,
+        To:      []string{email},
+        Subject: subject,
+        Html:    htmlBody,
+    }
+
+    _, err := n.client.Emails.Send(params)
+    return err
+}
 func (n *ResendNotifier) SendBillingReminderEmail(email string, dueDate time.Time, amountKobo int) error {
 	subject := "SYSTEM_LEDGER: INVOICE_PENDING"
 	sender := "Kybern Academy Ledger <academy@kyberncloud.com>"

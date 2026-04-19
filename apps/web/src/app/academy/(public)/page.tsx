@@ -168,8 +168,8 @@ export default function AcademyLandingPage() {
                 {" "}From day one, you operate like a professional — provisioning live infrastructure, debugging production failures, and communicating architectural decisions in writing.
               </p>
               <p>
-                Every session is recorded and instantly deployed to your dashboard for revision. However, we maintain a live-first, high-accountability culture. If you miss the live interaction, you miss the critical logic-building phase. This is how real engineering teams operate, and it is precisely how you develop the{" "}
-                <span className="text-yellow-400 font-semibold">instincts that employers pay for.</span>
+                Every session is recorded and instantly archived in your private student dashboard. This allows for infinite revision of complex architectural discussions while maintaining the high-accountability, live-first culture required to develop the{" "}
+                <span className="text-yellow-400 font-semibold">instincts that senior engineers pay for.</span>
               </p>
             </div>
 

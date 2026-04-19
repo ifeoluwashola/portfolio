@@ -181,3 +181,35 @@ export async function adminFetch(path: string, options: RequestInit = {}) {
     return { error: "API request failed", status: 500 };
   }
 }
+
+// ===== ACADEMY ADMIN ACTIONS =====
+
+export async function getBillingOverview() {
+  const result = await adminFetch("/v1/admin/billing/overview");
+  if (result.error) return { error: result.error };
+  return { data: result.data };
+}
+
+export async function getBillingLedger() {
+  const result = await adminFetch("/v1/admin/billing/ledger");
+  if (result.error) return { error: result.error };
+  return { data: result.data };
+}
+
+export async function logManualPayment(studentID: string, amount: number, note: string) {
+  const result = await adminFetch("/v1/admin/billing/manual-payment", {
+    method: "POST",
+    body: JSON.stringify({ student_id: studentID, amount, note }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
+export async function updateStudentStatus(studentID: string, academicStatus: string, isManuallyLocked: boolean) {
+  const result = await adminFetch(`/v1/admin/students/${studentID}/status`, {
+    method: "PUT",
+    body: JSON.stringify({ academic_status: academicStatus, is_manually_locked: isManuallyLocked }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}

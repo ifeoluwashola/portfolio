@@ -92,14 +92,14 @@ func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*
 
 func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, reset_token, reset_token_expires_at, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, created_at
 		FROM students WHERE email = $1
 	`
 	student := &domain.Student{}
 	err := r.db.QueryRow(ctx, query, email).Scan(
 		&student.ID, &student.FirstName, &student.LastName, &student.Email,
 		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount, 
-		&student.DisqualificationReason, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt,
+		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -109,14 +109,14 @@ func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string)
 
 func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, reset_token, reset_token_expires_at, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, created_at
 		FROM students WHERE id = $1
 	`
 	student := &domain.Student{}
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&student.ID, &student.FirstName, &student.LastName, &student.Email,
 		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
-		&student.DisqualificationReason, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt,
+		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (r *AcademyRepository) GetStudentByResetToken(ctx context.Context, token st
 
 func (r *AcademyRepository) GetAllStudents(ctx context.Context) ([]*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, status, warning_count, disqualification_reason, created_at
+		SELECT id, first_name, last_name, email, status, warning_count, disqualification_reason, is_manually_locked, created_at
 		FROM students ORDER BY created_at DESC
 	`
 	rows, err := r.db.Query(ctx, query)
@@ -184,7 +184,7 @@ func (r *AcademyRepository) GetAllStudents(ctx context.Context) ([]*domain.Stude
 	var students []*domain.Student
 	for rows.Next() {
 		s := &domain.Student{}
-		err := rows.Scan(&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.Status, &s.WarningCount, &s.DisqualificationReason, &s.CreatedAt)
+		err := rows.Scan(&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.Status, &s.WarningCount, &s.DisqualificationReason, &s.IsManuallyLocked, &s.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -870,7 +870,7 @@ func (r *AcademyRepository) GetStudentsByIDs(ctx context.Context, ids []uuid.UUI
 		return []*domain.Student{}, nil
 	}
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, reset_token, reset_token_expires_at, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, created_at
 		FROM students WHERE id = ANY($1)
 	`
 	rows, err := r.db.Query(ctx, query, ids)
@@ -884,7 +884,7 @@ func (r *AcademyRepository) GetStudentsByIDs(ctx context.Context, ids []uuid.UUI
 		s := &domain.Student{}
 		err := rows.Scan(
 			&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.PasswordHash, &s.IsFirstLogin,
-			&s.Status, &s.WarningCount, &s.DisqualificationReason, &s.ResetToken, &s.ResetTokenExpiresAt, &s.CreatedAt,
+			&s.Status, &s.WarningCount, &s.DisqualificationReason, &s.IsManuallyLocked, &s.ResetToken, &s.ResetTokenExpiresAt, &s.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
@@ -892,4 +892,61 @@ func (r *AcademyRepository) GetStudentsByIDs(ctx context.Context, ids []uuid.UUI
 		students = append(students, s)
 	}
 	return students, nil
+}
+
+// ─── Admin Command Center ───────────────────────────────────────────────────
+
+func (r *AcademyRepository) GetBillingOverview(ctx context.Context) (*domain.BillingOverview, error) {
+	query := `
+		SELECT 
+			COALESCE(SUM(total_paid), 0) as total_revenue,
+			COALESCE(SUM(total_due - total_paid), 0) as pending_receivables,
+			COUNT(*) FILTER (WHERE billing_status = 'payment_locked') as overdue_accounts
+		FROM student_billing
+	`
+	stats := &domain.BillingOverview{}
+	err := r.db.QueryRow(ctx, query).Scan(&stats.TotalRevenue, &stats.PendingReceivables, &stats.OverdueAccounts)
+	return stats, err
+}
+
+func (r *AcademyRepository) GetAllStudentBillings(ctx context.Context) ([]*domain.AdminStudentBilling, error) {
+	query := `
+		SELECT 
+			s.id, s.first_name, s.last_name, s.email, 
+			sb.total_paid, (sb.total_due - sb.total_paid) as remaining_balance,
+			sb.next_payment_due_date, sb.billing_status, s.status as academic_status,
+			s.is_manually_locked
+		FROM students s
+		JOIN student_billing sb ON s.id = sb.student_id
+		ORDER BY s.first_name ASC
+	`
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*domain.AdminStudentBilling
+	for rows.Next() {
+		b := &domain.AdminStudentBilling{}
+		err := rows.Scan(
+			&b.ID, &b.FirstName, &b.LastName, &b.Email,
+			&b.TotalPaid, &b.RemainingBalance, &b.NextPaymentDueDate,
+			&b.BillingStatus, &b.AcademicStatus, &b.IsManuallyLocked,
+		)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, b)
+	}
+	if results == nil {
+		results = []*domain.AdminStudentBilling{}
+	}
+	return results, nil
+}
+
+func (r *AcademyRepository) SetManualLock(ctx context.Context, id uuid.UUID, locked bool) error {
+	query := `UPDATE students SET is_manually_locked = $2 WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id, locked)
+	return err
 }

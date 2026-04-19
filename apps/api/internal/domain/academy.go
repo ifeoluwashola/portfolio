@@ -37,9 +37,10 @@ type Student struct {
 	LastName               string    `json:"last_name"`
 	Email                  string    `json:"email"`
 	PasswordHash           string    `json:"-"`
-	Status                 string    `json:"status"` // active, graduated, disqualified
+	Status                 string    `json:"status"` // active, graduated, disqualified, probation
 	WarningCount           int       `json:"warning_count"`
 	DisqualificationReason *string   `json:"disqualification_reason,omitempty"`
+	IsManuallyLocked       bool      `json:"is_manually_locked"`
 	IsFirstLogin           bool      `json:"is_first_login"`
 	ResetToken             *string   `json:"-"`
 	ResetTokenExpiresAt    *time.Time `json:"-"`
@@ -110,9 +111,13 @@ type AcademyRepository interface {
 	GetLabSubmissions(ctx context.Context, labID int) ([]*LabSubmission, error)
 	UpdateLabSubmissionWinner(ctx context.Context, submissionID int, isWinner bool) error
 
-	// Comments
 	CreateSubmissionComment(ctx context.Context, comment *SubmissionComment) error
 	GetSubmissionComments(ctx context.Context, submissionID int) ([]*SubmissionComment, error)
+
+	// Admin Command Center
+	GetBillingOverview(ctx context.Context) (*BillingOverview, error)
+	GetAllStudentBillings(ctx context.Context) ([]*AdminStudentBilling, error)
+	SetManualLock(ctx context.Context, id uuid.UUID, locked bool) error
 }
 
 type AcademyService interface {
@@ -157,6 +162,12 @@ type AcademyService interface {
 	ApproveCapstone(ctx context.Context, id int, req *ApproveCapstoneRequest) error
 	GetStudentSession(ctx context.Context, studentID uuid.UUID) (*StudentSessionResponse, error)
 
+	// Admin Command Center
+	GetBillingOverview(ctx context.Context) (*BillingOverview, error)
+	GetAllStudentBillings(ctx context.Context) ([]*AdminStudentBilling, error)
+	ProcessManualPayment(ctx context.Context, req *ManualPaymentRequest) error
+	UpdateStudentStatus(ctx context.Context, id uuid.UUID, req *UpdateStudentStatusRequest) error
+
 	// Billing & Installments
 	GetBillingStatus(ctx context.Context, studentID uuid.UUID) (*StudentBilling, error)
 	GetBillingHub(ctx context.Context, studentID uuid.UUID) (*BillingHubResponse, error)
@@ -187,6 +198,7 @@ type NotificationService interface {
 	SendBillingReminderEmail(email string, dueDate time.Time, amountKobo int) error
 	SendAccountSuspendedEmail(email string, minAmountKobo int, remainingBalanceKobo int) error
 	SendPaymentConfirmationEmail(email string, amountKobo int, remainingKobo int) error
+	SendAcademicProbationEmail(firstName, email, reason string) error
 }
 
 type AcademyApplyRequest struct {
@@ -463,4 +475,35 @@ type DisqualifyRequest struct {
 
 type DisqualifyStudentRequest struct {
 	Reason string `json:"reason"`
+}
+// ─── Admin Command Center Types ───────────────────────────────────────────────
+
+type BillingOverview struct {
+	TotalRevenue       int `json:"total_revenue"`        // Total collected
+	PendingReceivables int `json:"pending_receivables"` // Expected from active plans
+	OverdueAccounts    int `json:"overdue_accounts"`    // Count of locked students
+}
+
+type AdminStudentBilling struct {
+	ID                 uuid.UUID  `json:"id"`
+	FirstName          string     `json:"first_name"`
+	LastName           string     `json:"last_name"`
+	Email              string     `json:"email"`
+	TotalPaid          int        `json:"total_paid"`
+	RemainingBalance   int        `json:"remaining_balance"`
+	NextPaymentDueDate *time.Time `json:"next_payment_due_date"`
+	BillingStatus      string     `json:"billing_status"`
+	AcademicStatus     string     `json:"academic_status"`
+	IsManuallyLocked   bool       `json:"is_manually_locked"`
+}
+
+type ManualPaymentRequest struct {
+	StudentID uuid.UUID `json:"student_id"`
+	Amount    int       `json:"amount"` // in kobo
+	Note      string    `json:"note"`
+}
+
+type UpdateStudentStatusRequest struct {
+	AcademicStatus   string `json:"academic_status"`     // active, graduated, disqualified, probation
+	IsManuallyLocked bool   `json:"is_manually_locked"`
 }

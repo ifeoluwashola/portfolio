@@ -216,6 +216,12 @@ func main() {
 	mux.HandleFunc("GET /api/v1/admin/students", authMW.RequireAuth(academyHandler.HandleListAllStudents))
 	mux.HandleFunc("POST /api/v1/admin/students/{id}/warn", authMW.RequireAuth(academyHandler.HandleWarnStudent))
 	mux.HandleFunc("POST /api/v1/admin/students/{id}/disqualify", authMW.RequireAuth(academyHandler.HandleDisqualifyStudent))
+	mux.HandleFunc("PUT /api/v1/admin/students/{id}/status", authMW.RequireAuth(academyHandler.HandleUpdateStudentStatus))
+
+	// Financial Command Center (admin)
+	mux.HandleFunc("GET /api/v1/admin/billing/overview", authMW.RequireAuth(academyHandler.HandleGetAdminBillingOverview))
+	mux.HandleFunc("GET /api/v1/admin/billing/ledger", authMW.RequireAuth(academyHandler.HandleGetAllStudentBillings))
+	mux.HandleFunc("POST /api/v1/admin/billing/manual-payment", authMW.RequireAuth(academyHandler.HandleManualPayment))
 	mux.HandleFunc("GET /api/v1/admin/alumni/eligible", authMW.RequireAuth(academyHandler.HandleGetEligibleStudents))
 	mux.HandleFunc("GET /api/v1/admin/alumni/pending", authMW.RequireAuth(academyHandler.HandleListPendingCapstones))
 	mux.HandleFunc("POST /api/v1/admin/alumni/approve/{id}", authMW.RequireAuth(academyHandler.HandleApproveCapstone))

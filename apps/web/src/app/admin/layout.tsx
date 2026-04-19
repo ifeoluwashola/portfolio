@@ -34,6 +34,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const academyLinks = [
     { href: "/admin/cohort", label: "Applications", icon: <Users className="h-4 w-4" /> },
+    { href: "/admin/academy/billing", label: "Billing & Revenue", icon: <GraduationCap className="h-4 w-4" /> },
     { href: "/admin/academy/students", label: "Student Management", icon: <Users className="h-4 w-4" /> },
     { href: "/admin/academy/curriculum", label: "Curriculum", icon: <BookOpen className="h-4 w-4" /> },
     { href: "/admin/academy/submissions", label: "Submissions", icon: <GraduationCap className="h-4 w-4" /> },
