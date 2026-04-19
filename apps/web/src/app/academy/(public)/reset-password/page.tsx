@@ -61,7 +61,7 @@ function ResetPasswordForm() {
       <div className="text-center p-8 bg-red-500/10 border border-red-500/20 rounded-xl max-w-md w-full">
         <h2 className="text-red-400 font-bold mb-4 uppercase tracking-tighter text-xl">Critical Error: Broken Link</h2>
         <p className="text-red-400/80 text-sm mb-6">Reset token is missing or corrupted. Contact academy support terminal.</p>
-        <Link href="/academy/forgot-password" className="text-slate-300 hover:text-yellow-500 underline text-xs font-bold uppercase transition-colors">
+        <Link href="/academy/forgot-password" className="text-muted-foreground hover:text-yellow-500 underline text-xs font-bold uppercase transition-colors">
           $ sudo systemctl restart password_reset
         </Link>
       </div>
@@ -69,15 +69,15 @@ function ResetPasswordForm() {
   }
 
   return (
-    <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden group">
+    <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-2xl relative overflow-hidden group">
       <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500/20" />
 
       <div className="flex flex-col items-center mb-10 mt-2 text-center">
-        <div className="w-12 h-12 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center mb-6 text-yellow-500">
+        <div className="w-12 h-12 bg-background rounded-lg border border-border flex items-center justify-center mb-6 text-yellow-500">
           <Key className="w-6 h-6" />
         </div>
-        <h1 className="text-2xl font-bold text-slate-100 uppercase tracking-tight">Set_New_Password</h1>
-        <p className="text-slate-500 text-sm mt-3">{"{ status: 'authenticated_via_token' }"}</p>
+        <h1 className="text-2xl font-bold text-foreground uppercase tracking-tight">Set_New_Password</h1>
+        <p className="text-muted-foreground/60 text-sm mt-3">{"{ status: 'authenticated_via_token' }"}</p>
       </div>
 
       {successMsg ? (
@@ -98,7 +98,7 @@ function ResetPasswordForm() {
           )}
 
           <div className="space-y-2">
-            <label className="text-xs font-medium text-slate-500 flex items-center gap-2 uppercase tracking-wide">
+            <label className="text-xs font-medium text-muted-foreground/60 flex items-center gap-2 uppercase tracking-wide">
               <Lock className="w-3.5 h-3.5" />
               NEW_PASSWORD
             </label>
@@ -108,13 +108,13 @@ function ResetPasswordForm() {
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full bg-slate-950/50 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-yellow-500/50 transition-all text-sm"
+              className="w-full bg-background/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-yellow-500/50 transition-all text-sm"
               disabled={isLoading}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-medium text-slate-500 flex items-center gap-2 uppercase tracking-wide">
+            <label className="text-xs font-medium text-muted-foreground/60 flex items-center gap-2 uppercase tracking-wide">
               <Lock className="w-3.5 h-3.5" />
               CONFIRM_NEW_PASSWORD
             </label>
@@ -124,7 +124,7 @@ function ResetPasswordForm() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               placeholder="••••••••••••"
-              className="w-full bg-slate-950/50 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 focus:outline-none focus:border-yellow-500/50 transition-all text-sm"
+              className="w-full bg-background/50 border border-border rounded-lg px-4 py-3 text-foreground focus:outline-none focus:border-yellow-500/50 transition-all text-sm"
               disabled={isLoading}
             />
           </div>
@@ -144,7 +144,7 @@ function ResetPasswordForm() {
 
 export default function ResetPasswordPage() {
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 font-mono">
+    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 font-mono text-foreground">
       <Suspense fallback={<div className="text-yellow-500">Initializing Recovery Protocol...</div>}>
         <ResetPasswordForm />
       </Suspense>

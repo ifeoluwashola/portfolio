@@ -449,7 +449,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
       {/* Global Enrollment CTA for Public Students */}
       {!isAuthenticated && (
         <div className="max-w-5xl mx-auto px-6 mt-32">
-          <div className="bg-gradient-to-br from-yellow-500/10 to-card border border-yellow-500/20 rounded-3xl p-12 text-center relative overflow-hidden">
+          <div className="bg-card border border-yellow-500/20 rounded-3xl p-12 text-center relative overflow-hidden">
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
             <div className="relative z-10">
               <h2 className="text-3xl font-bold mb-4 tracking-tighter uppercase">

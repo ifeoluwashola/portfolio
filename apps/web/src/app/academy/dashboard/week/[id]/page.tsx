@@ -105,26 +105,26 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
           <div className="text-[10px] font-bold text-yellow-500/60 border border-yellow-500/20 px-2 py-0.5 uppercase rounded">
             Module {week.week_number}
           </div>
-          <div className="h-px bg-slate-900 flex-1" />
+          <div className="h-px bg-border flex-1" />
         </div>
-        <h1 className="text-4xl font-bold tracking-tight text-slate-100">{week.title}</h1>
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">{week.title}</h1>
       </div>
 
       {/* Dynamic Content States */}
       {week.status === 'locked' && (
-        <div className="bg-slate-900/50 border border-slate-900 rounded-3xl p-12 text-center space-y-6">
-          <div className="w-20 h-20 bg-slate-950 rounded-full flex items-center justify-center mx-auto border border-slate-800">
-            < Lock className="w-8 h-8 text-slate-700" />
+        <div className="bg-card/50 border border-border rounded-3xl p-12 text-center space-y-6">
+          <div className="w-20 h-20 bg-background rounded-full flex items-center justify-center mx-auto border border-border">
+            < Lock className="w-8 h-8 text-muted-foreground/30" />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-slate-400">ACCESS DENIED: Module Status Locked</h3>
-            <p className="text-slate-600 text-sm max-w-sm mx-auto leading-relaxed"> This deployment block is currently locked by the academy. Modules will unlock sequentially following prerequisite completion. </p>
+            <h3 className="text-xl font-bold text-muted-foreground">ACCESS DENIED: Module Status Locked</h3>
+            <p className="text-muted-foreground/60 text-sm max-w-sm mx-auto leading-relaxed"> This deployment block is currently locked by the academy. Modules will unlock sequentially following prerequisite completion. </p>
           </div>
         </div>
       )}
 
       {week.status === 'pre-flight' && (
-        <div className="bg-slate-900 border border-slate-800 rounded-3xl p-10 flex flex-col items-center text-center space-y-8">
+        <div className="bg-card border border-border rounded-3xl p-10 flex flex-col items-center text-center space-y-8">
            <div className="flex items-center gap-4 px-4 py-2 bg-amber-500/10 border border-amber-500/20 rounded-full">
             <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
             <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Status: Ready to Execute</span>
@@ -135,14 +135,14 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
             <p className="text-slate-500 text-sm leading-relaxed tracking-tight"> The environment is provisioned. Labs are compiled. Waiting for instructor to initiate the live session relay for this module. Check the Telegram group for the live ping. </p>
           </div>
 
-          <div className="w-full h-px bg-slate-900" />
+          <div className="w-full h-px bg-border" />
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
-            <div className="flex flex-col items-center gap-2 opacity-30 cursor-not-allowed grayscale p-6 border border-slate-900 rounded-2xl">
-              <div className="w-12 h-12 bg-slate-950 border border-slate-800 rounded-full flex items-center justify-center text-slate-700 mb-2">
+            <div className="flex flex-col items-center gap-2 opacity-30 cursor-not-allowed grayscale p-6 border border-border rounded-2xl">
+              <div className="w-12 h-12 bg-background border border-border rounded-full flex items-center justify-center text-muted-foreground/40 mb-2">
                 <PlayCircle className="w-8 h-8" />
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-600">Awaiting Signal...</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Awaiting Signal...</p>
             </div>
             
             {week.materials && week.materials.length > 0 && (
@@ -150,7 +150,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                 <h4 className="text-[10px] font-black uppercase tracking-widest text-yellow-500/80 underline decoration-yellow-500/20 underline-offset-4">Module Intelligence</h4>
                 <div className="space-y-2">
                   {week.materials.map((mat, i) => (
-                    <a key={i} href={mat.url} target="_blank" className="flex items-center justify-between text-xs text-slate-400 hover:text-yellow-500 transition-colors group/link">
+                    <a key={i} href={mat.url} target="_blank" className="flex items-center justify-between text-xs text-muted-foreground hover:text-yellow-500 transition-colors group/link">
                       <span className="font-bold tracking-tight">{mat.title}</span>
                       <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
                     </a>
@@ -163,7 +163,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
       )}
 
       {week.status === 'live' && (
-        <div className="bg-slate-900 border-2 border-yellow-500/20 rounded-3xl p-12 text-center space-y-10 relative overflow-hidden group">
+        <div className="bg-card border-2 border-yellow-500/20 rounded-3xl p-12 text-center space-y-10 relative overflow-hidden group">
           <div className="absolute inset-0 bg-yellow-500/[0.02] animate-pulse" />
           
           <div className="relative z-10 space-y-6">
@@ -174,7 +174,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
             
             <div className="space-y-3">
               <h2 className="text-3xl font-bold tracking-tight uppercase tracking-tighter">EXECUTE: Join Live Class</h2>
-              <p className="text-slate-500 text-sm max-w-sm mx-auto tracking-tighter"> The instructor is currently broadcasting this module. Link into the operational bridge now. </p>
+              <p className="text-muted-foreground text-sm max-w-sm mx-auto tracking-tighter"> The instructor is currently broadcasting this module. Link into the operational bridge now. </p>
             </div>
 
             <a 
@@ -193,7 +193,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
       {week.status === 'archived' && (
         <div className="space-y-12">
           {/* Video Player */}
-          <div className="aspect-video w-full bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl group flex items-center justify-center">
+          <div className="aspect-video w-full bg-card border border-border rounded-3xl overflow-hidden shadow-2xl group flex items-center justify-center">
             {week.recording_url ? (
                <iframe 
                 src={week.recording_url} 
@@ -203,29 +203,29 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                />
             ) : (
               <div className="text-center space-y-4">
-                <div className="w-12 h-12 text-slate-700 mx-auto border border-slate-800 rounded-full flex items-center justify-center">?</div>
-                <p className="text-slate-500 text-xs uppercase tracking-widest">RECORDING NOT FOUND: Processing Buffer...</p>
+                <div className="w-12 h-12 text-muted-foreground/30 mx-auto border border-border rounded-full flex items-center justify-center">?</div>
+                <p className="text-muted-foreground/60 text-xs uppercase tracking-widest">RECORDING NOT FOUND: Processing Buffer...</p>
               </div>
             )}
           </div>
 
           {/* Assignment & Resources Section */}
           {week.assignment_instructions && (
-            <div className="bg-slate-900 border border-yellow-500/10 rounded-3xl p-8 space-y-6">
+            <div className="bg-card border border-yellow-500/10 rounded-3xl p-8 space-y-6">
               <div className="flex items-center gap-3">
                 <Terminal className="w-5 h-5 text-yellow-500" />
                 <h3 className="text-sm font-black uppercase tracking-[0.15em] text-yellow-500">{'>'}_ LAB SPECIFICATIONS</h3>
               </div>
-              <div className="bg-slate-950 border border-slate-800 rounded-2xl p-6 overflow-x-auto">
+              <div className="bg-background border border-border rounded-2xl p-6 overflow-x-auto">
                 <div className="prose prose-invert prose-sm max-w-none
                   prose-headings:text-yellow-500 prose-headings:font-bold prose-headings:tracking-tight prose-headings:uppercase
-                  prose-h2:text-base prose-h2:border-b prose-h2:border-slate-800 prose-h2:pb-2 prose-h2:mb-4
+                  prose-h2:text-base prose-h2:border-b prose-h2:border-border prose-h2:pb-2 prose-h2:mb-4
                   prose-h3:text-xs prose-h3:tracking-[0.15em]
-                  prose-p:text-slate-400 prose-p:leading-relaxed prose-p:text-sm
-                  prose-strong:text-slate-200
+                  dark:prose-p:text-muted-foreground prose-p:text-foreground/70 prose-p:leading-relaxed prose-p:text-sm
+                  dark:prose-strong:text-slate-200 prose-strong:text-foreground
                   prose-code:text-yellow-500 prose-code:bg-yellow-500/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
-                  prose-pre:bg-slate-900 prose-pre:border prose-pre:border-slate-800 prose-pre:rounded-xl
-                  prose-li:text-slate-400 prose-li:text-sm
+                  prose-pre:bg-card prose-pre:border prose-pre:border-border prose-pre:rounded-xl
+                  dark:prose-li:text-muted-foreground prose-li:text-foreground/70 prose-li:text-sm
                   prose-ul:space-y-1
                   prose-a:text-yellow-500 prose-a:no-underline hover:prose-a:underline
                 ">
@@ -236,7 +236,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 space-y-8">
+            <div className="bg-card border border-border rounded-3xl p-8 space-y-8">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold flex items-center gap-3 tracking-tight">
                   <Terminal className="w-5 h-5 text-yellow-500" />
@@ -246,18 +246,18 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                    <div className={`px-2 py-0.5 rounded border text-[10px] font-bold tracking-widest uppercase ${
                     assignment.status === 'passed' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500' : 
                     assignment.status === 'failed' ? 'bg-red-500/10 border-red-500/20 text-red-500' : 
-                    'bg-slate-800 border-slate-700 text-slate-400'
+                    'bg-muted border-border text-muted-foreground'
                   }`}>
                     {assignment.status}
                   </div>
                 ) : (
-                  <span className="text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">Open Deployment</span>
+                  <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-[0.2em]">Open Deployment</span>
                 )}
               </div>
 
               <form onSubmit={handleSubmitAssignment} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
+                  <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
                     GitHub Repository URL
                     {assignment?.status === 'passed' && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Validated</span>}
                   </label>
@@ -266,7 +266,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                       type="url" 
                       required
                       placeholder="https://github.com/user/kybern-lab-01"
-                      className="w-full bg-slate-950 border border-slate-800 rounded-2xl px-6 py-4 text-sm text-yellow-500 focus:outline-none focus:border-yellow-500/40 transition-all font-semibold"
+                      className="w-full bg-background border border-border rounded-2xl px-6 py-4 text-sm text-yellow-500 focus:outline-none focus:border-yellow-500/40 transition-all font-semibold"
                       value={githubUrl}
                       onChange={(e) => setGithubUrl(e.target.value)}
                       disabled={submitting || assignment?.status === 'passed'}
@@ -275,12 +275,12 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                 </div>
 
                 {assignment?.admin_feedback && (
-                  <div className="p-4 bg-slate-950 border-l-2 border-yellow-500/40 rounded-r-xl space-y-2">
+                  <div className="p-4 bg-background border-l-2 border-yellow-500/40 rounded-r-xl space-y-2">
                     <p className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-2">
                       <Terminal className="w-3 h-3" />
                       Instructor Feedback
                     </p>
-                    <p className="text-sm text-slate-400 leading-relaxed font-medium">
+                    <p className="text-sm text-muted-foreground leading-relaxed font-medium">
                       &quot;{assignment.admin_feedback}&quot;
                     </p>
                   </div>
@@ -291,7 +291,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                   disabled={submitting || assignment?.status === 'passed'}
                   className={`w-full py-5 rounded-2xl font-bold uppercase transition-all flex items-center justify-center gap-4 group tracking-tighter ${
                     assignment?.status === 'passed' 
-                      ? 'bg-slate-900/50 border border-slate-800 text-slate-600 cursor-not-allowed'
+                      ? 'bg-muted border border-border text-muted-foreground/40 cursor-not-allowed'
                       : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
                   }`}
                 >
@@ -308,30 +308,30 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
             </div>
 
             <div className="space-y-8">
-              <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 flex flex-col">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 mb-6 underline decoration-slate-800 underline-offset-4">Module Inventory</h4>
+              <div className="bg-card border border-border rounded-3xl p-8 flex flex-col">
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-6 underline decoration-border underline-offset-4">Module Inventory</h4>
                 <div className="flex-1 space-y-3">
                   {(week.materials && week.materials.length > 0) ? (
                     week.materials.map((doc, idx) => (
-                      <a key={idx} href={doc.url} target="_blank" className="flex items-center justify-between p-4 bg-slate-950/50 border border-slate-800/50 rounded-2xl hover:border-yellow-500/40 transition-all group">
-                        <span className="text-xs text-slate-400 group-hover:text-yellow-500 transition-colors font-bold tracking-tight underline decoration-transparent group-hover:decoration-yellow-500/30">{doc.title}</span>
-                        <div className="text-slate-600 group-hover:text-yellow-500 transition-all">
+                      <a key={idx} href={doc.url} target="_blank" className="flex items-center justify-between p-4 bg-background/50 border border-border/50 rounded-2xl hover:border-yellow-500/40 transition-all group">
+                        <span className="text-xs text-muted-foreground group-hover:text-yellow-500 transition-colors font-bold tracking-tight underline decoration-transparent group-hover:decoration-yellow-500/30">{doc.title}</span>
+                        <div className="text-muted-foreground/40 group-hover:text-yellow-500 transition-all">
                           <ExternalLink className="w-3 h-3" />
                         </div>
                       </a>
                     ))
                   ) : (
-                    <div className="py-8 text-center border border-dashed border-slate-800 rounded-2xl">
-                      <p className="text-[10px] text-slate-600 uppercase font-bold">No Supplementary Intel</p>
+                    <div className="py-8 text-center border border-dashed border-border rounded-2xl">
+                      <p className="text-[10px] text-muted-foreground/60 uppercase font-bold">No Supplementary Intel</p>
                     </div>
                   )}
                 </div>
               </div>
 
               {week.transcript && (
-                <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
+                <div className="bg-card border border-border rounded-3xl p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">Session Transcript</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">Session Transcript</h4>
                     <button 
                       onClick={() => setShowTranscript(!showTranscript)}
                       className="text-[10px] font-bold text-yellow-500 hover:text-yellow-400 flex items-center gap-2 transition-colors uppercase tracking-widest"
@@ -340,8 +340,8 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                     </button>
                   </div>
                   {showTranscript && (
-                    <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl max-h-[300px] overflow-y-auto scrollbar-hide">
-                      <p className="text-xs text-slate-400 leading-relaxed font-medium whitespace-pre-wrap">
+                    <div className="p-4 bg-background border border-border rounded-xl max-h-[300px] overflow-y-auto scrollbar-hide">
+                      <p className="text-xs text-muted-foreground leading-relaxed font-medium whitespace-pre-wrap">
                         {week.transcript}
                       </p>
                     </div>

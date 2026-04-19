@@ -39,11 +39,11 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
   const capstone = profile.projects?.[0];
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-mono selection:bg-yellow-500/30 pb-40">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-mono selection:bg-yellow-500/30 pb-40">
       <AcademyNavbar />
       
       {/* Premium Hero Header */}
-      <section className="relative pt-40 pb-32 border-b border-slate-900 overflow-hidden">
+      <section className="relative pt-40 pb-32 border-b border-border overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(234,179,8,0.1),transparent_50%)]" />
         <div className="absolute -right-20 -top-20 w-96 h-96 bg-yellow-500/5 blur-[120px] rounded-full" />
         
@@ -57,12 +57,12 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
               <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-tight animate-in fade-in slide-in-from-left-6 duration-1000">
                 {profile.student_name}
               </h1>
-              <div className="flex flex-wrap items-center gap-6 text-slate-400 animate-in fade-in slide-in-from-left-8 duration-1000">
+              <div className="flex flex-wrap items-center gap-6 text-muted-foreground animate-in fade-in slide-in-from-left-8 duration-1000">
                 <div className="flex items-center gap-2">
                    <Cpu className="w-4 h-4 text-yellow-500/50" />
                    <span className="text-xs uppercase tracking-widest font-bold">Cloud Native Engineer</span>
                 </div>
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
+                <div className="w-1.5 h-1.5 rounded-full bg-border" />
                 <div className="flex items-center gap-2">
                    <Layers className="w-4 h-4 text-yellow-500/50" />
                    <span className="text-xs uppercase tracking-widest font-bold">{profile.cohort_name}</span>
@@ -75,18 +75,18 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
                 <a 
                   href={profile.linkedin_url} 
                   target="_blank" 
-                  className="w-14 h-14 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center hover:border-yellow-500 transition-all group shadow-xl"
+                  className="w-14 h-14 bg-card border border-border rounded-2xl flex items-center justify-center hover:border-yellow-500 transition-all group shadow-xl"
                 >
-                  <Linkedin className="w-6 h-6 text-slate-400 group-hover:text-yellow-500 transition-colors" />
+                  <Linkedin className="w-6 h-6 text-muted-foreground group-hover:text-yellow-500 transition-colors" />
                 </a>
               )}
               {profile.github_url && (
                 <a 
                   href={profile.github_url} 
                   target="_blank" 
-                  className="w-14 h-14 bg-slate-900 border border-slate-800 rounded-2xl flex items-center justify-center hover:border-yellow-500 transition-all group shadow-xl"
+                  className="w-14 h-14 bg-card border border-border rounded-2xl flex items-center justify-center hover:border-yellow-500 transition-all group shadow-xl"
                 >
-                  <Github className="w-6 h-6 text-slate-400 group-hover:text-yellow-500 transition-colors" />
+                  <Github className="w-6 h-6 text-muted-foreground group-hover:text-yellow-500 transition-colors" />
                 </a>
               )}
             </div>
@@ -104,14 +104,14 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
                     <Terminal className="w-5 h-5" />
                     <span className="text-xs font-bold uppercase tracking-[0.3em]">Capstone Case Study_</span>
                   </div>
-                  <h2 className="text-4xl md:text-5xl font-bold mb-10 tracking-tight">{capstone.project_title}</h2>
+                  <h2 className="text-4xl md:text-5xl font-bold mb-10 tracking-tight text-foreground">{capstone.project_title}</h2>
                   
                   <div className="flex flex-wrap gap-6 mb-20">
                     {capstone.repo_url && (
                       <a 
                         href={capstone.repo_url} 
                         target="_blank" 
-                        className="flex-1 min-w-[240px] bg-slate-100 text-slate-950 px-8 py-5 rounded-2xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-yellow-500 transition-all shadow-2xl group shadow-slate-100/5"
+                        className="flex-1 min-w-[240px] bg-foreground text-background dark:bg-white dark:text-black px-8 py-5 rounded-2xl font-bold text-sm uppercase tracking-widest flex items-center justify-center gap-3 hover:bg-yellow-500 hover:text-slate-950 transition-all shadow-2xl group shadow-slate-100/5"
                       >
                          <Github className="w-5 h-5" /> Inspect Source Code <ChevronRight className="w-4 h-4 opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                       </a>
@@ -130,13 +130,13 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
 
                {/* Infrastructure Architecture Diagram */}
                <div className="mb-24 relative">
-                  <div className="absolute inset-x-0 h-40 bg-gradient-to-t from-slate-950 to-transparent bottom-0 z-10 pointer-events-none" />
+                  <div className="absolute inset-x-0 h-40 bg-gradient-to-t from-background to-transparent bottom-0 z-10 pointer-events-none" />
                   <div className="flex items-center justify-between mb-8">
                     <h3 className="text-lg font-bold uppercase tracking-widest flex items-center gap-2">
                        <ShieldCheck className="w-5 h-5 text-yellow-500" /> Infrastructure Architecture
                     </h3>
                   </div>
-                  <div className="bg-slate-900 border border-slate-800 rounded-[32px] p-6 md:p-12 shadow-inner group overflow-hidden">
+                  <div className="bg-card border border-border rounded-[32px] p-6 md:p-12 shadow-inner group overflow-hidden">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img 
                        src={capstone.architecture_diagram_url} 
@@ -148,29 +148,29 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
 
                {/* Technical Deep Dive */}
                <div className="grid grid-cols-1 lg:grid-cols-3 gap-20">
-                  <div className="lg:col-span-2 prose prose-invert prose-slate max-w-none">
-                     <div className="flex items-center gap-3 text-slate-600 mb-8 font-bold text-xs uppercase tracking-[0.2em]">
+                  <div className="lg:col-span-2 prose prose-invert dark:prose-slate max-w-none">
+                     <div className="flex items-center gap-3 text-muted-foreground/40 mb-8 font-bold text-xs uppercase tracking-[0.2em]">
                         <Code className="w-4 h-4" /> Technical Documentation_
                      </div>
-                     <div className="text-slate-400 text-lg leading-relaxed space-y-8 whitespace-pre-wrap">
+                     <div className="text-muted-foreground text-lg leading-relaxed space-y-8 whitespace-pre-wrap">
                         {capstone.description}
                      </div>
                   </div>
                   
                   <div className="lg:col-span-1">
-                     <div className="sticky top-12 p-8 bg-slate-900/40 border border-slate-800 rounded-3xl backdrop-blur-sm">
-                        <h4 className="text-xs font-bold uppercase tracking-widest text-slate-500 mb-6">Candidate Stats</h4>
+                     <div className="sticky top-12 p-8 bg-card/40 border border-border rounded-3xl backdrop-blur-sm">
+                        <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-6">Candidate Stats</h4>
                         <div className="space-y-6">
                            <div>
-                              <p className="text-[10px] text-slate-600 uppercase font-bold mb-1 tracking-widest">Graduation Date</p>
+                              <p className="text-[10px] text-muted-foreground/60 uppercase font-bold mb-1 tracking-widest">Graduation Date</p>
                               <p className="text-sm font-bold">{new Date(profile.created_at).toLocaleDateString()}</p>
                            </div>
                            <div>
-                              <p className="text-[10px] text-slate-600 uppercase font-bold mb-1 tracking-widest">Training Intensity</p>
+                              <p className="text-[10px] text-muted-foreground/60 uppercase font-bold mb-1 tracking-widest">Training Intensity</p>
                               <p className="text-sm font-bold text-yellow-500 uppercase">12 Weeks / High Stakes</p>
                            </div>
                         </div>
-                        <div className="mt-8 pt-8 border-t border-slate-800">
+                        <div className="mt-8 pt-8 border-t border-border">
                            <a href="mailto:hire@kybern.com" className="block w-full text-center py-3 bg-yellow-500 text-slate-950 rounded-xl font-bold text-[10px] uppercase tracking-widest hover:bg-yellow-400 transition-all">
                               Inquire About Candidate_
                            </a>
@@ -181,9 +181,9 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
             </div>
           </div>
         ) : (
-          <div className="bg-slate-900/40 border border-slate-800 rounded-3xl p-32 text-center">
-            <Terminal className="w-12 h-12 text-slate-700 mx-auto mb-6" />
-            <p className="text-slate-500 font-bold uppercase tracking-widest">Awaiting Project Deployment Logs_</p>
+          <div className="bg-card/40 border border-border rounded-3xl p-32 text-center">
+            <Terminal className="w-12 h-12 text-muted-foreground/30 mx-auto mb-6" />
+            <p className="text-muted-foreground/40 font-bold uppercase tracking-widest">Awaiting Project Deployment Logs_</p>
           </div>
         )}
 
@@ -194,7 +194,7 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
                  <Trophy size={24} />
                  <h2 className="text-3xl font-bold tracking-tight">Verified Academy Milestones</h2>
               </div>
-              <p className="text-slate-500 max-w-2xl text-sm leading-relaxed">
+              <p className="text-muted-foreground/60 max-w-2xl text-sm leading-relaxed">
                  Proof of technical competence verified by through graded weekly assignments and high-intensity Break-It lab solutions. 
                  Each milestone represents 10+ hours of deep engineering work.
               </p>
@@ -203,21 +203,21 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {/* Assignments Grid */}
               {milestones?.assignments?.map((ass: { id: number; week_id: number; status: string; github_url: string }) => (
-                 <div key={ass.id} className="bg-slate-900/50 border border-slate-800 p-6 rounded-2xl space-y-4 hover:border-yellow-500/30 transition-all group">
+                 <div key={ass.id} className="bg-card/50 border border-border p-6 rounded-2xl space-y-4 hover:border-yellow-500/30 transition-all group">
                     <div className="flex items-start justify-between">
                        <CheckCircle2 className="text-emerald-500 group-hover:scale-110 transition-transform" size={20} />
-                       <span className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">M-LOG: {ass.week_id}</span>
+                       <span className="text-[10px] font-bold text-muted-foreground/40 uppercase tracking-widest">M-LOG: {ass.week_id}</span>
                     </div>
                     <div className="space-y-1">
-                       <h4 className="text-white font-bold text-sm uppercase tracking-tight">Assignment Week {ass.week_id}</h4>
-                       <p className="text-[10px] text-slate-500 uppercase tracking-widest font-semibold flex items-center gap-1">
+                       <h4 className="text-foreground font-bold text-sm uppercase tracking-tight">Assignment Week {ass.week_id}</h4>
+                       <p className="text-[10px] text-muted-foreground/60 uppercase tracking-widest font-semibold flex items-center gap-1">
                           <Activity size={10} /> {ass.status} {/* GRADED */}
                        </p>
                     </div>
                     <a 
                       href={ass.github_url} 
                       target="_blank"
-                      className="inline-flex items-center gap-1.5 text-[10px] font-bold text-[#eab308] uppercase tracking-widest hover:underline"
+                      className="inline-flex items-center gap-1.5 text-[10px] font-bold text-yellow-500 uppercase tracking-widest hover:underline"
                     >
                        View Solution <ChevronRight size={12}/>
                     </a>
@@ -226,16 +226,16 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
 
               {/* Lab Solutions Grid */}
               {milestones?.labs?.map((lab: { id: number; student_name: string }) => (
-                 <div key={lab.id} className="bg-[#020617] border border-[#eab308]/20 p-6 rounded-2xl space-y-4 hover:border-[#eab308]/50 transition-all group shadow-[0_0_20px_rgba(234,179,8,0.03)]">
+                 <div key={lab.id} className="bg-background border border-yellow-500/20 p-6 rounded-2xl space-y-4 hover:border-yellow-500/50 transition-all group shadow-[0_0_20px_rgba(234,179,8,0.03)]">
                     <div className="flex items-start justify-between">
-                       <History className="text-[#eab308] group-hover:rotate-12 transition-transform" size={20} />
-                       <span className="text-[10px] font-bold text-[#eab308]/40 uppercase tracking-widest">LAB_WINNER</span>
+                       <History className="text-yellow-500 group-hover:rotate-12 transition-transform" size={20} />
+                       <span className="text-[10px] font-bold text-yellow-500/40 uppercase tracking-widest">LAB_WINNER</span>
                     </div>
                     <div className="space-y-1">
-                       <h4 className="text-white font-bold text-sm uppercase tracking-tight truncate">{lab.student_name}</h4>
-                       <p className="text-[10px] text-[#eab308] uppercase tracking-widest font-bold">SOLVED_PRODUCTION_INCIDENT</p>
+                       <h4 className="text-foreground font-bold text-sm uppercase tracking-tight truncate">{lab.student_name}</h4>
+                       <p className="text-[10px] text-yellow-500 uppercase tracking-widest font-bold">SOLVED_PRODUCTION_INCIDENT</p>
                     </div>
-                    <div className="text-[9px] text-slate-600 font-mono italic">
+                    <div className="text-[9px] text-muted-foreground/60 font-mono italic">
                        Verified solution for high-level security breach lab.
                     </div>
                  </div>

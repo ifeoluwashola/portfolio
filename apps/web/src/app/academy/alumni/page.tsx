@@ -98,7 +98,7 @@ export default async function AlumniGridPage() {
               </p>
            </div>
            <div className="lg:col-span-2 flex flex-col gap-4">
-              <a href="mailto:hire@kybern.com" className="w-full bg-slate-100 text-slate-950 text-center py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-yellow-500 transition-all">
+              <a href="mailto:hire@kybern.com" className="w-full bg-foreground text-background dark:bg-white dark:text-black text-center py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-yellow-500 hover:text-slate-950 transition-all">
                 Request Talent Directory_
               </a>
               <Link href="/academy" className="w-full border border-border text-muted-foreground text-center py-4 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-card transition-all flex items-center justify-center gap-2">

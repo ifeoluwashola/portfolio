@@ -172,7 +172,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <button 
               onClick={() => isSidebarOpen && setIsModulesExpanded(!isModulesExpanded)}
               className={`
-                w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em] hover:text-slate-400 transition-colors
+                w-full flex items-center justify-between px-4 py-2 text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] hover:text-muted-foreground transition-colors
                 ${!isSidebarOpen ? "justify-center px-0 cursor-default" : "cursor-pointer"}
               `}
             >
@@ -182,13 +182,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isModulesExpanded ? "" : "-rotate-90"}`} />
                 </>
               ) : (
-                <div className="h-px w-8 bg-slate-900" />
+                <div className="h-px w-8 bg-muted" />
               )}
             </button>
             <div className={`space-y-1 transition-all duration-300 overflow-hidden ${isModulesExpanded && isSidebarOpen ? "max-h-[1000px] opacity-100" : "max-h-0 lg:max-h-[1000px] opacity-0 lg:opacity-100"}`}>
               {loading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-12 w-full bg-slate-900/40 animate-pulse rounded-lg mx-auto" style={{ width: !isSidebarOpen ? '48px' : '100%' }} />
+                  <div key={i} className="h-12 w-full bg-muted/40 animate-pulse rounded-lg mx-auto" style={{ width: !isSidebarOpen ? '48px' : '100%' }} />
                 ))
               ) : (
                 weeks.map((week) => (

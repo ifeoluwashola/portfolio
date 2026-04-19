@@ -161,7 +161,7 @@ export default function LabsHubPage() {
 
         {/* Dynamic CTA for Public Users */}
         {!loading && (
-          <div className="mt-32 bg-gradient-to-br from-yellow-500/10 to-card border border-yellow-500/20 rounded-3xl p-12 text-center relative overflow-hidden">
+          <div className="mt-32 bg-card border border-yellow-500/20 rounded-3xl p-12 text-center relative overflow-hidden">
              <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10 pointer-events-none" />
              <div className="relative z-10">
                <h2 className="text-3xl font-bold mb-4 tracking-tighter uppercase">Ready to join the <span className="text-yellow-500">elite?</span></h2>

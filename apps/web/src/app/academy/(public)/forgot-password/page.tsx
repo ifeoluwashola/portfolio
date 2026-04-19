@@ -32,16 +32,16 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 font-mono">
-      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-xl p-8 shadow-2xl relative overflow-hidden group">
+    <div className="flex items-center justify-center min-h-[calc(100vh-4rem)] px-4 sm:px-6 font-mono text-foreground">
+      <div className="w-full max-w-md bg-card border border-border rounded-xl p-8 shadow-2xl relative overflow-hidden group">
         <div className="absolute top-0 left-0 w-full h-1 bg-yellow-500/20" />
 
         <div className="flex flex-col items-center mb-10 mt-2 text-center">
-          <div className="w-12 h-12 bg-slate-950 rounded-lg border border-slate-800 flex items-center justify-center mb-6 text-yellow-500">
+          <div className="w-12 h-12 bg-background rounded-lg border border-border flex items-center justify-center mb-6 text-yellow-500">
             <Terminal className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 uppercase tracking-tight">Recovery Terminal</h1>
-          <p className="text-slate-500 text-sm mt-3">Initiating password_reset.sh protocol...</p>
+          <h1 className="text-2xl font-bold text-foreground uppercase tracking-tight">Recovery Terminal</h1>
+          <p className="text-muted-foreground/60 text-sm mt-3">Initiating password_reset.sh protocol...</p>
         </div>
 
         {successMsg ? (
@@ -63,7 +63,7 @@ export default function ForgotPasswordPage() {
             )}
 
             <div className="space-y-2">
-              <label className="text-xs font-medium text-slate-500 flex items-center gap-2 uppercase">
+              <label className="text-xs font-medium text-muted-foreground/60 flex items-center gap-2 uppercase">
                 <Mail className="w-3.5 h-3.5" />
                 EMAIL_ADDRESS
               </label>
@@ -73,7 +73,7 @@ export default function ForgotPasswordPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="student@domain.com"
-                className="w-full bg-slate-950/50 border border-slate-800 rounded-lg px-4 py-3 text-slate-200 placeholder:text-slate-700 focus:outline-none focus:border-yellow-500/50 transition-all text-sm"
+                className="w-full bg-background/50 border border-border rounded-lg px-4 py-3 text-foreground placeholder:text-muted-foreground/30 focus:outline-none focus:border-yellow-500/50 transition-all text-sm"
                 disabled={isLoading}
               />
             </div>
@@ -87,7 +87,7 @@ export default function ForgotPasswordPage() {
             </button>
 
             <div className="text-center">
-              <Link href="/academy/login" className="inline-flex items-center gap-2 text-slate-500 hover:text-yellow-500 transition-colors text-xs uppercase font-bold">
+              <Link href="/academy/login" className="inline-flex items-center gap-2 text-muted-foreground/60 hover:text-yellow-500 transition-colors text-xs uppercase font-bold">
                 <ArrowLeft className="w-3 h-3" />
                 Exit_Terminal
               </Link>

@@ -41,7 +41,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-300 font-sans selection:bg-yellow-500/30 selection:text-yellow-200">
+    <div className="min-h-screen bg-background text-muted-foreground font-sans selection:bg-yellow-500/30 selection:text-yellow-200">
       {/* Background Decor */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-500/5 blur-[120px] rounded-full" />
@@ -52,7 +52,7 @@ export default function RegisterPage() {
         {/* Navigation */}
         <Link 
           href="/academy" 
-          className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-yellow-500 transition-colors mb-12 group"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground/50 hover:text-yellow-500 transition-colors mb-12 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Overview
@@ -71,7 +71,7 @@ export default function RegisterPage() {
               <span className="text-yellow-500">Cloud Command.</span>
             </h1>
 
-            <p className="text-slate-400 text-lg leading-relaxed mb-10">
+            <p className="text-muted-foreground/80 text-lg leading-relaxed mb-10">
               Admission to Kybern Academy is restricted to 20 seats. We prioritise candidates 
               demonstrating high commitment to the 16-week immersive schedule.
             </p>
@@ -94,11 +94,13 @@ export default function RegisterPage() {
                   desc: "Includes 12 weeks of live training + 4 weeks of high-stakes capstone." 
                 }
               ].map((item, idx) => (
-                <div key={idx} className="flex gap-4 p-4 rounded-2xl bg-slate-900/50 border border-slate-800/50">
-                  <div className="mt-1">{item.icon}</div>
+                <div key={idx} className="flex gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center flex-shrink-0">
+                    {item.icon}
+                  </div>
                   <div>
-                    <h3 className="text-white font-bold text-sm mb-1">{item.title}</h3>
-                    <p className="text-slate-500 text-sm leading-relaxed">{item.desc}</p>
+                    <h3 className="text-foreground font-bold text-sm mb-1">{item.title}</h3>
+                    <p className="text-muted-foreground/60 text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -106,11 +108,11 @@ export default function RegisterPage() {
           </div>
 
           {/* Right Column: Form */}
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+          <div className="bg-card border border-border rounded-3xl p-8 shadow-2xl relative overflow-hidden">
             {/* Header */}
-            <div className="mb-8 pb-8 border-bottom border-slate-800">
-               <h2 className="text-xl font-bold text-white mb-2">Student Registration</h2>
-               <p className="text-sm text-slate-500">Provide your technical background and select a plan.</p>
+            <div className="mb-8 pb-8 border-b border-border">
+               <h2 className="text-xl font-bold text-foreground mb-2">Student Registration</h2>
+               <p className="text-sm text-muted-foreground/60">Provide your technical background and select a plan.</p>
             </div>
 
             {error && (
@@ -124,38 +126,38 @@ export default function RegisterPage() {
               {/* Basic Info Group */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">First Name</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">First Name</label>
                   <input 
                     name="first_name" required
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors"
+                    className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
                     placeholder="John"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Last Name</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Last Name</label>
                   <input 
                     name="last_name" required
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors"
+                    className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
                     placeholder="Doe"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Email Address</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Email Address</label>
                 <input 
                   type="email" name="email" required
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors"
+                  className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
                   placeholder="john@example.com"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Experience Level</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Experience Level</label>
                   <select 
                     name="experience_level"
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors appearance-none"
+                    className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors appearance-none"
                   >
                     <option value="Absolute Beginner">Absolute Beginner</option>
                     <option value="Basic IT Knowledge">Basic IT Knowledge</option>
@@ -163,68 +165,68 @@ export default function RegisterPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Phone</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Phone</label>
                   <input 
                     name="phone" required
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors"
+                    className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
                     placeholder="+234..."
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Current Role / Student Status</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Current Role / Student Status</label>
                 <input 
                   name="current_role" required
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors"
+                  className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
                   placeholder="e.g. Frontend Developer, Final Year Student..."
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Why do you want to join Kybern Academy?</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Why do you want to join Kybern Academy?</label>
                 <textarea 
                   name="goal" required
-                  className="w-full bg-slate-950 border border-slate-800 focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-slate-200 transition-colors min-h-[80px]"
+                  className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors min-h-[80px]"
                   placeholder="Briefly describe your professional goals..."
                 />
               </div>
 
               {/* Hardware / Readiness */}
-              <div className="space-y-6 pt-4 border-t border-slate-800/50">
-                <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-slate-950/50 border border-slate-800">
+              <div className="space-y-6 pt-4 border-t border-border/50">
+                <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-card/50 border border-border">
                   <div className="flex items-center gap-3">
-                    <Laptop className="w-5 h-5 text-slate-400" />
-                    <span className="text-sm text-slate-300">I own a working laptop (8GB+ RAM)</span>
+                    <Laptop className="w-5 h-5 text-muted-foreground/50" />
+                    <span className="text-sm text-muted-foreground">I own a working laptop (8GB+ RAM)</span>
                   </div>
                   <input type="checkbox" name="has_laptop" required className="accent-yellow-500 w-5 h-5" />
                 </div>
               </div>
 
               {/* Payment Plan selection */}
-              <div className="space-y-4 pt-4 border-t border-slate-800/50">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 ml-1">Select Investment Plan</label>
+              <div className="space-y-4 pt-4 border-t border-border/50">
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Select Investment Plan</label>
                 
                 <div 
                   onClick={() => setPaymentPlan("full")}
                   className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer group ${
                     paymentPlan === "full" 
                       ? "border-yellow-500 bg-yellow-500/5" 
-                      : "border-slate-800 hover:border-slate-700 bg-slate-950/50"
+                      : "border-border hover:border-border/80 bg-background/50"
                   }`}
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-white font-bold mb-1">Full Tuition</p>
-                      <p className="text-xs text-slate-500">Single payment for complete 16-week access.</p>
+                      <p className="text-foreground font-bold mb-1">Full Tuition</p>
+                      <p className="text-xs text-muted-foreground/60">Single payment for complete 16-week access.</p>
                     </div>
                     <div className="text-right">
-                       <p className="text-xl font-black text-white font-mono">₦250k</p>
+                       <p className="text-xl font-black text-foreground font-mono">₦250k</p>
                        <p className="text-[10px] text-yellow-500 font-bold uppercase">Paid in Full</p>
                     </div>
                   </div>
                   {paymentPlan === "full" && (
-                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-slate-900">
+                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-background">
                       <CheckCircle2 className="w-4 h-4" />
                     </div>
                   )}
@@ -235,21 +237,21 @@ export default function RegisterPage() {
                   className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer group ${
                     paymentPlan === "installment" 
                       ? "border-yellow-500 bg-yellow-500/5" 
-                      : "border-slate-800 hover:border-slate-700 bg-slate-950/50"
+                      : "border-border hover:border-border/80 bg-background/50"
                   }`}
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <p className="text-white font-bold mb-1">Flexible Ledger</p>
-                      <p className="text-xs text-slate-500">₦100k now, balance spread over 3 payments.</p>
+                      <p className="text-foreground font-bold mb-1">Flexible Ledger</p>
+                      <p className="text-xs text-muted-foreground/60">₦100k now, balance spread over 3 payments.</p>
                     </div>
                     <div className="text-right">
-                       <p className="text-xl font-black text-white font-mono">₦100k</p>
-                       <p className="text-[10px] text-slate-500 font-bold uppercase">Deposit</p>
+                       <p className="text-xl font-black text-foreground font-mono">₦100k</p>
+                       <p className="text-[10px] text-muted-foreground/60 font-bold uppercase">Deposit</p>
                     </div>
                   </div>
                   {paymentPlan === "installment" && (
-                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-slate-900">
+                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-background">
                       <CheckCircle2 className="w-4 h-4" />
                     </div>
                   )}
@@ -261,15 +263,13 @@ export default function RegisterPage() {
                 disabled={loading}
                 className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase tracking-widest transition-all ${
                   loading 
-                    ? "bg-slate-800 text-slate-500 cursor-not-allowed" 
-                    : "bg-yellow-500 text-slate-950 hover:bg-yellow-400 hover:scale-[1.02] shadow-[0_0_30px_rgba(234,179,8,0.3)]"
                 }`}
               >
                 {loading ? "Processing Secure Link..." : "Apply & Initialize Payment"}
                 <ChevronRight className="w-5 h-5" />
               </button>
 
-              <div className="flex items-center justify-center gap-6 text-[10px] text-slate-600 uppercase font-black tracking-widest mt-6">
+              <div className="flex items-center justify-center gap-6 text-[10px] text-muted-foreground/40 uppercase font-black tracking-widest mt-6">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-3 h-3" />
                   Secured by Paystack

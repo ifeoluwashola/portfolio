@@ -80,8 +80,8 @@ export default function AcademyLandingPage() {
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none" />
 
         {/* Eyebrow */}
-        <div className="relative z-10 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/5 text-yellow-400 text-[11px] font-bold uppercase tracking-[0.2em] mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse" />
+        <div className="relative z-10 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/5 text-yellow-500 dark:text-yellow-400 text-[11px] font-bold uppercase tracking-[0.2em] mb-8">
+          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 dark:bg-yellow-400 animate-pulse" />
           Cohort 1 · Now Enrolling · Starting April 2026
         </div>
 
@@ -89,14 +89,14 @@ export default function AcademyLandingPage() {
         <h1 className="relative z-10 max-w-4xl text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-6">
           <span className="text-foreground">Master the Cloud.</span>
           <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-amber-400">
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 via-yellow-400 to-amber-500 dark:from-yellow-400 dark:via-yellow-300 dark:to-amber-400">
             Command Your Career.
           </span>
         </h1>
 
         {/* Subheadline */}
         <p className="relative z-10 max-w-2xl text-lg sm:text-xl text-muted-foreground leading-relaxed mb-12">
-          A rigorous, <span className="text-yellow-400 font-bold">16-week</span> immersive mentorship in Cloud Native Engineering.{" "}
+          A rigorous, <span className="text-yellow-600 dark:text-yellow-400 font-bold">16-week</span> immersive mentorship in Cloud Native Engineering.{" "}
           <span className="text-foreground font-semibold">Zero tech background required</span>
           {" "}— just absolute dedication.
         </p>
@@ -112,7 +112,7 @@ export default function AcademyLandingPage() {
           </Link>
           <Link
             href="/academy/break-it-labs"
-            className="inline-flex items-center gap-2 px-6 py-4 text-muted-foreground hover:text-yellow-400 text-sm font-bold uppercase tracking-widest transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-4 text-muted-foreground hover:text-yellow-500 dark:hover:text-yellow-400 text-sm font-bold uppercase tracking-widest transition-colors"
           >
             <BookOpen className="w-4 h-4" />
             Browse Free Labs
@@ -120,7 +120,7 @@ export default function AcademyLandingPage() {
         </div>
 
         {/* Stat strip */}
-        <div className="relative z-10 mt-20 flex flex-wrap justify-center gap-10 border-t border-slate-800/60 pt-10">
+        <div className="relative z-10 mt-20 flex flex-wrap justify-center gap-10 border-t border-border/50 pt-10">
           {[
             { value: "16", label: "Weeks Intensity" },
             { value: "32+", label: "Live Sessions" },
@@ -128,16 +128,16 @@ export default function AcademyLandingPage() {
             { value: "100%", label: "Hands-On Labs" },
           ].map(({ value, label }) => (
             <div key={label} className="text-center">
-              <p className="text-3xl font-black text-yellow-400 font-mono">{value}</p>
+              <p className="text-3xl font-black text-yellow-600 dark:text-yellow-400 font-mono">{value}</p>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mt-1">{label}</p>
             </div>
           ))}
         </div>
 
         {/* Scroll cue */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-700 text-[10px] font-bold uppercase tracking-widest">
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-muted-foreground/40 text-[10px] font-bold uppercase tracking-widest">
           <span>Scroll</span>
-          <div className="w-px h-8 bg-gradient-to-b from-slate-700 to-transparent" />
+          <div className="w-px h-8 bg-gradient-to-b from-muted-foreground/40 to-transparent" />
         </div>
       </section>
 
@@ -156,12 +156,12 @@ export default function AcademyLandingPage() {
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-8 max-w-3xl">
             We don&apos;t do{" "}
             <span className="relative">
-              <span className="text-foreground/40 dark:text-muted-foreground/60 line-through decoration-red-500/60">passive video courses.</span>
+              <span className="text-muted-foreground/30 dark:text-muted-foreground/60 line-through decoration-red-500/60">passive video courses.</span>
             </span>
           </h2>
 
           <div className="grid md:grid-cols-2 gap-12 items-start">
-            <div className="space-y-6 text-foreground/70 dark:text-muted-foreground text-lg leading-relaxed">
+            <div className="space-y-6 text-muted-foreground text-lg leading-relaxed">
               <p>
                 Kybern Academy is a{" "}
                 <span className="text-foreground font-semibold">simulation of a real enterprise engineering environment.</span>
@@ -169,15 +169,15 @@ export default function AcademyLandingPage() {
               </p>
               <p>
                 Every session is recorded and instantly archived in your private student dashboard. This allows for infinite revision of complex architectural discussions while maintaining the high-accountability, live-first culture required to develop the{" "}
-                <span className="text-yellow-400 font-semibold">instincts that senior engineers pay for.</span>
+                <span className="text-yellow-600 dark:text-yellow-400 font-semibold">instincts that senior engineers pay for.</span>
               </p>
             </div>
 
             <div className="space-y-4">
               {[
-                { icon: <Zap className="w-5 h-5 text-yellow-400" />, title: "The High-Frequency Schedule", desc: "Thu/Fri 9-11 PM (Core). Sat 10 AM-12 PM (Q&A). All sessions recorded & deployed instantly." },
-                { icon: <Users className="w-5 h-5 text-cyan-400" />, title: "Cohort-Capped at 20", desc: "Every student gets direct access to Lead Engineers. We deliberately reject scale for quality." },
-                { icon: <Server className="w-5 h-5 text-emerald-400" />, title: "You Run Real Infra", desc: "Your AWS and GCP accounts. Your Terraform state. Your Kubernetes cluster. Real costs, real stakes." },
+                { icon: <Zap className="w-5 h-5 text-yellow-500 dark:text-yellow-400" />, title: "The High-Frequency Schedule", desc: "Thu/Fri 9-11 PM (Core). Sat 10 AM-12 PM (Q&A). All sessions recorded & deployed instantly." },
+                { icon: <Users className="w-5 h-5 text-cyan-500 dark:text-cyan-400" />, title: "Cohort-Capped at 20", desc: "Every student gets direct access to Lead Engineers. We deliberately reject scale for quality." },
+                { icon: <Server className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />, title: "You Run Real Infra", desc: "Your AWS and GCP accounts. Your Terraform state. Your Kubernetes cluster. Real costs, real stakes." },
               ].map(({ icon, title, desc }) => (
                   <div key={title} className="flex gap-4 p-5 bg-card/60 border border-border rounded-2xl hover:border-yellow-500/20 transition-colors">
                     <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
@@ -216,9 +216,9 @@ export default function AcademyLandingPage() {
                 emerald: "border-emerald-500/20 hover:border-emerald-500/40 hover:shadow-[0_0_40px_rgba(16,185,129,0.06)]",
               };
               const badgeMap: Record<string, string> = {
-                yellow: "bg-yellow-500/10 border-yellow-500/20 text-yellow-400",
-                cyan: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-                emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+                yellow: "bg-yellow-500/10 border-yellow-500/20 text-yellow-500 dark:text-yellow-400",
+                cyan: "bg-cyan-500/10 border-cyan-500/20 text-cyan-600 dark:text-cyan-400",
+                emerald: "bg-emerald-500/10 border-emerald-500/20 text-emerald-600 dark:text-emerald-400",
               };
               const topBarMap: Record<string, string> = {
                 yellow: "from-yellow-500 to-yellow-300",
@@ -234,7 +234,7 @@ export default function AcademyLandingPage() {
                   <div className={`absolute top-0 left-8 right-8 h-px bg-gradient-to-r ${topBarMap[accent]}`} />
 
                   <div className="flex items-center justify-between">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center">
                       {icon}
                     </div>
                     <span className={`text-[10px] font-black uppercase tracking-[0.15em] px-3 py-1 rounded-full border ${badgeMap[accent]}`}>
@@ -256,17 +256,17 @@ export default function AcademyLandingPage() {
       {/* ──────────────────────────────────────────────── */}
       {/* 3b. CURRICULUM TIMELINE                         */}
       {/* ──────────────────────────────────────────────── */}
-      <section className="py-20 px-6 bg-slate-900/30">
+      <section className="py-20 px-6 bg-muted/20">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-4">The 16-Week Roadmap</p>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight">Two Phases. Zero Compromise.</h2>
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-8 mt-6">
               <div className="text-xs text-muted-foreground/60 flex items-center gap-2">
-                <span className="text-yellow-400 font-bold">Phase 1:</span> 12 Weeks Training
+                <span className="text-yellow-600 dark:text-yellow-400 font-bold">Phase 1:</span> 12 Weeks Training
               </div>
               <div className="text-xs text-muted-foreground/60 flex items-center gap-2">
-                <span className="text-cyan-400 font-bold">Phase 2:</span> 4 Weeks Capstone
+                <span className="text-cyan-600 dark:text-cyan-400 font-bold">Phase 2:</span> 4 Weeks Capstone
               </div>
             </div>
             
@@ -282,10 +282,10 @@ export default function AcademyLandingPage() {
                 key={week}
                 className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-5 p-4 sm:p-5 bg-card/60 border border-border rounded-2xl hover:border-yellow-500/20 hover:bg-yellow-500/[0.02] transition-all group"
               >
-                <span className="w-16 sm:w-20 text-[9px] sm:text-[10px] font-black text-muted-foreground font-mono tracking-widest flex-shrink-0 uppercase">{week}</span>
+                <span className="w-16 sm:w-20 text-[9px] sm:text-[10px] font-black text-muted-foreground/40 font-mono tracking-widest flex-shrink-0 uppercase">{week}</span>
                 <ChevronRight className="hidden sm:block w-4 h-4 text-muted-foreground group-hover:text-yellow-500/50 transition-colors flex-shrink-0" />
                 <span className="flex-1 min-w-[140px] font-bold text-foreground/80 group-hover:text-foreground transition-colors">{title}</span>
-                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.15em] px-2 py-1 bg-muted rounded-full text-muted-foreground flex-shrink-0 ml-auto sm:ml-0">{tag}</span>
+                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.15em] px-2 py-1 bg-muted rounded-full text-muted-foreground/60 flex-shrink-0 ml-auto sm:ml-0">{tag}</span>
               </div>
             ))}
           </div>
@@ -313,10 +313,10 @@ export default function AcademyLandingPage() {
                  </div>
                  
                  <div className="text-center md:text-left">
-                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-4">The Incentive Program</p>
+                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500 dark:text-yellow-400 mb-4">The Incentive Program</p>
                    <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-6">The Elite Track: Top 3 Guarantee</h2>
                    <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl">
-                     Kybern Academy is a proving ground. The <span className="text-yellow-400 font-bold underline decoration-yellow-500/30 underline-offset-4">top 3 performing students</span> will be drafted to work directly alongside our Lead DevOps Engineer on a live production project, and fast-tracked for direct internship placements within our corporate network.
+                     Kybern Academy is a proving ground. The <span className="text-yellow-600 dark:text-yellow-400 font-bold underline decoration-yellow-500/30 underline-offset-4">top 3 performing students</span> will be drafted to work directly alongside our Lead DevOps Engineer on a live production project, and fast-tracked for direct internship placements within our corporate network.
                    </p>
                  </div>
                </div>
@@ -335,7 +335,7 @@ export default function AcademyLandingPage() {
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-6">The Vibe Check</p>
               <h2 className="text-4xl sm:text-5xl font-black tracking-tight leading-tight mb-6">
                 Who is{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300">
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-amber-600 dark:from-yellow-400 dark:to-amber-300">
                   this for?
                 </span>
               </h2>
@@ -343,7 +343,7 @@ export default function AcademyLandingPage() {
                 Kybern Academy Training is designed for{" "}
                 <span className="text-foreground font-semibold">ambitious people who are willing to work hard, not passive learners </span>
                 looking for structured entertainment. The only admissions criterion that truly matters is{" "}
-                <span className="text-yellow-400 font-semibold">grit.</span>
+                <span className="text-yellow-600 dark:text-yellow-400 font-semibold">grit.</span>
               </p>
             </div>
 
@@ -359,12 +359,12 @@ export default function AcademyLandingPage() {
                 >
                   <div className="flex-shrink-0 mt-0.5">
                     {ok ? (
-                      <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                      <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400" />
                     ) : (
-                      <Lock className="w-5 h-5 text-slate-500" />
+                      <Lock className="w-5 h-5 text-muted-foreground/30" />
                     )}
                   </div>
-                  <p className={`text-sm leading-relaxed ${ok ? "text-emerald-300" : "text-muted-foreground"}`}>
+                  <p className={`text-sm leading-relaxed ${ok ? "text-emerald-700 dark:text-emerald-300" : "text-muted-foreground"}`}>
                     {ok ? <span className="font-semibold">✓ </span> : null}
                     {text}
                   </p>
@@ -378,7 +378,7 @@ export default function AcademyLandingPage() {
       {/* ──────────────────────────────────────────────── */}
       {/* 5. TUITION & FLEXIBLE BILLING                   */}
       {/* ──────────────────────────────────────────────── */}
-      <section id="apply" className="py-32 px-6 bg-slate-900/30 relative overflow-hidden">
+      <section id="apply" className="py-32 px-6 bg-muted/20 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-yellow-500/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative z-10 max-w-5xl mx-auto">
@@ -386,7 +386,7 @@ export default function AcademyLandingPage() {
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-4">Transparent Pricing</p>
             <h2 className="text-4xl sm:text-5xl font-black tracking-tight mb-4">
               The Investment:{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300">₦250,000</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-500 to-amber-600 dark:from-yellow-400 dark:to-amber-300">₦250,000</span>
             </h2>
             <p className="text-muted-foreground/60 max-w-xl mx-auto text-base leading-relaxed">
               This is not a subscription. It is a single, high-stakes investment in one of the highest-demand skills in the global job market.
@@ -396,15 +396,15 @@ export default function AcademyLandingPage() {
           <div className="grid md:grid-cols-2 gap-6 max-w-3xl mx-auto">
 
             {/* Option 1: Pay in Full */}
-            <div className="relative bg-slate-900 border border-yellow-500/30 rounded-3xl p-8 flex flex-col gap-6 overflow-hidden group hover:border-yellow-500/50 hover:shadow-[0_0_50px_rgba(234,179,8,0.08)] transition-all">
+            <div className="relative bg-card border border-yellow-500/30 rounded-3xl p-8 flex flex-col gap-6 overflow-hidden group hover:border-yellow-500/50 hover:shadow-[0_0_50px_rgba(234,179,8,0.08)] transition-all">
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-yellow-500 to-amber-400" />
 
               <div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500/70 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-600 dark:text-yellow-500/70 bg-yellow-500/10 px-3 py-1 rounded-full border border-yellow-500/20">
                   Pay in Full
                 </span>
-                <p className="text-4xl font-black text-yellow-400 font-mono mt-4">₦250,000</p>
-                <p className="text-muted-foreground/60 text-sm mt-2">One payment. Zero obligations.</p>
+                <p className="text-4xl font-black text-yellow-600 dark:text-yellow-400 font-mono mt-4">₦250,000</p>
+                <p className="text-muted-foreground/60 text-sm mt-2 font-bold uppercase tracking-widest">One payment. Zero obligations.</p>
               </div>
 
               <ul className="space-y-3 flex-1">
@@ -414,8 +414,8 @@ export default function AcademyLandingPage() {
                   "Priority cohort seat confirmation",
                   "Lifetime alumni network access",
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-slate-400">
-                    <CheckCircle2 className="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5" />
+                  <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
+                    <CheckCircle2 className="w-4 h-4 text-yellow-500 flex-shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
@@ -430,15 +430,15 @@ export default function AcademyLandingPage() {
             </div>
 
             {/* Option 2: Flexible Ledger */}
-            <div className="relative bg-slate-900 border border-cyan-500/25 rounded-3xl p-8 flex flex-col gap-6 overflow-hidden group hover:border-cyan-500/40 hover:shadow-[0_0_50px_rgba(6,182,212,0.05)] transition-all">
+            <div className="relative bg-card border border-cyan-500/25 rounded-3xl p-8 flex flex-col gap-6 overflow-hidden group hover:border-cyan-500/40 hover:shadow-[0_0_50px_rgba(6,182,212,0.05)] transition-all">
               <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-cyan-500 to-cyan-300" />
 
               <div>
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-400/70 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-400/70 bg-cyan-500/10 px-3 py-1 rounded-full border border-cyan-500/20">
                   Kybern Flexible Ledger
                 </span>
-                <p className="text-4xl font-black text-cyan-300 font-mono mt-4">₦100,000</p>
-                <p className="text-slate-500 text-sm mt-2">Initial deposit to secure your seat.</p>
+                <p className="text-4xl font-black text-cyan-600 dark:text-cyan-300 font-mono mt-4">₦100,000</p>
+                <p className="text-muted-foreground/60 text-sm mt-2 font-bold uppercase tracking-widest">Initial deposit to secure your seat.</p>
               </div>
 
               <ul className="space-y-3 flex-1">
@@ -449,7 +449,7 @@ export default function AcademyLandingPage() {
                   "4-Week Advanced Capstone Phase included",
                 ].map((item) => (
                   <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
-                    <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-cyan-500 dark:text-cyan-400 flex-shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
@@ -461,7 +461,7 @@ export default function AcademyLandingPage() {
 
               <Link
                 href="/academy/register"
-                className="w-full text-center py-3.5 px-6 bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 hover:border-cyan-400/50 text-cyan-300 font-black text-xs uppercase tracking-widest rounded-xl transition-all active:scale-[0.99]"
+                className="w-full text-center py-3.5 px-6 bg-cyan-600/10 dark:bg-cyan-500/10 hover:bg-cyan-600/20 dark:hover:bg-cyan-500/20 border border-cyan-600/30 dark:border-cyan-500/30 hover:border-cyan-600 dark:hover:border-cyan-400/50 text-cyan-700 dark:text-cyan-300 font-black text-xs uppercase tracking-widest rounded-xl transition-all active:scale-[0.99]"
               >
                 Apply & Pay Deposit →
               </Link>
@@ -469,7 +469,7 @@ export default function AcademyLandingPage() {
           </div>
 
           {/* Instalment footnote */}
-          <p className="text-center text-[11px] text-muted-foreground/40 mt-8 max-w-lg mx-auto leading-relaxed">
+          <p className="text-center text-[11px] text-muted-foreground/40 mt-8 max-w-lg mx-auto leading-relaxed uppercase font-black tracking-widest">
             All payments are processed securely via Paystack. Your billing status is tracked in real-time through the Kybern student portal.
           </p>
         </div>
@@ -478,13 +478,13 @@ export default function AcademyLandingPage() {
       {/* ──────────────────────────────────────────────── */}
       {/* APPLICATION FORM ANCHOR                         */}
       {/* ──────────────────────────────────────────────── */}
-      <section className="py-24 px-6 border-t border-slate-800/20">
+      <section className="py-24 px-6 border-t border-border/50">
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-4">Final Admission Pass</p>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight mb-6">
             Ready to commit?
           </h2>
-          <p className="text-muted-foreground text-lg leading-relaxed mb-12">
+          <p className="text-muted-foreground text-lg leading-relaxed mb-12 text-muted-foreground/60 font-bold uppercase tracking-widest">
             The next cohort cycle begins shortly. Approved applicants proceed directly to payment — there is no waiting list for accepted students.
           </p>
           <Link
@@ -500,18 +500,18 @@ export default function AcademyLandingPage() {
       {/* ──────────────────────────────────────────────── */}
       {/* 6. FOOTER CTA                                   */}
       {/* ──────────────────────────────────────────────── */}
-      <footer className="relative border-t border-slate-800/60 py-24 px-6 overflow-hidden">
+      <footer className="relative border-t border-border/50 py-24 px-6 overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff04_1px,transparent_1px),linear-gradient(to_bottom,#ffffff04_1px,transparent_1px)] bg-[size:32px_32px] opacity-20 dark:opacity-100" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-yellow-500/8 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-6">
+          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-6 font-black uppercase tracking-[0.3em]">
             ⚡ Limited Enrollment
           </p>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-6">
             Seats for Cohort 1 are strictly<br />
             <span className="text-muted-foreground/30">limited to ensure</span>{" "}
-            <span className="text-yellow-400">high-quality mentorship.</span>
+            <span className="text-yellow-500 dark:text-yellow-400">high-quality mentorship.</span>
           </h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto leading-relaxed">
             We cap every cohort at 20 engineers. When the seats are gone, they are gone. The next opening is Cohort 2 — with no confirmed date yet.
@@ -532,9 +532,9 @@ export default function AcademyLandingPage() {
             <span className="flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-muted-foreground/30" /> Live Engineering Sessions</span>
           </div>
 
-          <p className="text-muted-foreground/30 text-[11px] mt-8">
+          <p className="text-muted-foreground/30 text-[11px] mt-8 uppercase font-bold tracking-widest">
             © 2026 Kybern Academy · Cloud Native Mentorship Program ·{" "}
-            <Link href="/academy/login" className="hover:text-muted-foreground transition-colors">Student Login</Link>
+            <Link href="/academy/login" className="hover:text-muted-foreground transition-colors underline underline-offset-4 decoration-muted-foreground/20">Student Login</Link>
           </p>
         </div>
       </footer>

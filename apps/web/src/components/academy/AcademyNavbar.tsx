@@ -8,7 +8,7 @@ export async function AcademyNavbar() {
   const token = cookieStore.get("academy_token")?.value;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border bg-background/80 dark:bg-slate-950/85 backdrop-blur-xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
       <div className="flex h-16 items-center justify-between px-6 max-w-7xl mx-auto gap-4">
 
         {/* Logo */}
@@ -16,7 +16,7 @@ export async function AcademyNavbar() {
           <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
             <Terminal className="w-4 h-4 text-yellow-500" />
           </div>
-          <span className="text-sm font-black uppercase tracking-widest text-foreground group-hover:text-yellow-400 transition-colors">
+          <span className="text-sm font-black uppercase tracking-widest text-foreground group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
             Kybern
           </span>
           <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground border border-border px-1.5 py-0.5 rounded">
@@ -25,11 +25,11 @@ export async function AcademyNavbar() {
         </Link>
 
         {/* Desktop nav links */}
-        <div className="hidden md:flex flex-1 justify-center gap-8 items-center text-[10px] font-bold text-slate-500 font-mono tracking-[0.15em] uppercase">
-          <Link href="/academy" className="hover:text-yellow-400 transition-colors">Home</Link>
-          <Link href="/academy/break-it-labs" className="hover:text-yellow-400 transition-colors">Labs</Link>
-          <Link href="/academy/alumni" className="hover:text-yellow-400 transition-colors">Alumni</Link>
-          <Link href="/academy/materials" className="hover:text-yellow-400 transition-colors">Resources</Link>
+        <div className="hidden md:flex flex-1 justify-center gap-8 items-center text-[10px] font-bold text-muted-foreground/60 font-mono tracking-[0.15em] uppercase">
+          <Link href="/academy" className="hover:text-foreground transition-colors">Home</Link>
+          <Link href="/academy/break-it-labs" className="hover:text-foreground transition-colors">Labs</Link>
+          <Link href="/academy/alumni" className="hover:text-foreground transition-colors">Alumni</Link>
+          <Link href="/academy/materials" className="hover:text-foreground transition-colors">Resources</Link>
         </div>
 
         {/* Right actions */}
@@ -39,7 +39,7 @@ export async function AcademyNavbar() {
           {token ? (
             <Link
               href="/academy/dashboard"
-              className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-500/20 transition-all"
+              className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-500/20 transition-all font-bold"
             >
               Dashboard →
             </Link>
@@ -47,7 +47,7 @@ export async function AcademyNavbar() {
             <>
               <Link
                 href="/academy/login"
-                className="hidden sm:block px-4 py-2 text-slate-500 hover:text-slate-300 text-[10px] font-bold tracking-[0.15em] uppercase transition-colors"
+                className="hidden sm:block px-4 py-2 text-muted-foreground/60 hover:text-foreground text-[10px] font-bold tracking-[0.15em] uppercase transition-colors"
               >
                 Login
               </Link>
