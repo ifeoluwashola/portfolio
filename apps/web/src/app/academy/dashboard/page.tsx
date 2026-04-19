@@ -95,7 +95,7 @@ export default async function StudentDashboard() {
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Dashboard Overview</h1>
-            <p className="text-slate-500 text-sm">Session: Cloud Native Mentorship 2026</p>
+            <p className="text-muted-foreground text-sm">Session: Cloud Native Mentorship 2026</p>
           </div>
         </div>
       </div>
@@ -104,7 +104,7 @@ export default async function StudentDashboard() {
         
         {/* Left Column: Enrollment Card */}
         <div className="lg:col-span-2 space-y-8">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 sm:p-10 relative overflow-hidden group">
+          <div className="bg-card border border-border rounded-3xl p-8 sm:p-10 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-8 opacity-5">
               <Terminal className="w-64 h-64 -mr-12 -mt-12" />
             </div>
@@ -114,30 +114,30 @@ export default async function StudentDashboard() {
                 STATUS: ENROLLMENT ACTIVE
               </div>
               
-              <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-slate-100">
+              <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground">
                 Welcome to the <span className="text-yellow-500 underline decoration-yellow-500/30 underline-offset-8">Cohort.</span>
               </h2>
               
-              <p className="text-slate-400 leading-relaxed text-lg max-w-2xl mb-10">
+              <p className="text-muted-foreground leading-relaxed text-lg max-w-2xl mb-10">
                 Seats are locked. Access granted. You are now officially enrolled in the specialized Cloud Native Mentorship program. Complete your pre-flight checks below.
               </p>
               
-              <div className="flex flex-wrap items-center gap-6 p-6 bg-slate-950/50 border border-slate-800/50 rounded-2xl">
+              <div className="flex flex-wrap items-center gap-6 p-6 bg-background/50 border border-border/50 rounded-2xl">
                 <div className="flex items-center gap-3">
                   <Calendar className="w-5 h-5 text-yellow-500" />
-                  <span className="text-slate-200">Start Date: <span className="text-yellow-400 font-bold">May 4th</span></span>
+                  <span className="text-foreground">Start Date: <span className="text-yellow-400 font-bold">May 4th</span></span>
                 </div>
                 <div className="h-4 w-px bg-slate-800 hidden sm:block" />
                 <div className="flex items-center gap-3">
                   <Clock className="w-5 h-5 text-yellow-500" />
-                  <span className="text-slate-200">Session: <span className="text-yellow-400 font-bold">9:00 PM WAT</span></span>
+                  <span className="text-foreground">Session: <span className="text-yellow-400 font-bold">9:00 PM WAT</span></span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Checklist Area */}
-          <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 sm:p-10">
+          <div className="bg-card/50 border border-border rounded-3xl p-8 sm:p-10">
             <h3 className="text-xl font-bold mb-8 flex items-center gap-3">
               <CheckCircle2 className="w-6 h-6 text-yellow-500" />
               Pre-Flight Checklist
@@ -173,15 +173,15 @@ export default async function StudentDashboard() {
                   icon: <ArrowRight className="w-4 h-4" />
                 }
               ].map((step) => (
-                <div key={step.id} className="group flex items-start gap-6 p-6 hover:bg-slate-900 border border-transparent hover:border-slate-800 rounded-2xl transition-all">
+                <div key={step.id} className="group flex items-start gap-6 p-6 hover:bg-card border border-transparent hover:border-border rounded-2xl transition-all">
                   <div className="text-yellow-500/50 font-bold text-lg mt-1 pr-2">{step.id}</div>
                   <div className="flex-1">
-                    <h4 className="font-bold text-slate-200 mb-2 group-hover:text-yellow-500 transition-colors uppercase tracking-tight">{step.title}</h4>
-                    <p className="text-sm text-slate-500 leading-relaxed max-w-xl">{step.desc}</p>
+                    <h4 className="font-bold text-foreground mb-2 group-hover:text-yellow-500 transition-colors uppercase tracking-tight">{step.title}</h4>
+                    <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">{step.desc}</p>
                     {step.subActions && (
                       <div className="flex gap-4 mt-4">
                         {step.subActions.map((sub, idx) => (
-                          <Link key={idx} href={sub.link} target="_blank" className="px-3 py-1 bg-slate-950 border border-slate-800 rounded text-[10px] font-bold text-slate-400 hover:text-yellow-500 hover:border-yellow-500/30 transition-all uppercase tracking-widest">
+                          <Link key={idx} href={sub.link} target="_blank" className="px-3 py-1 bg-background border border-border rounded text-[10px] font-bold text-muted-foreground hover:text-yellow-500 hover:border-yellow-500/30 transition-all uppercase tracking-widest">
                             {sub.label}
                           </Link>
                         ))}
@@ -189,7 +189,7 @@ export default async function StudentDashboard() {
                     )}
                   </div>
                   {!step.subActions && (
-                    <Link href={step.link} className="flex items-center gap-2 text-[10px] text-slate-400 group-hover:text-yellow-500 transition-all font-bold tracking-widest uppercase">
+                    <Link href={step.link} className="flex items-center gap-2 text-[10px] text-muted-foreground group-hover:text-yellow-500 transition-all font-bold tracking-widest uppercase">
                       {step.action}
                       {step.icon}
                     </Link>
@@ -210,22 +210,22 @@ export default async function StudentDashboard() {
             <div className="space-y-4 relative z-10">
               {weeks.slice(0, 5).map((week: { id: number; week_number: number; title: string; status: string }) => (
                 <div key={week.id} className="flex items-center justify-between text-sm">
-                  <span className="text-slate-400 font-semibold tracking-tight">Week {week.week_number}: {week.title.split(' ').slice(0, 2).join(' ')}...</span>
+                  <span className="text-foreground font-semibold tracking-tight">Week {week.week_number}: {week.title.split(' ').slice(0, 2).join(' ')}...</span>
                   <Badge status={week.status} />
                 </div>
               ))}
-              <div className="pt-4 border-t border-slate-800 mt-4">
-                <p className="text-[10px] text-slate-500 leading-relaxed">
+              <div className="pt-4 border-t border-border mt-4">
+                <p className="text-[10px] text-muted-foreground leading-relaxed">
                   The roadmap is live. Modules unlock as we progress through the 12-week deployment cycle.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8">
-            <h4 className="font-bold text-slate-400 mb-6 tracking-tight uppercase text-xs">Support Terminal</h4>
-            <p className="text-sm text-slate-500 mb-6 leading-relaxed">Logged issues or technical deployment blockers? Hit the academy support bridge for immediate triage.</p>
-            <button className="w-full py-3 bg-slate-950 border border-slate-800 rounded-lg text-slate-300 text-[10px] font-bold tracking-widest hover:border-yellow-500/30 hover:text-yellow-500 transition-all uppercase">
+          <div className="bg-card border border-border rounded-3xl p-8">
+            <h4 className="font-bold text-muted-foreground mb-6 tracking-tight uppercase text-xs">Support Terminal</h4>
+            <p className="text-sm text-muted-foreground/70 mb-6 leading-relaxed">Logged issues or technical deployment blockers? Hit the academy support bridge for immediate triage.</p>
+            <button className="w-full py-3 bg-background border border-border rounded-lg text-foreground text-[10px] font-bold tracking-widest hover:border-yellow-500/30 hover:text-yellow-500 transition-all uppercase">
               OPEN SUPPORT TICKET
             </button>
           </div>

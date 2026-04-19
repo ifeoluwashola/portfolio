@@ -72,7 +72,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative ${
           isActive 
             ? "bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 shadow-[0_4px_20px_rgba(234,179,8,0.05)]" 
-            : "text-slate-500 hover:text-slate-200 hover:bg-slate-900"
+            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
         } ${isCollapsed ? "justify-center px-0" : ""}`}
         title={isCollapsed ? label : ""}
       >
@@ -81,7 +81,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         {!isCollapsed && (
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-slate-600 group-hover:text-yellow-500/50 transition-colors">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 group-hover:text-yellow-500/50 transition-colors">
               {weekNumber ? `Module ${weekNumber}` : "Control Center"}
             </p>
             <p className="text-sm font-semibold truncate tracking-tight">{label}</p>
@@ -96,17 +96,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-950 text-slate-100 selection:bg-yellow-500/30 selection:text-yellow-200">
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-yellow-500/30 selection:text-yellow-200">
       {isFirstLogin && <FirstLoginOverlay />}
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-900 z-[60] px-6 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-md border-b border-border z-[60] px-6 flex items-center justify-between">
         <Link href="/academy" className="flex items-center gap-3">
           <Terminal className="w-6 h-6 text-yellow-500" />
-          <span className="text-sm font-bold uppercase tracking-widest text-slate-200">Kybern Academy</span>
+          <span className="text-sm font-bold uppercase tracking-widest text-foreground">Kybern Academy</span>
         </Link>
         <button 
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 text-slate-400 hover:text-yellow-500 transition-colors"
+          className="p-2 text-muted-foreground hover:text-yellow-500 transition-colors"
         >
           {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -115,32 +115,32 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[50] lg:hidden"
+          className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[50] lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 bg-slate-950 border-r border-slate-900 flex flex-col z-[55] transition-all duration-300 ease-in-out
+        fixed inset-y-0 left-0 bg-background border-r border-border flex flex-col z-[55] transition-all duration-300 ease-in-out
         ${isMobileMenuOpen ? "translate-x-0 w-[280px]" : "-translate-x-full lg:translate-x-0"}
         ${!isSidebarOpen ? "lg:w-20" : "lg:w-72"}
       `}>
-        <div className={`p-8 border-b border-slate-900/50 flex items-center justify-between overflow-hidden ${!isSidebarOpen ? "px-5" : ""}`}>
+        <div className={`p-8 border-b border-border/50 flex items-center justify-between overflow-hidden ${!isSidebarOpen ? "px-5" : ""}`}>
           <Link href="/academy" className="flex items-center gap-3 group min-w-max">
             <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 group-hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] transition-all">
               <Terminal className="w-5 h-5" />
             </div>
             {isSidebarOpen && (
               <div className="transition-all duration-300 opacity-100">
-                <h1 className="text-sm font-bold tracking-tight text-slate-200 uppercase whitespace-nowrap">Kybern Academy</h1>
+                <h1 className="text-sm font-bold tracking-tight text-foreground uppercase whitespace-nowrap">Kybern Academy</h1>
                 <p className="text-[10px] text-yellow-500/60 font-bold uppercase tracking-widest">Student Portal</p>
               </div>
             )}
           </Link>
           <button 
             onClick={() => setIsMobileMenuOpen(false)}
-            className="lg:hidden p-2 text-slate-500 hover:text-white"
+            className="lg:hidden p-2 text-muted-foreground hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -216,22 +216,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </nav>
 
-        <div className={`p-4 border-t border-slate-900/50 space-y-2 ${!isSidebarOpen ? "items-center" : ""}`}>
+        <div className={`p-4 border-t border-border/50 space-y-2 ${!isSidebarOpen ? "items-center" : ""}`}>
           <div className={`flex items-center gap-3 w-full px-4 py-2 ${!isSidebarOpen ? "justify-center px-0" : ""}`}>
             <ModeToggle variant="academy" />
-            {isSidebarOpen && <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Theme Control</span>}
+            {isSidebarOpen && <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Theme Control</span>}
           </div>
 
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className="hidden lg:flex items-center gap-3 w-full px-4 py-2.5 text-slate-500 hover:text-yellow-500 hover:bg-yellow-500/5 rounded-xl transition-all group"
+            className="hidden lg:flex items-center gap-3 w-full px-4 py-2.5 text-muted-foreground hover:text-yellow-500 hover:bg-yellow-500/5 rounded-xl transition-all group"
           >
             <Layout className={`w-5 h-5 transition-transform duration-500 ${!isSidebarOpen ? "rotate-180" : ""}`} />
             {isSidebarOpen && <span className="text-[10px] font-bold uppercase tracking-widest">Collapse View</span>}
           </button>
           
           <form action={logout}>
-            <button className="flex items-center gap-3 w-full px-4 py-2.5 text-slate-600 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all group">
+            <button className="flex items-center gap-3 w-full px-4 py-2.5 text-muted-foreground/60 hover:text-red-400 hover:bg-red-500/5 rounded-xl transition-all group">
               <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
               {isSidebarOpen && <span className="text-[10px] font-bold uppercase tracking-widest">Logout Session</span>}
             </button>

@@ -145,7 +145,7 @@ export default function AcademyLandingPage() {
       {/* 2. MISSION & METHODOLOGY                        */}
       {/* ──────────────────────────────────────────────── */}
       <section className="relative py-32 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950 via-slate-900/40 to-slate-950 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-card/40 to-background pointer-events-none" />
 
         <div className="relative z-10 max-w-5xl mx-auto">
           {/* Section label */}
@@ -156,12 +156,12 @@ export default function AcademyLandingPage() {
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-8 max-w-3xl">
             We don&apos;t do{" "}
             <span className="relative">
-              <span className="text-muted-foreground/60 line-through decoration-red-500/60">passive video courses.</span>
+              <span className="text-foreground/40 dark:text-muted-foreground/60 line-through decoration-red-500/60">passive video courses.</span>
             </span>
           </h2>
 
           <div className="grid md:grid-cols-2 gap-12 items-start">
-            <div className="space-y-6 text-muted-foreground text-lg leading-relaxed">
+            <div className="space-y-6 text-foreground/70 dark:text-muted-foreground text-lg leading-relaxed">
               <p>
                 Kybern Academy is a{" "}
                 <span className="text-foreground font-semibold">simulation of a real enterprise engineering environment.</span>
