@@ -11,7 +11,7 @@ export default function AcademyLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 selection:bg-yellow-500/30 font-mono pb-40">
+    <div className="min-h-screen bg-background text-foreground selection:bg-yellow-500/30 font-mono pb-40 transition-colors duration-300">
       <AcademyNavbar />
       <main className="flex-1 overflow-x-hidden">
         {children}

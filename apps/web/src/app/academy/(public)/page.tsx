@@ -65,7 +65,7 @@ const requirements = [
 
 export default function AcademyLandingPage() {
   return (
-    <div className="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased selection:bg-yellow-500/30 selection:text-yellow-200">
+    <div className="bg-background text-foreground min-h-screen font-sans antialiased selection:bg-yellow-500/30 selection:text-yellow-200 transition-colors duration-300">
 
       {/* ──────────────────────────────────────────────── */}
       {/* 1. HERO                                         */}
@@ -86,8 +86,8 @@ export default function AcademyLandingPage() {
         </div>
 
         {/* Headline */}
-        <h1 className="relative z-10 max-w-4xl text-5xl sm:text-6xl lg:text-8xl font-black tracking-tight leading-[0.95] mb-6">
-          <span className="text-slate-100">Master the Cloud.</span>
+        <h1 className="relative z-10 max-w-4xl text-4xl sm:text-5xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-6">
+          <span className="text-foreground">Master the Cloud.</span>
           <br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-yellow-300 to-amber-400">
             Command Your Career.
@@ -95,9 +95,9 @@ export default function AcademyLandingPage() {
         </h1>
 
         {/* Subheadline */}
-        <p className="relative z-10 max-w-2xl text-lg sm:text-xl text-slate-400 leading-relaxed mb-12">
+        <p className="relative z-10 max-w-2xl text-lg sm:text-xl text-muted-foreground leading-relaxed mb-12">
           A rigorous, <span className="text-yellow-400 font-bold">16-week</span> immersive mentorship in Cloud Native Engineering.{" "}
-          <span className="text-slate-200 font-semibold">Zero tech background required</span>
+          <span className="text-foreground font-semibold">Zero tech background required</span>
           {" "}— just absolute dedication.
         </p>
 
@@ -112,7 +112,7 @@ export default function AcademyLandingPage() {
           </Link>
           <Link
             href="/academy/break-it-labs"
-            className="inline-flex items-center gap-2 px-6 py-4 text-slate-400 hover:text-yellow-400 text-sm font-bold uppercase tracking-widest transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-4 text-muted-foreground hover:text-yellow-400 text-sm font-bold uppercase tracking-widest transition-colors"
           >
             <BookOpen className="w-4 h-4" />
             Browse Free Labs
@@ -129,7 +129,7 @@ export default function AcademyLandingPage() {
           ].map(({ value, label }) => (
             <div key={label} className="text-center">
               <p className="text-3xl font-black text-yellow-400 font-mono">{value}</p>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600 mt-1">{label}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60 mt-1">{label}</p>
             </div>
           ))}
         </div>
@@ -156,15 +156,15 @@ export default function AcademyLandingPage() {
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-8 max-w-3xl">
             We don&apos;t do{" "}
             <span className="relative">
-              <span className="text-slate-600 line-through decoration-red-500/60">passive video courses.</span>
+              <span className="text-muted-foreground/60 line-through decoration-red-500/60">passive video courses.</span>
             </span>
           </h2>
 
           <div className="grid md:grid-cols-2 gap-12 items-start">
-            <div className="space-y-6 text-slate-400 text-lg leading-relaxed">
+            <div className="space-y-6 text-muted-foreground text-lg leading-relaxed">
               <p>
                 Kybern Academy is a{" "}
-                <span className="text-slate-100 font-semibold">simulation of a real enterprise engineering environment.</span>
+                <span className="text-foreground font-semibold">simulation of a real enterprise engineering environment.</span>
                 {" "}From day one, you operate like a professional — provisioning live infrastructure, debugging production failures, and communicating architectural decisions in writing.
               </p>
               <p>
@@ -179,15 +179,15 @@ export default function AcademyLandingPage() {
                 { icon: <Users className="w-5 h-5 text-cyan-400" />, title: "Cohort-Capped at 20", desc: "Every student gets direct access to Lead Engineers. We deliberately reject scale for quality." },
                 { icon: <Server className="w-5 h-5 text-emerald-400" />, title: "You Run Real Infra", desc: "Your AWS and GCP accounts. Your Terraform state. Your Kubernetes cluster. Real costs, real stakes." },
               ].map(({ icon, title, desc }) => (
-                <div key={title} className="flex gap-4 p-5 bg-slate-900/60 border border-slate-800/60 rounded-2xl hover:border-slate-700/60 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-slate-800 flex items-center justify-center flex-shrink-0">
-                    {icon}
+                  <div key={title} className="flex gap-4 p-5 bg-card/60 border border-border rounded-2xl hover:border-yellow-500/20 transition-colors">
+                    <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center flex-shrink-0">
+                      {icon}
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-foreground mb-1">{title}</h4>
+                      <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h4 className="font-bold text-slate-100 mb-1">{title}</h4>
-                    <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
-                  </div>
-                </div>
               ))}
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function AcademyLandingPage() {
               return (
                 <div
                   key={badge}
-                  className={`relative bg-slate-900/60 border rounded-3xl p-8 flex flex-col gap-6 transition-all duration-300 ${accentMap[accent]}`}
+                  className={`relative bg-card/60 border rounded-3xl p-8 flex flex-col gap-6 transition-all duration-300 ${accentMap[accent]}`}
                 >
                   {/* Top accent line */}
                   <div className={`absolute top-0 left-8 right-8 h-px bg-gradient-to-r ${topBarMap[accent]}`} />
@@ -243,8 +243,8 @@ export default function AcademyLandingPage() {
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-bold text-slate-100 mb-3 leading-snug">{title}</h3>
-                    <p className="text-sm text-slate-500 leading-relaxed">{desc}</p>
+                    <h3 className="text-lg font-bold text-foreground mb-3 leading-snug">{title}</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
                   </div>
                 </div>
               );
@@ -262,16 +262,16 @@ export default function AcademyLandingPage() {
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-4">The 16-Week Roadmap</p>
             <h2 className="text-3xl sm:text-4xl font-black tracking-tight">Two Phases. Zero Compromise.</h2>
             <div className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-8 mt-6">
-              <div className="text-xs text-slate-500 flex items-center gap-2">
+              <div className="text-xs text-muted-foreground/60 flex items-center gap-2">
                 <span className="text-yellow-400 font-bold">Phase 1:</span> 12 Weeks Training
               </div>
-              <div className="text-xs text-slate-500 flex items-center gap-2">
+              <div className="text-xs text-muted-foreground/60 flex items-center gap-2">
                 <span className="text-cyan-400 font-bold">Phase 2:</span> 4 Weeks Capstone
               </div>
             </div>
             
             {/* Recording Note */}
-            <div className="inline-flex items-center gap-2 mt-8 px-4 py-1 rounded-full bg-slate-800/50 border border-slate-700/50 text-[10px] text-slate-500 uppercase font-bold tracking-widest">
+            <div className="inline-flex items-center gap-2 mt-8 px-4 py-1 rounded-full bg-muted/50 border border-border text-[10px] text-muted-foreground uppercase font-bold tracking-widest">
               <MonitorPlay className="w-3 h-3 text-yellow-500" />
               All live sessions recorded & instantly deployed to dashboard
             </div>
@@ -280,12 +280,12 @@ export default function AcademyLandingPage() {
             {curriculum.map(({ week, title, tag }) => (
               <div
                 key={week}
-                className="flex items-center gap-5 p-5 bg-slate-900/60 border border-slate-800/50 rounded-2xl hover:border-yellow-500/20 hover:bg-yellow-500/[0.02] transition-all group"
+                className="flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-5 p-4 sm:p-5 bg-card/60 border border-border rounded-2xl hover:border-yellow-500/20 hover:bg-yellow-500/[0.02] transition-all group"
               >
-                <span className="w-20 text-[10px] font-black text-slate-600 font-mono tracking-widest flex-shrink-0 uppercase">{week}</span>
-                <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-yellow-500/50 transition-colors flex-shrink-0" />
-                <span className="flex-1 font-bold text-slate-300 group-hover:text-slate-100 transition-colors">{title}</span>
-                <span className="text-[9px] font-black uppercase tracking-[0.15em] px-2 py-1 bg-slate-800 rounded-full text-slate-500 flex-shrink-0">{tag}</span>
+                <span className="w-16 sm:w-20 text-[9px] sm:text-[10px] font-black text-muted-foreground font-mono tracking-widest flex-shrink-0 uppercase">{week}</span>
+                <ChevronRight className="hidden sm:block w-4 h-4 text-muted-foreground group-hover:text-yellow-500/50 transition-colors flex-shrink-0" />
+                <span className="flex-1 min-w-[140px] font-bold text-foreground/80 group-hover:text-foreground transition-colors">{title}</span>
+                <span className="text-[8px] sm:text-[9px] font-black uppercase tracking-[0.15em] px-2 py-1 bg-muted rounded-full text-muted-foreground flex-shrink-0 ml-auto sm:ml-0">{tag}</span>
               </div>
             ))}
           </div>
@@ -301,7 +301,7 @@ export default function AcademyLandingPage() {
             {/* Glow */}
             <div className="absolute -inset-1 bg-gradient-to-r from-yellow-500 to-amber-500 rounded-3xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200" />
             
-            <div className="relative bg-slate-900 border border-yellow-500/30 rounded-3xl p-10 md:p-16 overflow-hidden">
+            <div className="relative bg-card border border-yellow-500/30 rounded-3xl p-10 md:p-16 overflow-hidden">
                {/* Decorative background text */}
                <div className="absolute top-0 right-0 text-[120px] font-black text-yellow-500/5 select-none pointer-events-none -translate-y-10 translate-x-10">
                  TOP 3
@@ -315,7 +315,7 @@ export default function AcademyLandingPage() {
                  <div className="text-center md:text-left">
                    <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-400 mb-4">The Incentive Program</p>
                    <h2 className="text-3xl sm:text-4xl font-black tracking-tight mb-6">The Elite Track: Top 3 Guarantee</h2>
-                   <p className="text-slate-400 text-lg leading-relaxed max-w-2xl">
+                   <p className="text-muted-foreground text-lg leading-relaxed max-w-2xl">
                      Kybern Academy is a proving ground. The <span className="text-yellow-400 font-bold underline decoration-yellow-500/30 underline-offset-4">top 3 performing students</span> will be drafted to work directly alongside our Lead DevOps Engineer on a live production project, and fast-tracked for direct internship placements within our corporate network.
                    </p>
                  </div>
@@ -339,9 +339,9 @@ export default function AcademyLandingPage() {
                   this for?
                 </span>
               </h2>
-              <p className="text-slate-400 text-lg leading-relaxed">
+              <p className="text-muted-foreground text-lg leading-relaxed">
                 Kybern Academy Training is designed for{" "}
-                <span className="text-slate-200 font-semibold">ambitious people who are willing to work hard, not passive learners </span>
+                <span className="text-foreground font-semibold">ambitious people who are willing to work hard, not passive learners </span>
                 looking for structured entertainment. The only admissions criterion that truly matters is{" "}
                 <span className="text-yellow-400 font-semibold">grit.</span>
               </p>
@@ -354,7 +354,7 @@ export default function AcademyLandingPage() {
                   className={`flex items-start gap-4 p-4 rounded-xl border transition-colors ${
                     ok
                       ? "bg-emerald-500/5 border-emerald-500/15"
-                      : "bg-slate-900/60 border-slate-800/60"
+                      : "bg-card/60 border-border"
                   }`}
                 >
                   <div className="flex-shrink-0 mt-0.5">
@@ -364,7 +364,7 @@ export default function AcademyLandingPage() {
                       <Lock className="w-5 h-5 text-slate-500" />
                     )}
                   </div>
-                  <p className={`text-sm leading-relaxed ${ok ? "text-emerald-300" : "text-slate-400"}`}>
+                  <p className={`text-sm leading-relaxed ${ok ? "text-emerald-300" : "text-muted-foreground"}`}>
                     {ok ? <span className="font-semibold">✓ </span> : null}
                     {text}
                   </p>
@@ -388,7 +388,7 @@ export default function AcademyLandingPage() {
               The Investment:{" "}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-300">₦250,000</span>
             </h2>
-            <p className="text-slate-500 max-w-xl mx-auto text-base leading-relaxed">
+            <p className="text-muted-foreground/60 max-w-xl mx-auto text-base leading-relaxed">
               This is not a subscription. It is a single, high-stakes investment in one of the highest-demand skills in the global job market.
             </p>
           </div>
@@ -404,7 +404,7 @@ export default function AcademyLandingPage() {
                   Pay in Full
                 </span>
                 <p className="text-4xl font-black text-yellow-400 font-mono mt-4">₦250,000</p>
-                <p className="text-slate-500 text-sm mt-2">One payment. Zero obligations.</p>
+                <p className="text-muted-foreground/60 text-sm mt-2">One payment. Zero obligations.</p>
               </div>
 
               <ul className="space-y-3 flex-1">
@@ -448,13 +448,13 @@ export default function AcademyLandingPage() {
                   "Pay remaining ₦150k over installments",
                   "4-Week Advanced Capstone Phase included",
                 ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-sm text-slate-400">
+                  <li key={item} className="flex items-start gap-3 text-sm text-muted-foreground">
                     <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
                     {item}
                   </li>
                 ))}
-                <li className="flex items-start gap-3 text-[11px] text-slate-600 pt-2 border-t border-slate-800">
-                  <ShieldCheck className="w-3.5 h-3.5 text-slate-700 flex-shrink-0 mt-0.5" />
+                <li className="flex items-start gap-3 text-[11px] text-muted-foreground/40 pt-2 border-t border-border">
+                  <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground/30 flex-shrink-0 mt-0.5" />
                   Missed payments trigger automated account suspension. No exceptions.
                 </li>
               </ul>
@@ -469,7 +469,7 @@ export default function AcademyLandingPage() {
           </div>
 
           {/* Instalment footnote */}
-          <p className="text-center text-[11px] text-slate-600 mt-8 max-w-lg mx-auto leading-relaxed">
+          <p className="text-center text-[11px] text-muted-foreground/40 mt-8 max-w-lg mx-auto leading-relaxed">
             All payments are processed securely via Paystack. Your billing status is tracked in real-time through the Kybern student portal.
           </p>
         </div>
@@ -484,7 +484,7 @@ export default function AcademyLandingPage() {
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight mb-6">
             Ready to commit?
           </h2>
-          <p className="text-slate-400 text-lg leading-relaxed mb-12">
+          <p className="text-muted-foreground text-lg leading-relaxed mb-12">
             The next cohort cycle begins shortly. Approved applicants proceed directly to payment — there is no waiting list for accepted students.
           </p>
           <Link
@@ -501,7 +501,7 @@ export default function AcademyLandingPage() {
       {/* 6. FOOTER CTA                                   */}
       {/* ──────────────────────────────────────────────── */}
       <footer className="relative border-t border-slate-800/60 py-24 px-6 overflow-hidden">
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff04_1px,transparent_1px),linear-gradient(to_bottom,#ffffff04_1px,transparent_1px)] bg-[size:32px_32px]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff04_1px,transparent_1px),linear-gradient(to_bottom,#ffffff04_1px,transparent_1px)] bg-[size:32px_32px] opacity-20 dark:opacity-100" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[200px] bg-yellow-500/8 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
@@ -510,10 +510,10 @@ export default function AcademyLandingPage() {
           </p>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-6">
             Seats for Cohort 1 are strictly<br />
-            <span className="text-slate-600">limited to ensure</span>{" "}
+            <span className="text-muted-foreground/30">limited to ensure</span>{" "}
             <span className="text-yellow-400">high-quality mentorship.</span>
           </h2>
-          <p className="text-slate-500 text-lg mb-12 max-w-xl mx-auto leading-relaxed">
+          <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto leading-relaxed">
             We cap every cohort at 20 engineers. When the seats are gone, they are gone. The next opening is Cohort 2 — with no confirmed date yet.
           </p>
 
@@ -526,15 +526,15 @@ export default function AcademyLandingPage() {
           </Link>
 
           {/* Trust signals */}
-          <div className="flex flex-wrap justify-center gap-8 mt-16 pt-10 border-t border-slate-800/40 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">
-            <span className="flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-slate-700" /> SSL Secured Payments</span>
-            <span className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-slate-700" /> Max 20 Students / Cohort</span>
-            <span className="flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-slate-700" /> Live Engineering Sessions</span>
+          <div className="flex flex-wrap justify-center gap-8 mt-16 pt-10 border-t border-border text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
+            <span className="flex items-center gap-2"><ShieldCheck className="w-3.5 h-3.5 text-muted-foreground/30" /> SSL Secured Payments</span>
+            <span className="flex items-center gap-2"><Users className="w-3.5 h-3.5 text-muted-foreground/30" /> Max 20 Students / Cohort</span>
+            <span className="flex items-center gap-2"><Zap className="w-3.5 h-3.5 text-muted-foreground/30" /> Live Engineering Sessions</span>
           </div>
 
-          <p className="text-slate-700 text-[11px] mt-8">
+          <p className="text-muted-foreground/30 text-[11px] mt-8">
             © 2026 Kybern Academy · Cloud Native Mentorship Program ·{" "}
-            <Link href="/academy/login" className="hover:text-slate-500 transition-colors">Student Login</Link>
+            <Link href="/academy/login" className="hover:text-muted-foreground transition-colors">Student Login</Link>
           </p>
         </div>
       </footer>

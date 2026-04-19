@@ -8,7 +8,7 @@ export async function AcademyNavbar() {
   const token = cookieStore.get("academy_token")?.value;
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-800/80 bg-slate-950/85 backdrop-blur-xl">
+    <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border bg-background/80 dark:bg-slate-950/85 backdrop-blur-xl">
       <div className="flex h-16 items-center justify-between px-6 max-w-7xl mx-auto gap-4">
 
         {/* Logo */}
@@ -16,10 +16,10 @@ export async function AcademyNavbar() {
           <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
             <Terminal className="w-4 h-4 text-yellow-500" />
           </div>
-          <span className="text-sm font-black uppercase tracking-widest text-slate-100 group-hover:text-yellow-400 transition-colors">
+          <span className="text-sm font-black uppercase tracking-widest text-foreground group-hover:text-yellow-400 transition-colors">
             Kybern
           </span>
-          <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600 border border-slate-800 px-1.5 py-0.5 rounded">
+          <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground border border-border px-1.5 py-0.5 rounded">
             Academy
           </span>
         </Link>
