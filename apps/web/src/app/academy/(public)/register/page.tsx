@@ -261,12 +261,23 @@ export default function RegisterPage() {
               <button 
                 type="submit"
                 disabled={loading}
-                className={`w-full flex items-center justify-center gap-3 py-4 rounded-2xl font-black uppercase tracking-widest transition-all ${
+                className={`group w-full flex items-center justify-center gap-3 py-5 rounded-2xl font-black uppercase tracking-widest transition-all duration-200 ${
                   loading 
+                    ? "bg-muted text-muted-foreground cursor-not-allowed"
+                    : "bg-yellow-500 text-slate-950 hover:bg-yellow-400 shadow-[0_4px_20px_rgba(234,179,8,0.15)] hover:shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:scale-[1.01] active:scale-[0.99]"
                 }`}
               >
-                {loading ? "Processing Secure Link..." : "Apply & Initialize Payment"}
-                <ChevronRight className="w-5 h-5" />
+                {loading ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-slate-950/20 border-t-slate-950 animate-spin rounded-full" />
+                    Processing Secure Link...
+                  </>
+                ) : (
+                  <>
+                    Apply & Initialize Payment
+                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
               </button>
 
               <div className="flex items-center justify-center gap-6 text-[10px] text-muted-foreground/40 uppercase font-black tracking-widest mt-6">
