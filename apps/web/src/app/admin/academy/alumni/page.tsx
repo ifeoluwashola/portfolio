@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { 
   Search, 
@@ -12,8 +11,8 @@ import {
   PlusCircle,
   X,
   ChevronRight,
-  Code2,
   Layout,
+  Code2,
   Edit3
 } from "lucide-react";
 import { 
@@ -58,7 +57,7 @@ export default function AlumniManagerPage() {
     { project_title: "", description: "", architecture_diagram_url: "", live_demo_url: "", repo_url: "" }
   ]);
 
-  const router = useRouter();
+
 
   const fetchData = useCallback(async () => {
     setLoading(true);

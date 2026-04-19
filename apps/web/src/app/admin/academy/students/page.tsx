@@ -16,7 +16,6 @@ import {
   Search, 
   CheckCircle2,
   AlertTriangle,
-  XCircle,
   Lock,
   Unlock,
   Loader2,
@@ -295,7 +294,7 @@ export default function AdminStudentsPage() {
               <h2>Apply Academic Probation</h2>
             </div>
             <p className="text-slate-400 text-sm leading-relaxed mb-8">
-              Changing status for <span className="text-white font-bold">{selectedStudent.first_name} {selectedStudent.last_name}</span>. This will trigger a notification email and move the student into a "Monitored" state for 14 days.
+              Changing status for <span className="text-white font-bold">{selectedStudent.first_name} {selectedStudent.last_name}</span>. This will trigger a notification email and move the student into a &quot;Monitored&quot; state for 14 days.
             </p>
             <div className="flex gap-4">
               <button onClick={() => setShowProbationModal(false)} className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 transition-all text-sm">Abort</button>

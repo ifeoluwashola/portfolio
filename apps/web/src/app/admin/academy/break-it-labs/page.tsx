@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import { 
   Plus, 
   Trash2, 
@@ -48,13 +47,11 @@ interface BreakItLab {
 export default function AdminLabsPage() {
   const [labs, setLabs] = useState<BreakItLab[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedLab, setSelectedLab] = useState<BreakItLab | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewingSubmissions, setViewingSubmissions] = useState<number | null>(null);
 
-  const router = useRouter();
 
 
   const fetchLabs = useCallback(async () => {
@@ -65,11 +62,11 @@ export default function AdminLabsPage() {
       const data = await res.json();
       setLabs(data || []);
     } catch (err: unknown) {
-      if (err instanceof Error) setError(err.message);
+      console.error(err);
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, []);
 
   useEffect(() => {
     fetchLabs();

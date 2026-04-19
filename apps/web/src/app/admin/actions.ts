@@ -216,6 +216,6 @@ export async function updateStudentStatus(studentID: string, academicStatus: str
 
 export async function getCohortApplications() {
   const result = await adminFetch("/v1/admin/cohort-applications");
-  if (result.error) return { error: result.error };
-  return { data: result.data };
+  if (result.error) return { error: result.error, status: result.status };
+  return { data: result.data, status: result.status };
 }

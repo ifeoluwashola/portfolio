@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -11,7 +11,6 @@ import { adminLogout } from "./actions";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [academyOpen, setAcademyOpen] = useState(pathname.includes("/admin/academy") || pathname === "/admin/cohort");
 
   const isAuthPage = pathname === "/admin/login" || pathname === "/admin/change-password";

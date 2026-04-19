@@ -13,19 +13,34 @@ import {
   AlertCircle, 
   Plus, 
   Search,
-  ChevronRight,
   Loader2,
-  CheckCircle2,
-  XCircle
+  CheckCircle2
 } from "lucide-react";
 
+interface BillingOverview {
+  total_revenue: number;
+  pending_receivables: number;
+  overdue_accounts: number;
+}
+
+interface BillingLedgerEntry {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  total_paid: number;
+  remaining_balance: number;
+  next_payment_due_date: string | null;
+  billing_status: string;
+}
+
 export default function AdminBillingPage() {
-  const [overview, setOverview] = useState<any>(null);
-  const [ledger, setLedger] = useState<any[]>([]);
+  const [overview, setOverview] = useState<BillingOverview | null>(null);
+  const [ledger, setLedger] = useState<BillingLedgerEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [selectedStudent, setSelectedStudent] = useState<BillingLedgerEntry | null>(null);
   const [manualAmount, setManualAmount] = useState("");
   const [manualNote, setManualNote] = useState("");
   const [formLoading, setFormLoading] = useState(false);

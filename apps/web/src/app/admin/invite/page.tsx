@@ -1,12 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
 import { UserPlus, Mail, User, Shield, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 import { adminInvite } from "../actions";
 
 export default function InviteAdminPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");

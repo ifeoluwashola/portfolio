@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
 import { 
   Terminal, 
@@ -14,7 +14,6 @@ import {
   Clock,
   ExternalLink,
   Code2,
-  ChevronDown,
   Zap,
   ChevronRight
 } from "lucide-react";
@@ -71,7 +70,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
 
-  const fetchLab = async () => {
+  const fetchLab = useCallback(async () => {
     try {
       const res = await fetch(`${apiBase}/v1/labs/${id}`);
       if (!res.ok) throw new Error("Lab not found");
@@ -82,7 +81,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
     } finally {
       setLoading(false);
     }
-  };
+  }, [apiBase, id]);
 
   useEffect(() => {
     getAcademySession().then(setIsAuthenticated);
@@ -90,7 +89,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
       if (res.status) setStudentStatus(res.status);
     });
     fetchLab();
-  }, [id]);
+  }, [id, fetchLab]);
 
   const showAlert = (title: string, message: string, type: "error" | "warning" | "success" = "warning", onConfirm?: () => void) => {
     setModal({ isOpen: true, title, message, type, onConfirm });
