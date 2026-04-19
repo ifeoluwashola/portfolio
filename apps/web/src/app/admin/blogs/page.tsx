@@ -20,7 +20,7 @@ export default function AdminBlogsPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch("/api/admin/proxy/admin/blog/stats");
+        const res = await fetch("/api/admin/proxy/v1/admin/blog/stats");
 
         if (res.ok) {
           const data = await res.json();

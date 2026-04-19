@@ -16,7 +16,7 @@ export async function adminLogin(formData: FormData) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/login`, {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, password }),
@@ -65,7 +65,7 @@ export async function adminLogout() {
   // Revoke the token on the server
   if (token) {
     try {
-      await fetch(`${API_BASE_URL}/admin/logout`, {
+      await fetch(`${API_BASE_URL}/v1/admin/logout`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -90,7 +90,7 @@ export async function adminChangePassword(formData: FormData) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/change-password`, {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/change-password`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -124,7 +124,7 @@ export async function adminInvite(formData: FormData) {
   }
 
   try {
-    const res = await fetch(`${API_BASE_URL}/admin/invite`, {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/invite`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -212,4 +212,10 @@ export async function updateStudentStatus(studentID: string, academicStatus: str
   });
   if (result.error) return { error: result.error };
   return { success: true };
+}
+
+export async function getCohortApplications() {
+  const result = await adminFetch("/v1/admin/cohort-applications");
+  if (result.error) return { error: result.error };
+  return { data: result.data };
 }

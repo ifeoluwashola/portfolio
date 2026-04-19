@@ -32,7 +32,7 @@ export function ContactSection() {
 
     const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
     try {
-      const response = await fetch(`${apiBase}/contact`, {
+      const response = await fetch(`${apiBase}/v1/contact`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -118,19 +118,19 @@ func main() {
 	mux.Handle("/metrics", promhttp.Handler())
 
 	// === PUBLIC ROUTES ===
-	mux.HandleFunc("/api/contact", contactHandler.HandleSubmitContact)
-	mux.HandleFunc("/api/projects/guardrail/stats", projectHandler.HandleGetGuardrailStats)
+	mux.HandleFunc("/api/v1/contact", contactHandler.HandleSubmitContact)
+	mux.HandleFunc("/api/v1/projects/guardrail/stats", projectHandler.HandleGetGuardrailStats)
 
 	// Admin Auth (public: login only — NO register endpoint)
-	mux.HandleFunc("POST /api/admin/login", authHandler.HandleLogin)
-	mux.HandleFunc("POST /api/admin/logout", authMW.RequireAuth(authHandler.HandleLogout))
+	mux.HandleFunc("POST /api/v1/admin/login", authHandler.HandleLogin)
+	mux.HandleFunc("POST /api/v1/admin/logout", authMW.RequireAuth(authHandler.HandleLogout))
 	mux.HandleFunc("GET /api/v1/auth/session", authMW.RequireAuth(authHandler.HandleGetSession))
 
 	// Blog API Routes (public)
-	mux.HandleFunc("GET /api/blog/{slug}", blogHandler.GetPostData)
-	mux.HandleFunc("POST /api/blog/{slug}/view", blogHandler.RegisterView)
-	mux.HandleFunc("POST /api/blog/{slug}/like", blogHandler.RegisterLike)
-	mux.HandleFunc("POST /api/blog/{slug}/comment", blogHandler.LeaveComment)
+	mux.HandleFunc("GET /api/v1/blog/{slug}", blogHandler.GetPostData)
+	mux.HandleFunc("POST /api/v1/blog/{slug}/view", blogHandler.RegisterView)
+	mux.HandleFunc("POST /api/v1/blog/{slug}/like", blogHandler.RegisterLike)
+	mux.HandleFunc("POST /api/v1/blog/{slug}/comment", blogHandler.LeaveComment)
 
 	// Academy Public Routes
 	mux.HandleFunc("POST /api/v1/academy/apply", academyHandler.HandleApply)
@@ -150,7 +150,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/labs/{id}", academyHandler.HandleGetLab)
 
 	// Profile API (GET is public, PUT is admin-protected)
-	mux.HandleFunc("/api/profile", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v1/profile", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			profileHandler.HandleGetProfile(w, r)
@@ -162,7 +162,7 @@ func main() {
 	})
 
 	// Dynamic DB Projects (GET is public, POST requires admin auth)
-	mux.HandleFunc("/api/projects", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/v1/projects", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			projectDataHandler.HandleGetProjects(w, r)
@@ -187,18 +187,18 @@ func main() {
 
 	// === ADMIN PROTECTED ROUTES ===
 	// Admin management
-	mux.HandleFunc("POST /api/admin/invite", authMW.RequireAuth(authHandler.HandleInviteAdmin))
-	mux.HandleFunc("POST /api/admin/change-password", authMW.RequireAuth(authHandler.HandleChangePassword))
+	mux.HandleFunc("POST /api/v1/admin/invite", authMW.RequireAuth(authHandler.HandleInviteAdmin))
+	mux.HandleFunc("POST /api/v1/admin/change-password", authMW.RequireAuth(authHandler.HandleChangePassword))
 
 	// Contacts & Blog (admin)
-	mux.HandleFunc("/api/contacts", authMW.RequireAuth(contactHandler.HandleGetContacts))
-	mux.HandleFunc("GET /api/contacts/{id}", authMW.RequireAuth(contactHandler.HandleGetContactByID))
-	mux.HandleFunc("GET /api/admin/blog/stats", authMW.RequireAuth(blogHandler.GetAdminStats))
-	mux.HandleFunc("GET /api/admin/cohort-applications", authMW.RequireAuth(academyHandler.HandleGetAdminApplications))
+	mux.HandleFunc("/api/v1/contacts", authMW.RequireAuth(contactHandler.HandleGetContacts))
+	mux.HandleFunc("GET /api/v1/contacts/{id}", authMW.RequireAuth(contactHandler.HandleGetContactByID))
+	mux.HandleFunc("GET /api/v1/admin/blog/stats", authMW.RequireAuth(blogHandler.GetAdminStats))
+	mux.HandleFunc("GET /api/v1/admin/cohort-applications", authMW.RequireAuth(academyHandler.HandleGetAdminApplications))
 
 	// Projects (admin)
-	mux.HandleFunc("PUT /api/projects/{id}", authMW.RequireAuth(projectDataHandler.HandleUpdateProject))
-	mux.HandleFunc("DELETE /api/projects/{id}", authMW.RequireAuth(projectDataHandler.HandleDeleteProject))
+	mux.HandleFunc("PUT /api/v1/projects/{id}", authMW.RequireAuth(projectDataHandler.HandleUpdateProject))
+	mux.HandleFunc("DELETE /api/v1/projects/{id}", authMW.RequireAuth(projectDataHandler.HandleDeleteProject))
 
 	// Academy Management (admin)
 	mux.HandleFunc("GET /api/v1/admin/academy/weeks", authMW.RequireAuth(academyHandler.HandleGetCurriculum))

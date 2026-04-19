@@ -14,13 +14,13 @@ export function ProjectsGrid() {
     async function fetchData() {
       try {
         const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
-        const projRes = await fetch(`${apiBase}/projects`);
+        const projRes = await fetch(`${apiBase}/v1/projects`);
         if (projRes.ok) {
           const data = await projRes.json();
           setProjects(data);
         }
  
-        const statsRes = await fetch(`${apiBase}/projects/guardrail/stats`);
+        const statsRes = await fetch(`${apiBase}/v1/projects/guardrail/stats`);
         if (statsRes.ok) {
           const data = await statsRes.json();
           setGuardrailStats({ stars: data.stars, forks: data.forks });

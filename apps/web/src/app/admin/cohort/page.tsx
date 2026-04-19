@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Users, CreditCard, Clock, TrendingUp } from "lucide-react";
+import { getCohortApplications } from "../actions";
 
 interface CohortApplication {
   id: string;
@@ -37,38 +38,19 @@ export default function AdminCohortPage() {
 
   useEffect(() => {
     async function fetchCohortData() {
-      try {
-        const res = await fetch("/api/v1/admin/cohort-applications", {
-          cache: "no-store",
-        });
-        
-        // Wait, I should use the adminFetch pattern to keep it consistent.
-        // Actually, fetching from a client component directly to /api/v1/...
-        // requires the cookie. The browser sends it.
-        // But the user mentioned "mapping", and I see the proxy route was probably used
-        // because of some middleware or path issue.
-        
-        // Let's check the API route in main.go again.
-        // mux.HandleFunc("GET /api/admin/cohort-applications", authMW.RequireAuth(academyHandler.HandleGetAdminApplications))
-        
-        const response = await fetch("/api/admin/cohort-applications");
-
-        if (!response.ok) {
-          if (response.status === 401) {
-            router.push("/admin/login");
-            return;
-          }
-          throw new Error("Failed to fetch cohort applications");
+      setLoading(true);
+      const res = await getCohortApplications();
+      
+      if (res.error) {
+        if (res.status === 401) {
+          router.push("/admin/login");
+        } else {
+          setError(res.error);
         }
-
-        const json = await response.json();
-        setData(json);
-      } catch (err: unknown) {
-        if (err instanceof Error) setError(err.message);
-        else setError(String(err));
-      } finally {
-        setLoading(false);
+      } else if (res.data) {
+        setData(res.data);
       }
+      setLoading(false);
     }
 
     fetchCohortData();

@@ -30,7 +30,7 @@ export default function AdminContactDetailPage({ params }: { params: Promise<{ i
   useEffect(() => {
     async function fetchContact() {
       try {
-        const res = await fetch(`/api/admin/proxy/contacts/${idStr}`);
+        const res = await fetch(`/api/admin/proxy/v1/contacts/${idStr}`);
 
         if (!res.ok) {
           if (res.status === 401) {

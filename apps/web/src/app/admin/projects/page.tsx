@@ -33,7 +33,7 @@ export default function AdminProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/proxy/projects");
+      const res = await fetch("/api/admin/proxy/v1/projects");
       if (!res.ok) throw new Error("Failed to fetch projects");
       const data = await res.json();
       setProjects(data || []);
@@ -88,8 +88,8 @@ export default function AdminProjectsPage() {
 
     try {
       const url = editingProjectId 
-        ? `/api/admin/proxy/projects/${editingProjectId}`
-        : `/api/admin/proxy/projects`;
+        ? `/api/admin/proxy/v1/projects/${editingProjectId}`
+        : `/api/admin/proxy/v1/projects`;
       
       const method = editingProjectId ? "PUT" : "POST";
 
@@ -127,7 +127,7 @@ export default function AdminProjectsPage() {
 
 
     try {
-      const res = await fetch(`/api/admin/proxy/projects/${id}`, {
+      const res = await fetch(`/api/admin/proxy/v1/projects/${id}`, {
         method: "DELETE",
       });
 

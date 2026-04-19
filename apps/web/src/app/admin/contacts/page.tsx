@@ -25,7 +25,7 @@ export default function AdminContactsPage() {
   useEffect(() => {
     async function fetchContacts() {
       try {
-        const res = await fetch("/api/admin/proxy/contacts");
+        const res = await fetch("/api/admin/proxy/v1/contacts");
 
         if (!res.ok) {
           if (res.status === 401) {

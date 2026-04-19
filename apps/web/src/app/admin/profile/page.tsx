@@ -77,7 +77,7 @@ export default function AdminProfilePage() {
   const fetchProfile = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/admin/proxy/profile");
+      const res = await fetch("/api/admin/proxy/v1/profile");
       if (!res.ok) throw new Error("Failed to load profile");
       const data = await res.json();
       
@@ -119,7 +119,7 @@ export default function AdminProfilePage() {
 
 
     try {
-      const res = await fetch("/api/admin/proxy/profile", {
+      const res = await fetch("/api/admin/proxy/v1/profile", {
         method: "PUT",
         headers: {
           "Content-Type": "application/json"

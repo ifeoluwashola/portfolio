@@ -40,7 +40,7 @@ export function BlogInteractivity({ slug }: { slug: string }) {
       if (viewedPosts.has(slug)) return;
       
       try {
-        await fetch(`${API_URL}/blog/${slug}/view`, { method: "POST" });
+        await fetch(`${API_URL}/v1/blog/${slug}/view`, { method: "POST" });
         viewedPosts.add(slug);
       } catch (err) {
         console.error("Failed to register view", err);
@@ -50,7 +50,7 @@ export function BlogInteractivity({ slug }: { slug: string }) {
     // Fetch initial metrics and comments
     const fetchData = async () => {
       try {
-        const res = await fetch(`${API_URL}/blog/${slug}`);
+        const res = await fetch(`${API_URL}/v1/blog/${slug}`);
         if (res.ok && isMounted) {
           const d = await res.json();
           setData(d);
@@ -79,7 +79,7 @@ export function BlogInteractivity({ slug }: { slug: string }) {
     if (hasLiked) return;
 
     try {
-      const res = await fetch(`${API_URL}/blog/${slug}/like`, { method: "POST" });
+      const res = await fetch(`${API_URL}/v1/blog/${slug}/like`, { method: "POST" });
       if (res.ok) {
         setHasLiked(true);
         setData(prev => prev ? { ...prev, likes: prev.likes + 1 } : null);
@@ -102,7 +102,7 @@ export function BlogInteractivity({ slug }: { slug: string }) {
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/blog/${slug}/comment`, {
+      const res = await fetch(`${API_URL}/v1/blog/${slug}/comment`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ display_name: displayName, content: commentContent })

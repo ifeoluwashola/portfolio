@@ -55,7 +55,12 @@ func (r *AcademyRepository) GetApplicationByReference(ctx context.Context, refer
 
 func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*domain.CohortApplication, error) {
 	query := `
-		SELECT id, first_name, last_name, email, phone, role, goal, experience_level, has_laptop, reference, payment_status, created_at
+		SELECT 
+			id, first_name, last_name, email, phone, 
+			COALESCE(role, ''), COALESCE(goal, ''), 
+			COALESCE(experience_level, 'Not Specified'), 
+			COALESCE(has_laptop, FALSE), 
+			reference, payment_status, created_at
 		FROM cohort_applications
 		ORDER BY created_at DESC
 	`
