@@ -31,11 +31,26 @@ func LoadConfig() *Config {
 		log.Fatal("FATAL: JWT_SECRET environment variable is required but not set")
 	}
 
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		// Fallback to individual components but DO NOT provide insecure default credentials
+		user := os.Getenv("DB_USER")
+		pass := os.Getenv("DB_PASSWORD")
+		host := getEnv("DB_HOST", "localhost")
+		port := getEnv("DB_PORT", "5432")
+		dbname := getEnv("DB_NAME", "portfolio")
+		
+		if user == "" || pass == "" {
+			log.Fatal("FATAL: DATABASE_URL or (DB_USER and DB_PASSWORD) must be set")
+		}
+		
+		sslMode := getEnv("DB_SSLMODE", "disable")
+		dbURL = "postgres://" + user + ":" + pass + "@" + host + ":" + port + "/" + dbname + "?sslmode=" + sslMode
+	}
+
 	return &Config{
 		Port: getEnv("PORT", "8080"),
-		DatabaseURL: getEnv("DATABASE_URL", 
-			"postgres://"+getEnv("DB_USER", "postgres")+":"+getEnv("DB_PASSWORD", "postgres")+"@"+getEnv("DB_HOST", "localhost")+":"+getEnv("DB_PORT", "5432")+"/"+getEnv("DB_NAME", "portfolio")+"?sslmode=disable",
-		),
+		// DatabaseURL: getEnv("DATABASE_URL", ""),
 		GithubToken:       getEnv("GITHUB_TOKEN", ""),
 		AllowedOrigins:    getEnv("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:3001"),
 		ResendAPIKey:      getEnv("RESEND_API_KEY", ""),
@@ -44,6 +59,7 @@ func LoadConfig() *Config {
 		FrontendURL:       getEnv("FRONTEND_URL", "http://localhost:3000"),
 		JWTSecret:         jwtSecret,
 		RedisURL:          getEnv("REDIS_URL", ""),
+		DatabaseURL:       dbURL,
 	}
 }
 

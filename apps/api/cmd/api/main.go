@@ -105,6 +105,12 @@ func main() {
 	blogHandler := handler.NewBlogHandler(blogSvc)
 	academyHandler := handler.NewAcademyHandler(academySvc)
 
+	// 8. Setup Rate Limiter
+	rl := middleware.NewRateLimiter(tokenCache)
+	loginLimit := rl.RateLimit(5, time.Minute)      // 5 attempts per minute
+	commentLimit := rl.RateLimit(10, time.Minute)   // 10 comments per minute
+	inviteLimit := rl.RateLimit(3, time.Hour)       // 3 invites per hour
+
 	// 8. Setup Router (ServeMux)
 	mux := http.NewServeMux()
 
@@ -122,7 +128,7 @@ func main() {
 	mux.HandleFunc("/api/v1/projects/guardrail/stats", projectHandler.HandleGetGuardrailStats)
 
 	// Admin Auth (public: login only — NO register endpoint)
-	mux.HandleFunc("POST /api/v1/admin/login", authHandler.HandleLogin)
+	mux.HandleFunc("POST /api/v1/admin/login", loginLimit(authHandler.HandleLogin))
 	mux.HandleFunc("POST /api/v1/admin/logout", authMW.RequireAuth(authHandler.HandleLogout))
 	mux.HandleFunc("GET /api/v1/auth/session", authMW.RequireAuth(authHandler.HandleGetSession))
 
@@ -130,16 +136,16 @@ func main() {
 	mux.HandleFunc("GET /api/v1/blog/{slug}", blogHandler.GetPostData)
 	mux.HandleFunc("POST /api/v1/blog/{slug}/view", blogHandler.RegisterView)
 	mux.HandleFunc("POST /api/v1/blog/{slug}/like", blogHandler.RegisterLike)
-	mux.HandleFunc("POST /api/v1/blog/{slug}/comment", blogHandler.LeaveComment)
+	mux.HandleFunc("POST /api/v1/blog/{slug}/comment", commentLimit(blogHandler.LeaveComment))
 
 	// Academy Public Routes
 	mux.HandleFunc("POST /api/v1/academy/apply", academyHandler.HandleApply)
 	mux.HandleFunc("POST /api/v1/paystack/webhook", academyHandler.HandlePaystackWebhook)
-	mux.HandleFunc("POST /api/v1/academy/login", academyHandler.HandleAcademyLogin)
+	mux.HandleFunc("POST /api/v1/academy/login", loginLimit(academyHandler.HandleAcademyLogin))
 	mux.HandleFunc("POST /api/v1/academy/logout", authMW.RequireStudentAuth(academyHandler.HandleAcademyLogout))
 	mux.HandleFunc("GET /api/v1/academy/session", authMW.RequireStudentAuth(academyHandler.HandleGetSession))
-	mux.HandleFunc("POST /api/v1/academy/forgot-password", academyHandler.HandleAcademyForgotPassword)
-	mux.HandleFunc("POST /api/v1/academy/reset-password", academyHandler.HandleAcademyResetPassword)
+	mux.HandleFunc("POST /api/v1/academy/forgot-password", loginLimit(academyHandler.HandleAcademyForgotPassword))
+	mux.HandleFunc("POST /api/v1/academy/reset-password", loginLimit(academyHandler.HandleAcademyResetPassword))
 
 	// Alumni Hall of Fame (public)
 	mux.HandleFunc("GET /api/v1/alumni", academyHandler.HandleListAlumni)
@@ -187,8 +193,8 @@ func main() {
 
 	// === ADMIN PROTECTED ROUTES ===
 	// Admin management
-	mux.HandleFunc("POST /api/v1/admin/invite", authMW.RequireAuth(authHandler.HandleInviteAdmin))
-	mux.HandleFunc("POST /api/v1/admin/change-password", authMW.RequireAuth(authHandler.HandleChangePassword))
+	mux.HandleFunc("POST /api/v1/admin/invite", inviteLimit(authMW.RequireAuth(authHandler.HandleInviteAdmin)))
+	mux.HandleFunc("POST /api/v1/admin/change-password", loginLimit(authMW.RequireAuth(authHandler.HandleChangePassword)))
 
 	// Contacts & Blog (admin)
 	mux.HandleFunc("/api/v1/contacts", authMW.RequireAuth(contactHandler.HandleGetContacts))

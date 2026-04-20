@@ -17,12 +17,19 @@ type InMemoryCache struct {
 	mu              sync.RWMutex
 	revokedTokens   map[string]time.Time // tokenHash -> expiresAt
 	studentStatuses map[string]cacheEntry
+	rateLimits      map[string]*rateLimitEntry
+}
+
+type rateLimitEntry struct {
+	count     int
+	expiresAt time.Time
 }
 
 func NewInMemoryCache() TokenCache {
 	c := &InMemoryCache{
 		revokedTokens:   make(map[string]time.Time),
 		studentStatuses: make(map[string]cacheEntry),
+		rateLimits:      make(map[string]*rateLimitEntry),
 	}
 	// Start background cleanup goroutine
 	go c.cleanup()
@@ -75,6 +82,25 @@ func (c *InMemoryCache) InvalidateStudentStatus(_ context.Context, studentID str
 	delete(c.studentStatuses, studentID)
 }
 
+func (c *InMemoryCache) Allow(_ context.Context, identifier string, limit int, window time.Duration) (bool, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	now := time.Now()
+	entry, exists := c.rateLimits[identifier]
+
+	if !exists || now.After(entry.expiresAt) {
+		c.rateLimits[identifier] = &rateLimitEntry{
+			count:     1,
+			expiresAt: now.Add(window),
+		}
+		return true, nil
+	}
+
+	entry.count++
+	return entry.count <= limit, nil
+}
+
 // cleanup periodically removes expired entries to prevent memory leaks
 func (c *InMemoryCache) cleanup() {
 	ticker := time.NewTicker(10 * time.Minute)
@@ -90,6 +116,11 @@ func (c *InMemoryCache) cleanup() {
 		for id, entry := range c.studentStatuses {
 			if now.After(entry.expiresAt) {
 				delete(c.studentStatuses, id)
+			}
+		}
+		for id, entry := range c.rateLimits {
+			if now.After(entry.expiresAt) {
+				delete(c.rateLimits, id)
 			}
 		}
 		c.mu.Unlock()

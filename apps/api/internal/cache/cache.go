@@ -20,4 +20,8 @@ type TokenCache interface {
 
 	// Invalidate removes a cached student status (e.g. on disqualification)
 	InvalidateStudentStatus(ctx context.Context, studentID string)
+
+	// Allow checks if a request is allowed by rate limiting logic.
+	// window is the duration for the rate limit (e.g. 1 minute for 60 requests).
+	Allow(ctx context.Context, identifier string, limit int, window time.Duration) (bool, error)
 }

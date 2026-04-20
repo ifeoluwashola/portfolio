@@ -62,3 +62,17 @@ func (c *RedisCache) SetStudentStatus(ctx context.Context, studentID, status str
 func (c *RedisCache) InvalidateStudentStatus(ctx context.Context, studentID string) {
 	c.client.Del(ctx, "status:"+studentID)
 }
+
+func (c *RedisCache) Allow(ctx context.Context, identifier string, limit int, window time.Duration) (bool, error) {
+	key := "rl:" + identifier
+	count, err := c.client.Incr(ctx, key).Result()
+	if err != nil {
+		return false, err
+	}
+
+	if count == 1 {
+		c.client.Expire(ctx, key, window)
+	}
+
+	return count <= int64(limit), nil
+}

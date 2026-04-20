@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"html"
 	"net/http"
 	
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
@@ -96,7 +97,11 @@ func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	comment, err := h.blogService.LeaveComment(slug, req.DisplayName, req.Content)
+	// Sanitize inputs to prevent stored XSS
+	sanitizedName := html.EscapeString(req.DisplayName)
+	sanitizedContent := html.EscapeString(req.Content)
+
+	comment, err := h.blogService.LeaveComment(slug, sanitizedName, sanitizedContent)
 	if err != nil {
 		http.Error(w, "Failed to leave comment", http.StatusInternalServerError)
 		return

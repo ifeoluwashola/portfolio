@@ -90,7 +90,8 @@ func (m *AuthMiddleware) isTokenRevoked(ctx context.Context, rawToken string) bo
 	hash := hashTokenMW(rawToken)
 	revoked, err := m.cache.IsRevoked(ctx, hash)
 	if err != nil {
-		return false // fail open on cache errors (DB is the fallback source of truth)
+		// Log error and fail-closed: reject token if we can't verify its revocation status
+		return true 
 	}
 	return revoked
 }
@@ -120,7 +121,8 @@ func (m *AuthMiddleware) RequireAuth(next http.HandlerFunc) http.HandlerFunc {
 		// Extract role
 		role, _ := claims["role"].(string)
 		if role == "" {
-			role = "admin" // backwards compat for tokens issued before RBAC
+			writeJSONError(w, "Forbidden: Invalid role claim", http.StatusForbidden)
+			return
 		}
 
 		// Extract user ID
@@ -147,8 +149,9 @@ func (m *AuthMiddleware) RequireStudentAuth(next http.HandlerFunc) http.HandlerF
 
 		// Check token type
 		tokenType, _ := claims["type"].(string)
-		if tokenType != "student" && tokenType != "" {
-			// Allow empty type for backwards compat with existing student tokens
+		if tokenType != "student" {
+			writeJSONError(w, "Forbidden: Student access required", http.StatusForbidden)
+			return
 		}
 
 		// Check revocation
