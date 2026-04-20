@@ -42,6 +42,9 @@ type Student struct {
 	DisqualificationReason *string   `json:"disqualification_reason,omitempty"`
 	IsManuallyLocked       bool      `json:"is_manually_locked"`
 	IsFirstLogin           bool      `json:"is_first_login"`
+	AttendanceRate         float64   `json:"attendance_rate"` // Percentage of occurred sessions attended
+	AttendedCount          int       `json:"attended_count"`
+	TotalHeldSessions      int       `json:"total_held_sessions"`
 	ResetToken             *string   `json:"-"`
 	ResetTokenExpiresAt    *time.Time `json:"-"`
 	CreatedAt              time.Time `json:"created_at"`
@@ -119,6 +122,12 @@ type AcademyRepository interface {
 	UpdateClassSession(ctx context.Context, session *ClassSession) error
 	DeleteClassSession(ctx context.Context, id int) error
 	GetClassSessionsByWeek(ctx context.Context, weekID int) ([]*ClassSession, error)
+	GetClassSessionByID(ctx context.Context, id int) (*ClassSession, error)
+
+	// Attendance
+	RecordAttendance(ctx context.Context, sessionID int, studentID uuid.UUID) error
+	GetStudentAttendance(ctx context.Context, studentID uuid.UUID) ([]*SessionAttendance, error)
+	GetSessionAttendance(ctx context.Context, sessionID int) ([]*Student, error)
 
 	// Admin Command Center
 	GetBillingOverview(ctx context.Context) (*BillingOverview, error)
@@ -184,6 +193,11 @@ type AcademyService interface {
 	AdminCreateClassSession(ctx context.Context, session *ClassSession) error
 	AdminUpdateClassSession(ctx context.Context, session *ClassSession) error
 	AdminDeleteClassSession(ctx context.Context, id int) error
+
+	// Attendance Gateway
+	JoinSession(ctx context.Context, studentID uuid.UUID, sessionID int) (string, error)
+	GetStudentAttendanceHistory(ctx context.Context, studentID uuid.UUID) ([]*AttendanceRecord, error)
+	GetSessionAttendance(ctx context.Context, sessionID int) ([]*Student, error)
 }
 
 // BillingHubResponse is the aggregate returned by the billing hub endpoint.
@@ -320,20 +334,36 @@ type CourseMaterial struct {
 }
 
 type ClassSession struct {
-	ID           int       `json:"id"`
-	CohortWeekID int       `json:"cohort_week_id"`
-	Title        string    `json:"title"`
-	RecordingURL string    `json:"recording_url"`
-	SessionDate  time.Time `json:"session_date"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID               int       `json:"id"`
+	CohortWeekID     int       `json:"cohort_week_id"`
+	Title            string    `json:"title"`
+	Status           string    `json:"status"`            // scheduled, live, archived
+	VisibilityStatus string    `json:"visibility_status"` // locked, published
+	MeetingURL       string    `json:"meeting_url"`
+	ScheduledAt      time.Time `json:"scheduled_at"`
+	RecordingURL     string    `json:"recording_url"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
+type SessionAttendance struct {
+	ID        int       `json:"id"`
+	SessionID int       `json:"session_id"`
+	StudentID uuid.UUID `json:"student_id"`
+	JoinedAt  time.Time `json:"joined_at"`
+}
+
+type AttendanceRecord struct {
+	SessionTitle string     `json:"session_title"`
+	Status       string     `json:"status"`
+	ScheduledAt  time.Time  `json:"scheduled_at"`
+	Attended     bool       `json:"attended"`
+	JoinedAt     *time.Time `json:"joined_at,omitempty"`
 }
 
 type CohortWeek struct {
 	ID                     int               `json:"id"`
 	WeekNumber             int               `json:"week_number"`
 	Title                  string            `json:"title"`
-	Status                 string            `json:"status"` // locked, pre-flight, live, archived
-	MeetLink               *string           `json:"meet_link"`
 	RecordingURL           *string           `json:"recording_url"`
 	Materials              []CourseMaterial `json:"materials"`
 	Transcript             *string           `json:"transcript"`
@@ -358,8 +388,6 @@ type Assignment struct {
 type UpdateWeekRequest struct {
 	ID                     int              `json:"id"`
 	Title                  string           `json:"title"`
-	Status                 string           `json:"status"`
-	MeetLink               *string          `json:"meet_link"`
 	RecordingURL           *string          `json:"recording_url"`
 	Materials              []CourseMaterial `json:"materials"`
 	Transcript             *string          `json:"transcript"`
@@ -380,8 +408,11 @@ type GradeAssignmentRequest struct {
 type StudentDashboardResponse struct {
 	Weeks        []*CohortWeek `json:"weeks"`
 	Assignments  []*Assignment `json:"assignments"`
-	IsFirstLogin bool          `json:"is_first_login"`
-	Status       string        `json:"status"`
+	IsFirstLogin      bool          `json:"is_first_login"`
+	Status            string        `json:"status"`
+	AttendedCount     int           `json:"attended_count"`
+	TotalHeldSessions int           `json:"total_held_sessions"`
+	AttendanceRate    float64       `json:"attendance_rate"`
 }
 
 type BreakItLab struct {

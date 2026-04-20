@@ -963,4 +963,61 @@ func (h *AcademyHandler) HandleUpdateStudentStatus(w http.ResponseWriter, r *htt
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
 
+func (h *AcademyHandler) HandleJoinSession(w http.ResponseWriter, r *http.Request) {
+	sessionID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	studentID, _ := uuid.Parse(studentIDStr)
+
+	redirectURL, err := h.svc.JoinSession(r.Context(), studentID, sessionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, redirectURL, http.StatusFound)
+}
+
+func (h *AcademyHandler) HandleGetStudentAttendanceHistory(w http.ResponseWriter, r *http.Request) {
+	studentID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	history, err := h.svc.GetStudentAttendanceHistory(r.Context(), studentID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(history)
+}
+
+func (h *AcademyHandler) HandleGetSessionAttendance(w http.ResponseWriter, r *http.Request) {
+	sessionID, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
+
+	students, err := h.svc.GetSessionAttendance(r.Context(), sessionID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(students)
+}
+
 

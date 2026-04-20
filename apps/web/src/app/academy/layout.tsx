@@ -12,7 +12,6 @@ export default function AcademyLayout({
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-yellow-500/30 font-mono pb-40 transition-colors duration-300">
-      <AcademyNavbar />
       <main className="flex-1 overflow-x-hidden">
         {children}
       </main>

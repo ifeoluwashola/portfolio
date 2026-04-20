@@ -25,7 +25,11 @@ interface CohortWeek {
   id: number;
   week_number: number;
   title: string;
-  status: 'locked' | 'pre-flight' | 'live' | 'archived';
+  sessions?: {
+    id: number;
+    status: 'scheduled' | 'live' | 'archived';
+    visibility_status: 'locked' | 'published';
+  }[];
 }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -198,17 +202,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     label={week.title}
                     weekNumber={week.week_number}
                     isCollapsed={!isSidebarOpen}
-                    icon={
-                      week.status === 'locked' ? <Lock className="w-5 h-5 opacity-40" /> :
-                      week.status === 'archived' ? <CheckCircle2 className="w-5 h-5 text-emerald-500/80" /> :
-                      week.status === 'live' ? (
+                    icon={(() => {
+                      const publishedSessions = week.sessions || [];
+                      const isLocked = publishedSessions.length === 0;
+                      if (isLocked) return <Lock className="w-5 h-5 opacity-40" />;
+                      
+                      const hasLive = publishedSessions.some(s => s.status === 'live');
+                      const allArchived = publishedSessions.every(s => s.status === 'archived');
+                      
+                      if (hasLive) return (
                         <div className="relative">
                           <div className="w-2 h-2 rounded-full bg-red-500 animate-ping absolute inset-0" />
                           <div className="w-2 h-2 rounded-full bg-red-500 relative" />
                         </div>
-                      ) : 
-                      <Clock className="w-5 h-5 text-amber-500/80" />
-                    }
+                      );
+                      
+                      if (allArchived) return <CheckCircle2 className="w-5 h-5 text-emerald-500/80" />;
+                      
+                      return <Clock className="w-5 h-5 text-amber-500/80" />;
+                    })()}
                   />
                 ))
               )}

@@ -43,6 +43,7 @@ async function proxyRequest(req: NextRequest, { params }: { params: Promise<{ pa
       method: req.method,
       headers,
       cache: "no-store",
+      redirect: "manual",
     };
 
     // Forward body for POST/PUT/PATCH
@@ -51,6 +52,14 @@ async function proxyRequest(req: NextRequest, { params }: { params: Promise<{ pa
     }
 
     const res = await fetch(`${targetUrl}${queryString}`, fetchOptions);
+
+    // Handle redirects manually to ensure browser follows them
+    if (res.status === 302 || res.status === 301) {
+      const location = res.headers.get("Location");
+      if (location) {
+        return NextResponse.redirect(new URL(location, req.url));
+      }
+    }
 
     // Stream response back
     const responseBody = await res.text();

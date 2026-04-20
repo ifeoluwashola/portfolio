@@ -368,8 +368,6 @@ func (s *academyService) UpdateCohortWeek(ctx context.Context, req *domain.Updat
 	}
 
 	week.Title = req.Title
-	week.Status = req.Status
-	week.MeetLink = req.MeetLink
 	week.RecordingURL = req.RecordingURL
 	week.Materials = req.Materials
 	week.Transcript = req.Transcript
@@ -379,14 +377,27 @@ func (s *academyService) UpdateCohortWeek(ctx context.Context, req *domain.Updat
 }
 
 func (s *academyService) SubmitAssignment(ctx context.Context, studentID uuid.UUID, req *domain.SubmitAssignmentRequest) error {
-	// First verify the week status is 'archived' (only then we accept submissions)
+	// First verify the week exists
 	week, err := s.repo.GetWeekByID(ctx, req.WeekID)
 	if err != nil {
 		return fmt.Errorf("invalid week: %w", err)
 	}
 
-	if week.Status != "archived" {
-		return errors.New("assignments can only be submitted for archived/completed modules")
+	// For state decoupling, we allow submissions if all published sessions are 'archived'
+	allArchived := true
+	hasPublished := false
+	for _, sess := range week.Sessions {
+		if sess.VisibilityStatus == "published" {
+			hasPublished = true
+			if sess.Status != "archived" {
+				allArchived = false
+				break
+			}
+		}
+	}
+
+	if !hasPublished || !allArchived {
+		return errors.New("assignments can only be submitted once all published sessions in this module are archived")
 	}
 
 	ass := &domain.Assignment{
@@ -414,11 +425,25 @@ func (s *academyService) GetStudentDashboardData(ctx context.Context, studentID 
 		return nil, err
 	}
 
+	// Filter sessions to only published ones for students
+	for _, w := range weeks {
+		var publishedSessions []*domain.ClassSession
+		for _, sess := range w.Sessions {
+			if sess.VisibilityStatus == "published" {
+				publishedSessions = append(publishedSessions, sess)
+			}
+		}
+		w.Sessions = publishedSessions
+	}
+
 	return &domain.StudentDashboardResponse{
-		Weeks:        weeks,
-		Assignments:  asses,
-		IsFirstLogin: student.IsFirstLogin,
-		Status:       student.Status,
+		Weeks:             weeks,
+		Assignments:       asses,
+		IsFirstLogin:      student.IsFirstLogin,
+		Status:            student.Status,
+		AttendedCount:     student.AttendedCount,
+		TotalHeldSessions: student.TotalHeldSessions,
+		AttendanceRate:    student.AttendanceRate,
 	}, nil
 }
 
@@ -1007,4 +1032,69 @@ func (s *academyService) UpdateStudentStatus(ctx context.Context, id uuid.UUID, 
 
 	// 2. Handle Portal Lock
 	return s.repo.SetManualLock(ctx, id, req.IsManuallyLocked)
+}
+
+// Attendance Logic
+
+func (s *academyService) JoinSession(ctx context.Context, studentID uuid.UUID, sessionID int) (string, error) {
+	// 1. Get Session
+	session, err := s.repo.GetClassSessionByID(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+
+	// 2. record attendance
+	err = s.repo.RecordAttendance(ctx, sessionID, studentID)
+	if err != nil {
+		// Log error but don't block redirect
+		fmt.Printf("Failed to record attendance: %v\n", err)
+	}
+
+	// 3. Return meeting URL
+	if session.MeetingURL == "" {
+		return "", fmt.Errorf("session meeting URL not set")
+	}
+
+	return session.MeetingURL, nil
+}
+
+func (s *academyService) GetStudentAttendanceHistory(ctx context.Context, studentID uuid.UUID) ([]*domain.AttendanceRecord, error) {
+	// 1. Get all weeks and sessions
+	weeks, err := s.repo.GetWeeks(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Get student attendance
+	attended, err := s.repo.GetStudentAttendance(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+
+	attendanceMap := make(map[int]*time.Time)
+	for _, a := range attended {
+		attendanceMap[a.SessionID] = &a.JoinedAt
+	}
+
+	var history []*domain.AttendanceRecord
+	for _, w := range weeks {
+		for _, sess := range w.Sessions {
+			// We only care about sessions that have status 'live' or 'archived' for "Held" metrics,
+			// but we can show all of them in the history.
+			joinedAt, wasAttended := attendanceMap[sess.ID]
+			history = append(history, &domain.AttendanceRecord{
+				SessionTitle: sess.Title,
+				Status:       sess.Status,
+				ScheduledAt:  sess.ScheduledAt,
+				Attended:     wasAttended,
+				JoinedAt:     joinedAt,
+			})
+		}
+	}
+
+	return history, nil
+}
+
+func (s *academyService) GetSessionAttendance(ctx context.Context, sessionID int) ([]*domain.Student, error) {
+	return s.repo.GetSessionAttendance(ctx, sessionID)
 }

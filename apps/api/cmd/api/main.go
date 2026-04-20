@@ -190,6 +190,9 @@ func main() {
 	mux.HandleFunc("GET /api/v1/academy/billing", authMW.RequireStudentAuth(academyHandler.HandleGetBillingStatus))
 	mux.HandleFunc("GET /api/v1/academy/billing/hub", authMW.RequireStudentAuth(academyHandler.HandleGetBillingHub))
 	mux.HandleFunc("POST /api/v1/academy/billing/pay", authMW.RequireStudentAuth(academyHandler.HandleInitiateInstallmentPayment))
+	
+	// Attendance Gateway
+	mux.HandleFunc("GET /api/v1/academy/sessions/{id}/join", authMW.RequireStudentAuth(academyHandler.HandleJoinSession))
 
 	// === ADMIN PROTECTED ROUTES ===
 	// Admin management
@@ -223,6 +226,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/admin/students/{id}/warn", authMW.RequireAuth(academyHandler.HandleWarnStudent))
 	mux.HandleFunc("POST /api/v1/admin/students/{id}/disqualify", authMW.RequireAuth(academyHandler.HandleDisqualifyStudent))
 	mux.HandleFunc("PUT /api/v1/admin/students/{id}/status", authMW.RequireAuth(academyHandler.HandleUpdateStudentStatus))
+	mux.HandleFunc("GET /api/v1/admin/students/{id}/attendance", authMW.RequireAuth(academyHandler.HandleGetStudentAttendanceHistory))
 
 	// Financial Command Center (admin)
 	mux.HandleFunc("GET /api/v1/admin/billing/overview", authMW.RequireAuth(academyHandler.HandleGetAdminBillingOverview))
@@ -238,6 +242,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/admin/academy/sessions", authMW.RequireAuth(academyHandler.HandleCreateClassSession))
 	mux.HandleFunc("PUT /api/v1/admin/academy/sessions/{id}", authMW.RequireAuth(academyHandler.HandleUpdateClassSession))
 	mux.HandleFunc("DELETE /api/v1/admin/academy/sessions/{id}", authMW.RequireAuth(academyHandler.HandleDeleteClassSession))
+	mux.HandleFunc("GET /api/v1/admin/academy/sessions/{id}/attendance", authMW.RequireAuth(academyHandler.HandleGetSessionAttendance))
 
 	// 9. Setup Middleware (CORS)
 	allowedOrigins := strings.Split(cfg.AllowedOrigins, ",")

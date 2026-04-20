@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { getAlumniList } from "@/app/academy/actions";
+import { AcademyNavbar } from "@/components/academy/AcademyNavbar";
 
 interface AlumniMember {
   id: number;
@@ -29,6 +30,7 @@ export default async function AlumniGridPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground selection:bg-yellow-500/30 font-mono pb-32">
+      <AcademyNavbar />
       {/* Hero Header */}
       <div className="relative border-b border-border bg-card/50 backdrop-blur-xl pt-32 pb-20 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(234,179,8,0.15),transparent_70%)]" />

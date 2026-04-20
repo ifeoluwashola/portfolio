@@ -103,12 +103,33 @@ func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string)
 	student := &domain.Student{}
 	err := r.db.QueryRow(ctx, query, email).Scan(
 		&student.ID, &student.FirstName, &student.LastName, &student.Email,
-		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount, 
+		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
 		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
+
+	// Fetch metrics
+	metricsQuery := `
+		SELECT 
+			COUNT(sa.id) as attended_count,
+			(SELECT COUNT(*) FROM class_sessions WHERE status IN ('live', 'archived') AND visibility_status = 'published') as total_held
+		FROM students s
+		LEFT JOIN session_attendance sa ON s.id = sa.student_id
+		WHERE s.id = $1
+		GROUP BY s.id
+	`
+	var attended, total int
+	err = r.db.QueryRow(ctx, metricsQuery, student.ID).Scan(&attended, &total)
+	if err == nil {
+		student.AttendedCount = attended
+		student.TotalHeldSessions = total
+		if total > 0 {
+			student.AttendanceRate = (float64(attended) / float64(total)) * 100
+		}
+	}
+
 	return student, nil
 }
 
@@ -125,6 +146,26 @@ func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// Fetch metrics
+	metricsQuery := `
+		SELECT 
+			COUNT(sa.id) as attended_count,
+			(SELECT COUNT(*) FROM class_sessions WHERE status IN ('live', 'archived') AND visibility_status = 'published') as total_held
+		FROM students s
+		LEFT JOIN session_attendance sa ON s.id = sa.student_id
+		WHERE s.id = $1
+		GROUP BY s.id
+	`
+	var attended, total int
+	err = r.db.QueryRow(ctx, metricsQuery, student.ID).Scan(&attended, &total)
+	if err == nil {
+		student.AttendedCount = attended
+		student.TotalHeldSessions = total
+		if total > 0 {
+			student.AttendanceRate = (float64(attended) / float64(total)) * 100
+		}
 	}
 	return student, nil
 }
@@ -177,8 +218,15 @@ func (r *AcademyRepository) GetStudentByResetToken(ctx context.Context, token st
 
 func (r *AcademyRepository) GetAllStudents(ctx context.Context) ([]*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, status, warning_count, disqualification_reason, is_manually_locked, created_at
-		FROM students ORDER BY created_at DESC
+		SELECT 
+			s.id, s.first_name, s.last_name, s.email, s.status, s.warning_count, 
+			s.disqualification_reason, s.is_manually_locked, s.created_at,
+			COUNT(sa.id) as attended_count,
+			(SELECT COUNT(*) FROM class_sessions WHERE status IN ('live', 'archived')) as total_held
+		FROM students s
+		LEFT JOIN session_attendance sa ON s.id = sa.student_id
+		GROUP BY s.id
+		ORDER BY s.created_at DESC
 	`
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
@@ -189,9 +237,19 @@ func (r *AcademyRepository) GetAllStudents(ctx context.Context) ([]*domain.Stude
 	var students []*domain.Student
 	for rows.Next() {
 		s := &domain.Student{}
-		err := rows.Scan(&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.Status, &s.WarningCount, &s.DisqualificationReason, &s.IsManuallyLocked, &s.CreatedAt)
+		var attended, total int
+		err := rows.Scan(
+			&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.Status, &s.WarningCount, 
+			&s.DisqualificationReason, &s.IsManuallyLocked, &s.CreatedAt,
+			&attended, &total,
+		)
 		if err != nil {
 			return nil, err
+		}
+		s.AttendedCount = attended
+		s.TotalHeldSessions = total
+		if total > 0 {
+			s.AttendanceRate = (float64(attended) / float64(total)) * 100
 		}
 		students = append(students, s)
 	}
@@ -216,7 +274,7 @@ func (r *AcademyRepository) WarnStudent(ctx context.Context, id uuid.UUID, reaso
 
 func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek, error) {
 	query := `
-		SELECT id, week_number, title, status, meet_link, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
+		SELECT id, week_number, title, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
 		FROM cohort_weeks ORDER BY week_number ASC
 	`
 	rows, err := r.db.Query(ctx, query)
@@ -228,7 +286,7 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek,
 	var weeks []*domain.CohortWeek
 	for rows.Next() {
 		w := &domain.CohortWeek{}
-		err := rows.Scan(&w.ID, &w.WeekNumber, &w.Title, &w.Status, &w.MeetLink, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
+		err := rows.Scan(&w.ID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -247,11 +305,11 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek,
 
 func (r *AcademyRepository) GetWeekByID(ctx context.Context, id int) (*domain.CohortWeek, error) {
 	query := `
-		SELECT id, week_number, title, status, meet_link, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
+		SELECT id, week_number, title, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
 		FROM cohort_weeks WHERE id = $1
 	`
 	w := &domain.CohortWeek{}
-	err := r.db.QueryRow(ctx, query, id).Scan(&w.ID, &w.WeekNumber, &w.Title, &w.Status, &w.MeetLink, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&w.ID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -268,10 +326,10 @@ func (r *AcademyRepository) GetWeekByID(ctx context.Context, id int) (*domain.Co
 func (r *AcademyRepository) UpdateWeek(ctx context.Context, week *domain.CohortWeek) error {
 	query := `
 		UPDATE cohort_weeks
-		SET title = $1, status = $2, meet_link = $3, recording_url = $4, materials = $5, transcript = $6, assignment_instructions = $7, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $8
+		SET title = $1, recording_url = $2, materials = $3, transcript = $4, assignment_instructions = $5, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $6
 	`
-	_, err := r.db.Exec(ctx, query, week.Title, week.Status, week.MeetLink, week.RecordingURL, week.Materials, week.Transcript, week.AssignmentInstructions, week.ID)
+	_, err := r.db.Exec(ctx, query, week.Title, week.RecordingURL, week.Materials, week.Transcript, week.AssignmentInstructions, week.ID)
 	return err
 }
 
@@ -506,20 +564,20 @@ func (r *AcademyRepository) GetSubmissionComments(ctx context.Context, subID int
 
 func (r *AcademyRepository) CreateClassSession(ctx context.Context, s *domain.ClassSession) error {
 	query := `
-		INSERT INTO class_sessions (cohort_week_id, title, recording_url, session_date, created_at)
-		VALUES ($1, $2, $3, $4, NOW())
+		INSERT INTO class_sessions (cohort_week_id, title, status, visibility_status, meeting_url, scheduled_at, recording_url, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
 	`
-	_, err := r.db.Exec(ctx, query, s.CohortWeekID, s.Title, s.RecordingURL, s.SessionDate)
+	_, err := r.db.Exec(ctx, query, s.CohortWeekID, s.Title, s.Status, s.VisibilityStatus, s.MeetingURL, s.ScheduledAt, s.RecordingURL)
 	return err
 }
 
 func (r *AcademyRepository) UpdateClassSession(ctx context.Context, s *domain.ClassSession) error {
 	query := `
 		UPDATE class_sessions
-		SET title = $1, recording_url = $2, session_date = $3
-		WHERE id = $4
+		SET title = $1, status = $2, visibility_status = $3, meeting_url = $4, scheduled_at = $5, recording_url = $6
+		WHERE id = $7
 	`
-	_, err := r.db.Exec(ctx, query, s.Title, s.RecordingURL, s.SessionDate, s.ID)
+	_, err := r.db.Exec(ctx, query, s.Title, s.Status, s.VisibilityStatus, s.MeetingURL, s.ScheduledAt, s.RecordingURL, s.ID)
 	return err
 }
 
@@ -531,10 +589,10 @@ func (r *AcademyRepository) DeleteClassSession(ctx context.Context, id int) erro
 
 func (r *AcademyRepository) GetClassSessionsByWeek(ctx context.Context, weekID int) ([]*domain.ClassSession, error) {
 	query := `
-		SELECT id, cohort_week_id, title, recording_url, session_date, created_at
+		SELECT id, cohort_week_id, title, status, visibility_status, meeting_url, scheduled_at, recording_url, created_at
 		FROM class_sessions
 		WHERE cohort_week_id = $1
-		ORDER BY session_date ASC
+		ORDER BY scheduled_at ASC
 	`
 	rows, err := r.db.Query(ctx, query, weekID)
 	if err != nil {
@@ -545,7 +603,7 @@ func (r *AcademyRepository) GetClassSessionsByWeek(ctx context.Context, weekID i
 	var sessions []*domain.ClassSession
 	for rows.Next() {
 		s := &domain.ClassSession{}
-		err := rows.Scan(&s.ID, &s.CohortWeekID, &s.Title, &s.RecordingURL, &s.SessionDate, &s.CreatedAt)
+		err := rows.Scan(&s.ID, &s.CohortWeekID, &s.Title, &s.Status, &s.VisibilityStatus, &s.MeetingURL, &s.ScheduledAt, &s.RecordingURL, &s.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -555,6 +613,72 @@ func (r *AcademyRepository) GetClassSessionsByWeek(ctx context.Context, weekID i
 		sessions = []*domain.ClassSession{}
 	}
 	return sessions, nil
+}
+
+func (r *AcademyRepository) GetClassSessionByID(ctx context.Context, id int) (*domain.ClassSession, error) {
+	query := `SELECT id, cohort_week_id, title, status, meeting_url, scheduled_at, recording_url, created_at FROM class_sessions WHERE id = $1`
+	s := &domain.ClassSession{}
+	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.CohortWeekID, &s.Title, &s.Status, &s.MeetingURL, &s.ScheduledAt, &s.RecordingURL, &s.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return s, nil
+}
+
+func (r *AcademyRepository) RecordAttendance(ctx context.Context, sessionID int, studentID uuid.UUID) error {
+	query := `
+		INSERT INTO session_attendance (session_id, student_id)
+		VALUES ($1, $2)
+		ON CONFLICT (session_id, student_id) DO UPDATE SET joined_at = CURRENT_TIMESTAMP
+	`
+	_, err := r.db.Exec(ctx, query, sessionID, studentID)
+	return err
+}
+
+func (r *AcademyRepository) GetStudentAttendance(ctx context.Context, studentID uuid.UUID) ([]*domain.SessionAttendance, error) {
+	query := `SELECT id, session_id, student_id, joined_at FROM session_attendance WHERE student_id = $1`
+	rows, err := r.db.Query(ctx, query, studentID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var results []*domain.SessionAttendance
+	for rows.Next() {
+		sa := &domain.SessionAttendance{}
+		err := rows.Scan(&sa.ID, &sa.SessionID, &sa.StudentID, &sa.JoinedAt)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, sa)
+	}
+	return results, nil
+}
+
+func (r *AcademyRepository) GetSessionAttendance(ctx context.Context, sessionID int) ([]*domain.Student, error) {
+	query := `
+		SELECT s.id, s.first_name, s.last_name, s.email, sa.joined_at as created_at
+		FROM students s
+		JOIN session_attendance sa ON s.id = sa.student_id
+		WHERE sa.session_id = $1
+		ORDER BY sa.joined_at DESC
+	`
+	rows, err := r.db.Query(ctx, query, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []*domain.Student
+	for rows.Next() {
+		s := &domain.Student{}
+		err := rows.Scan(&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		students = append(students, s)
+	}
+	return students, nil
 }
 
 // Phase 6: Alumni Hall of Fame

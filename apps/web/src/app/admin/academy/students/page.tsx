@@ -31,6 +31,9 @@ interface Student {
   warning_count: number;
   disqualification_reason?: string;
   is_manually_locked: boolean;
+  attendance_rate: number;
+  attended_count: number;
+  total_held_sessions: number;
   created_at: string;
 }
 
@@ -46,6 +49,9 @@ export default function AdminStudentsPage() {
   const [showProbationModal, setShowProbationModal] = useState(false);
   const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [showAttendanceModal, setShowAttendanceModal] = useState(false);
+  const [attendanceHistory, setAttendanceHistory] = useState<any[]>([]);
+  const [fetchingAttendance, setFetchingAttendance] = useState(false);
 
   const fetchStudents = async () => {
     setLoading(true);
@@ -129,6 +135,26 @@ export default function AdminStudentsPage() {
     setTimeout(() => setFeedback(null), 3000);
   };
 
+  const handleViewAttendance = async (student: Student) => {
+    setSelectedStudent(student);
+    setFetchingAttendance(true);
+    setShowAttendanceModal(true);
+    
+    try {
+      const res = await fetch(`/api/v1/admin/students/${student.id}/attendance`);
+      if (res.ok) {
+        const data = await res.json();
+        setAttendanceHistory(data);
+      } else {
+        setFeedback({ message: "Failed to fetch attendance history", type: 'error' });
+      }
+    } catch (err) {
+      setFeedback({ message: "Network error fetching attendance", type: 'error' });
+    } finally {
+      setFetchingAttendance(false);
+    }
+  };
+
   const filteredStudents = students.filter(s => 
     `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -185,6 +211,7 @@ export default function AdminStudentsPage() {
             <tr className="bg-slate-950/50 text-slate-500 text-[10px] uppercase font-black tracking-[0.2em]">
               <th className="px-6 py-5 font-semibold">Student Identity</th>
               <th className="px-6 py-5 font-semibold">Status Matrix</th>
+              <th className="px-6 py-5 font-semibold">Participation</th>
               <th className="px-6 py-5 font-semibold">Disciplinary History</th>
               <th className="px-6 py-5 font-semibold text-right">Moderation Suite</th>
             </tr>
@@ -214,6 +241,40 @@ export default function AdminStudentsPage() {
                       </span>
                     )}
                   </div>
+                </td>
+                <td className="px-6 py-5">
+                   <button 
+                     onClick={() => handleViewAttendance(student)}
+                     className="group/attend flex items-center gap-3 hover:bg-white/5 p-2 -m-2 rounded-lg transition-all"
+                   >
+                     <div className="relative h-10 w-10 flex items-center justify-center">
+                        <svg className="h-10 w-10 -rotate-90">
+                           <circle
+                             cx="20" cy="20" r="16"
+                             className="stroke-slate-800 fill-none"
+                             strokeWidth="4"
+                           />
+                           <circle
+                             cx="20" cy="20" r="16"
+                             className={`fill-none transition-all duration-1000 ${
+                               student.attendance_rate > 80 ? 'stroke-emerald-500' : 
+                               student.attendance_rate > 50 ? 'stroke-primary' : 'stroke-rose-500'
+                             }`}
+                             strokeWidth="4"
+                             strokeDasharray={100}
+                             strokeDashoffset={100 - (student.attendance_rate || 0)}
+                             strokeLinecap="round"
+                           />
+                        </svg>
+                        <span className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-white">
+                           {Math.round(student.attendance_rate || 0)}%
+                        </span>
+                     </div>
+                     <div className="flex flex-col">
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Live Ops</span>
+                        <span className="text-xs font-bold text-slate-300">{student.attended_count}/{student.total_held_sessions}</span>
+                     </div>
+                   </button>
                 </td>
                 <td className="px-6 py-5">
                    <div className="flex items-center gap-3">
@@ -374,6 +435,72 @@ export default function AdminStudentsPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Attendance Detail Modal */}
+      {showAttendanceModal && selectedStudent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
+           <div className="bg-slate-900 border border-slate-800 max-w-2xl w-full rounded-2xl p-0 shadow-2xl flex flex-col h-[80vh] overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-6 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
+                 <div>
+                    <h2 className="text-xl font-black text-white tracking-tight uppercase">Attendance Ledger</h2>
+                    <p className="text-slate-500 text-xs mt-1">Audit trail for <span className="text-primary">{selectedStudent.first_name} {selectedStudent.last_name}</span></p>
+                 </div>
+                 <button onClick={() => setShowAttendanceModal(false)} className="p-2 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-all">&times; Close</button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6">
+                 {fetchingAttendance ? (
+                    <div className="flex flex-col items-center justify-center h-full text-slate-500 italic text-sm">
+                       <Loader2 className="animate-spin mb-4 text-primary" />
+                       Synchronizing local attendance records...
+                    </div>
+                 ) : attendanceHistory.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-slate-500 italic text-sm uppercase tracking-widest">
+                       Zero session data recorded for this student.
+                    </div>
+                 ) : (
+                    <div className="space-y-3">
+                       {attendanceHistory.map((rec, i) => (
+                          <div key={i} className="bg-slate-950/50 border border-slate-800/50 rounded-xl p-4 flex items-center justify-between group hover:border-slate-700 transition-all">
+                             <div className="flex flex-col">
+                                <span className="text-sm font-bold text-white tracking-tight">{rec.session_title}</span>
+                                <span className="text-[10px] font-mono text-slate-500 flex items-center gap-2">
+                                   {new Date(rec.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                   <span className="h-1 w-1 rounded-full bg-slate-800" />
+                                   {rec.status.toUpperCase()}
+                                </span>
+                             </div>
+                             
+                             <div className="flex items-center gap-4">
+                                {rec.attended ? (
+                                   <div className="flex flex-col items-end">
+                                      <span className="bg-emerald-950/50 text-emerald-400 border border-emerald-900/50 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter shadow-sm flex items-center gap-1">
+                                         <CheckCircle2 size={10} /> Present
+                                      </span>
+                                      {rec.joined_at && <span className="text-[9px] font-mono text-slate-600 mt-1">{new Date(rec.joined_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>}
+                                   </div>
+                                ) : (
+                                   <span className="bg-rose-950/50 text-rose-500 border border-rose-900/50 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter shadow-sm flex items-center gap-1">
+                                      <Ban size={10} /> Absent
+                                   </span>
+                                )}
+                             </div>
+                          </div>
+                       ))}
+                    </div>
+                 )}
+              </div>
+              
+              <div className="p-6 bg-slate-950/50 border-t border-slate-800 flex items-center justify-between">
+                 <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
+                    <span className="text-slate-500">Global Coverage</span>
+                    <span className="text-white text-lg">{Math.round(selectedStudent.attendance_rate)}%</span>
+                 </div>
+                 <button onClick={() => setShowAttendanceModal(false)} className="px-6 py-2 bg-slate-800 text-slate-300 font-bold rounded-lg hover:bg-slate-700 transition-all text-sm">Dismiss</button>
+              </div>
+           </div>
         </div>
       )}
     </div>

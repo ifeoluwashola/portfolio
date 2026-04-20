@@ -8,7 +8,11 @@ interface CohortWeek {
   id: number;
   week_number: number;
   title: string;
-  status: 'locked' | 'pre-flight' | 'live' | 'archived' | string;
+  sessions?: {
+    id: number;
+    status: 'scheduled' | 'live' | 'archived';
+    visibility_status: 'locked' | 'published';
+  }[];
 }
 
 export default async function StudentDashboard() {
@@ -208,12 +212,19 @@ export default async function StudentDashboard() {
             </div>
             <h4 className="font-bold text-yellow-500 mb-6 tracking-tight uppercase text-xs">Module Roadmap Snapshot</h4>
             <div className="space-y-4 relative z-10">
-              {weeks.slice(0, 5).map((week: { id: number; week_number: number; title: string; status: string }) => (
-                <div key={week.id} className="flex items-center justify-between text-sm">
-                  <span className="text-foreground font-semibold tracking-tight">Week {week.week_number}: {week.title.split(' ').slice(0, 2).join(' ')}...</span>
-                  <Badge status={week.status} />
-                </div>
-              ))}
+              {weeks.slice(0, 5).map((week) => {
+                const publishedSessions = week.sessions || [];
+                const hasLive = publishedSessions.some(s => s.status === 'live');
+                const allArchived = publishedSessions.length > 0 && publishedSessions.every(s => s.status === 'archived');
+                const status = publishedSessions.length === 0 ? 'locked' : (hasLive ? 'live' : (allArchived ? 'archived' : 'scheduled'));
+                
+                return (
+                  <div key={week.id} className="flex items-center justify-between text-sm">
+                    <span className="text-foreground font-semibold tracking-tight">Week {week.week_number}: {week.title.split(' ').slice(0, 2).join(' ')}...</span>
+                    <Badge status={status} />
+                  </div>
+                );
+              })}
               <div className="pt-4 border-t border-border mt-4">
                 <p className="text-[10px] text-muted-foreground/60 leading-relaxed uppercase font-bold tracking-widest">
                   The roadmap is live. Modules unlock as we progress through the 12-week deployment cycle.
