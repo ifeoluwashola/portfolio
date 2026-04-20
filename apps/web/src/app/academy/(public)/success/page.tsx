@@ -20,7 +20,7 @@ export default function AcademySuccessPage() {
         </h1>
         
         <p className="text-muted-foreground text-lg mb-8 leading-relaxed">
-          Welcome to the cohort. We have sent a confirmation email with your Telegram/WhatsApp invite link and Week 1 prep instructions. Please check your inbox (and spam folder) now.
+          Welcome to the cohort. We have sent a confirmation email with your initial login credentials. Please check your inbox (and spam folder) now.
         </p>
         
         <div className="space-y-4">
