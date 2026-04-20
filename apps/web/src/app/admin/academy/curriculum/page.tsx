@@ -7,7 +7,10 @@ import {
   Video, 
   Edit3,
   ChevronRight,
-  X
+  X,
+  Plus,
+  Trash2,
+  Clock
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,6 +18,14 @@ import { Button } from "@/components/ui/button";
 interface CourseMaterial {
   title: string;
   url: string;
+}
+
+interface ClassSession {
+  id?: number;
+  cohort_week_id?: number;
+  title: string;
+  recording_url: string;
+  session_date: string;
 }
 
 interface CohortWeek {
@@ -27,6 +38,7 @@ interface CohortWeek {
   materials?: CourseMaterial[];
   transcript?: string;
   assignment_instructions?: string;
+  sessions?: ClassSession[];
 }
 
 export default function CurriculumManager() {
@@ -34,6 +46,7 @@ export default function CurriculumManager() {
   const [loading, setLoading] = useState(true);
   const [editingWeek, setEditingWeek] = useState<CohortWeek | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [newSession, setNewSession] = useState<Partial<ClassSession> | null>(null);
 
   const fetchWeeks = useCallback(async () => {
     try {
@@ -73,6 +86,65 @@ export default function CurriculumManager() {
       }
     } catch (err) {
       console.error("Update failed", err);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleAddSession() {
+    if (!editingWeek || !newSession?.title || !newSession?.recording_url) return;
+    
+    setIsUpdating(true);
+    try {
+      const res = await fetch("/api/admin/proxy/v1/admin/academy/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...newSession,
+          cohort_week_id: editingWeek.id,
+          session_date: newSession.session_date || new Date().toISOString()
+        }),
+      });
+
+      if (res.ok) {
+        setNewSession(null);
+        // Refresh editing week sessions
+        const updatedRes = await fetch(`/api/admin/proxy/v1/admin/academy/weeks`);
+        if (updatedRes.ok) {
+          const weeksData = await updatedRes.json();
+          const updatedWeek = weeksData.find((w: CohortWeek) => w.id === editingWeek.id);
+          if (updatedWeek) setEditingWeek(updatedWeek);
+          setWeeks(weeksData);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to add session", err);
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleDeleteSession(sessionId: number) {
+    if (!confirm("Are you sure you want to delete this session?")) return;
+    
+    setIsUpdating(true);
+    try {
+      const res = await fetch(`/api/admin/proxy/v1/admin/academy/sessions/${sessionId}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        // Refresh
+        const updatedRes = await fetch(`/api/admin/proxy/v1/admin/academy/weeks`);
+        if (updatedRes.ok) {
+          const weeksData = await updatedRes.json();
+          const updatedWeek = weeksData.find((w: CohortWeek) => w.id === (editingWeek?.id));
+          if (updatedWeek) setEditingWeek(updatedWeek);
+          setWeeks(weeksData);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to delete session", err);
     } finally {
       setIsUpdating(false);
     }
@@ -145,7 +217,7 @@ export default function CurriculumManager() {
               </div>
               <div className="flex items-center gap-2 text-muted-foreground font-medium">
                 <Video className="w-4 h-4" />
-                <span className="truncate">{week.recording_url || "No recording available"}</span>
+                <span className="truncate">{week.sessions && week.sessions.length > 0 ? `${week.sessions.length} Session(s)` : "No recordings"}</span>
               </div>
             </div>
 
@@ -213,15 +285,85 @@ export default function CurriculumManager() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recording Link</label>
-                <input 
-                  type="url"
-                  className="w-full p-2 bg-background border border-border rounded-md text-sm font-medium"
-                  placeholder="https://drive.google.com/..."
-                  value={editingWeek.recording_url || ""}
-                  onChange={(e) => setEditingWeek({...editingWeek, recording_url: e.target.value})}
-                />
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Class Sessions</label>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setNewSession({ title: "", recording_url: "", session_date: new Date().toISOString() })} 
+                    className="h-7 text-[10px] uppercase font-bold tracking-tight border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-black"
+                  >
+                    <Plus className="w-3 h-3 mr-1" /> Add New Session
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {editingWeek.sessions?.map((sess) => (
+                    <div key={sess.id} className="group flex flex-col gap-2 p-3 bg-muted/20 border border-border rounded-lg hover:border-yellow-500/30 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-bold text-foreground flex items-center gap-2">
+                          <Clock className="w-3 h-3 text-yellow-500" />
+                          {sess.title}
+                        </span>
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => handleDeleteSession(sess.id!)}
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[10px] text-muted-foreground font-mono truncate">{sess.recording_url}</span>
+                        <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">
+                          {new Date(sess.session_date).toLocaleDateString()} @ {new Date(sess.session_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+
+                  {newSession && (
+                    <div className="space-y-3 p-4 border-2 border-yellow-500/30 rounded-xl bg-yellow-500/5 anim-fade-in">
+                      <div className="grid grid-cols-1 gap-3">
+                        <input 
+                          placeholder="Session Title (e.g. Linux Permissions Deep Dive)"
+                          className="w-full p-2 bg-background border border-border rounded text-sm font-bold"
+                          value={newSession.title}
+                          onChange={(e) => setNewSession({...newSession, title: e.target.value})}
+                        />
+                        <input 
+                          placeholder="Recording URL"
+                          className="w-full p-2 bg-background border border-border rounded text-sm"
+                          value={newSession.recording_url}
+                          onChange={(e) => setNewSession({...newSession, recording_url: e.target.value})}
+                        />
+                        <input 
+                          type="datetime-local"
+                          className="w-full p-2 bg-background border border-border rounded text-sm"
+                          value={newSession.session_date?.slice(0, 16)}
+                          onChange={(e) => setNewSession({...newSession, session_date: new Date(e.target.value).toISOString()})}
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Button type="button" size="sm" onClick={handleAddSession} className="bg-yellow-500 text-black hover:bg-yellow-600 font-bold text-[10px] uppercase">Save Session</Button>
+                        <Button type="button" size="sm" variant="ghost" onClick={() => setNewSession(null)} className="text-[10px] uppercase font-bold">Cancel</Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {(!editingWeek.sessions || editingWeek.sessions.length === 0) && !newSession && (
+                    <p className="text-center py-6 border border-dashed border-border rounded-lg text-xs text-muted-foreground font-medium flex flex-col items-center gap-2">
+                      <Video className="w-8 h-8 opacity-20" />
+                      No video recordings synced for this module.
+                    </p>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-4">

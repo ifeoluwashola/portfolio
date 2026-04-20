@@ -227,6 +227,11 @@ func main() {
 	mux.HandleFunc("POST /api/v1/admin/alumni/approve/{id}", authMW.RequireAuth(academyHandler.HandleApproveCapstone))
 	mux.HandleFunc("PUT /api/v1/admin/alumni/{id}", authMW.RequireAuth(academyHandler.HandleAdminUpdateAlumni))
 	mux.HandleFunc("GET /api/v1/admin/alumni", authMW.RequireAuth(academyHandler.HandleListAlumni))
+	
+	// Class Sessions (admin)
+	mux.HandleFunc("POST /api/v1/admin/academy/sessions", authMW.RequireAuth(academyHandler.HandleCreateClassSession))
+	mux.HandleFunc("PUT /api/v1/admin/academy/sessions/{id}", authMW.RequireAuth(academyHandler.HandleUpdateClassSession))
+	mux.HandleFunc("DELETE /api/v1/admin/academy/sessions/{id}", authMW.RequireAuth(academyHandler.HandleDeleteClassSession))
 
 	// 9. Setup Middleware (CORS)
 	allowedOrigins := strings.Split(cfg.AllowedOrigins, ",")

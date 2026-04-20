@@ -232,6 +232,14 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek,
 		if err != nil {
 			return nil, err
 		}
+
+		// Fetch sessions for this week
+		sessions, err := r.GetClassSessionsByWeek(ctx, w.ID)
+		if err != nil {
+			return nil, err
+		}
+		w.Sessions = sessions
+
 		weeks = append(weeks, w)
 	}
 	return weeks, nil
@@ -247,6 +255,13 @@ func (r *AcademyRepository) GetWeekByID(ctx context.Context, id int) (*domain.Co
 	if err != nil {
 		return nil, err
 	}
+
+	sessions, err := r.GetClassSessionsByWeek(ctx, w.ID)
+	if err != nil {
+		return nil, err
+	}
+	w.Sessions = sessions
+
 	return w, nil
 }
 
@@ -485,6 +500,61 @@ func (r *AcademyRepository) GetSubmissionComments(ctx context.Context, subID int
 		comms = []*domain.SubmissionComment{}
 	}
 	return comms, nil
+}
+
+// Class Sessions
+
+func (r *AcademyRepository) CreateClassSession(ctx context.Context, s *domain.ClassSession) error {
+	query := `
+		INSERT INTO class_sessions (cohort_week_id, title, recording_url, session_date, created_at)
+		VALUES ($1, $2, $3, $4, NOW())
+	`
+	_, err := r.db.Exec(ctx, query, s.CohortWeekID, s.Title, s.RecordingURL, s.SessionDate)
+	return err
+}
+
+func (r *AcademyRepository) UpdateClassSession(ctx context.Context, s *domain.ClassSession) error {
+	query := `
+		UPDATE class_sessions
+		SET title = $1, recording_url = $2, session_date = $3
+		WHERE id = $4
+	`
+	_, err := r.db.Exec(ctx, query, s.Title, s.RecordingURL, s.SessionDate, s.ID)
+	return err
+}
+
+func (r *AcademyRepository) DeleteClassSession(ctx context.Context, id int) error {
+	query := `DELETE FROM class_sessions WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
+func (r *AcademyRepository) GetClassSessionsByWeek(ctx context.Context, weekID int) ([]*domain.ClassSession, error) {
+	query := `
+		SELECT id, cohort_week_id, title, recording_url, session_date, created_at
+		FROM class_sessions
+		WHERE cohort_week_id = $1
+		ORDER BY session_date ASC
+	`
+	rows, err := r.db.Query(ctx, query, weekID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sessions []*domain.ClassSession
+	for rows.Next() {
+		s := &domain.ClassSession{}
+		err := rows.Scan(&s.ID, &s.CohortWeekID, &s.Title, &s.RecordingURL, &s.SessionDate, &s.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, s)
+	}
+	if sessions == nil {
+		sessions = []*domain.ClassSession{}
+	}
+	return sessions, nil
 }
 
 // Phase 6: Alumni Hall of Fame

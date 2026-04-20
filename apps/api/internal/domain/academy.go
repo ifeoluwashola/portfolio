@@ -114,6 +114,12 @@ type AcademyRepository interface {
 	CreateSubmissionComment(ctx context.Context, comment *SubmissionComment) error
 	GetSubmissionComments(ctx context.Context, submissionID int) ([]*SubmissionComment, error)
 
+	// Class Sessions
+	CreateClassSession(ctx context.Context, session *ClassSession) error
+	UpdateClassSession(ctx context.Context, session *ClassSession) error
+	DeleteClassSession(ctx context.Context, id int) error
+	GetClassSessionsByWeek(ctx context.Context, weekID int) ([]*ClassSession, error)
+
 	// Admin Command Center
 	GetBillingOverview(ctx context.Context) (*BillingOverview, error)
 	GetAllStudentBillings(ctx context.Context) ([]*AdminStudentBilling, error)
@@ -173,6 +179,11 @@ type AcademyService interface {
 	GetBillingHub(ctx context.Context, studentID uuid.UUID) (*BillingHubResponse, error)
 	InitializeInstallmentPayment(ctx context.Context, studentID uuid.UUID, amountKobo int) (*AcademyApplyResponse, error)
 	RunPaymentLockCron(ctx context.Context)
+
+	// Class Sessions
+	AdminCreateClassSession(ctx context.Context, session *ClassSession) error
+	AdminUpdateClassSession(ctx context.Context, session *ClassSession) error
+	AdminDeleteClassSession(ctx context.Context, id int) error
 }
 
 // BillingHubResponse is the aggregate returned by the billing hub endpoint.
@@ -308,6 +319,15 @@ type CourseMaterial struct {
 	URL   string `json:"url"`
 }
 
+type ClassSession struct {
+	ID           int       `json:"id"`
+	CohortWeekID int       `json:"cohort_week_id"`
+	Title        string    `json:"title"`
+	RecordingURL string    `json:"recording_url"`
+	SessionDate  time.Time `json:"session_date"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
 type CohortWeek struct {
 	ID                     int               `json:"id"`
 	WeekNumber             int               `json:"week_number"`
@@ -318,6 +338,7 @@ type CohortWeek struct {
 	Materials              []CourseMaterial `json:"materials"`
 	Transcript             *string           `json:"transcript"`
 	AssignmentInstructions *string           `json:"assignment_instructions"`
+	Sessions               []*ClassSession  `json:"sessions"`
 	CreatedAt              time.Time         `json:"created_at"`
 	UpdatedAt              time.Time         `json:"updated_at"`
 }

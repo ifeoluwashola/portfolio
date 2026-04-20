@@ -702,6 +702,65 @@ func (h *AcademyHandler) HandleGetAlumniPortfolio(w http.ResponseWriter, r *http
 	json.NewEncoder(w).Encode(portfolio)
 }
 
+// Class Sessions
+
+func (h *AcademyHandler) HandleCreateClassSession(w http.ResponseWriter, r *http.Request) {
+	var sess domain.ClassSession
+	if err := json.NewDecoder(r.Body).Decode(&sess); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	err := h.svc.AdminCreateClassSession(r.Context(), &sess)
+	if err != nil {
+		http.Error(w, "Failed to create session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+func (h *AcademyHandler) HandleUpdateClassSession(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
+
+	var sess domain.ClassSession
+	if err := json.NewDecoder(r.Body).Decode(&sess); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+	sess.ID = id
+
+	err = h.svc.AdminUpdateClassSession(r.Context(), &sess)
+	if err != nil {
+		http.Error(w, "Failed to update session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AcademyHandler) HandleDeleteClassSession(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
+
+	err = h.svc.AdminDeleteClassSession(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Failed to delete session: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}
+
 // ─── Billing & Installments ───────────────────────────────────────────────────
 
 // HandleGetBillingStatus returns the student's billing ledger state.

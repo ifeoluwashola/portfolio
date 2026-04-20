@@ -12,13 +12,23 @@ import {
   ChevronRight,
   ExternalLink,
   Eye,
-  EyeOff
+  EyeOff,
+  Clock,
+  History
 } from "lucide-react";
 import { getDashboardData, submitAssignment } from "../../../actions";
 
 interface CourseMaterial {
   title: string;
   url: string;
+}
+
+interface ClassSession {
+  id: number;
+  cohort_week_id: number;
+  title: string;
+  recording_url: string;
+  session_date: string;
 }
 
 interface CohortWeek {
@@ -31,6 +41,7 @@ interface CohortWeek {
   materials?: CourseMaterial[];
   transcript?: string;
   assignment_instructions?: string;
+  sessions?: ClassSession[];
 }
 
 interface Assignment {
@@ -49,6 +60,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   const [submitting, setSubmitting] = useState(false);
   const [githubUrl, setGithubUrl] = useState("");
   const [showTranscript, setShowTranscript] = useState(false);
+  const [activeSession, setActiveSession] = useState<ClassSession | null>(null);
 
   useEffect(() => {
     async function fetchWeekData() {
@@ -60,6 +72,10 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
           setWeek(foundWeek || null);
           setAssignment(foundAss || null);
           if (foundAss) setGithubUrl(foundAss.github_url);
+          
+          if (foundWeek?.sessions && foundWeek.sessions.length > 0) {
+            setActiveSession(foundWeek.sessions[0]);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch week data:", err);
@@ -192,22 +208,73 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
 
       {week.status === 'archived' && (
         <div className="space-y-12">
-          {/* Video Player */}
-          <div className="aspect-video w-full bg-card border border-border rounded-3xl overflow-hidden shadow-2xl group flex items-center justify-center">
-            {week.recording_url ? (
-               <iframe 
-                src={week.recording_url} 
-                className="w-full h-full border-none"
-                allow="autoplay"
-                title="Class Recording"
-               />
-            ) : (
-              <div className="text-center space-y-4">
-                <div className="w-12 h-12 text-muted-foreground/30 mx-auto border border-border rounded-full flex items-center justify-center">?</div>
-                <p className="text-muted-foreground/60 text-xs uppercase tracking-widest">RECORDING NOT FOUND: Processing Buffer...</p>
+        <div className="space-y-8">
+          {/* Video Hub */}
+          <div className="space-y-6">
+            <div className="aspect-video w-full bg-card border border-border rounded-3xl overflow-hidden shadow-2xl relative group">
+              {activeSession?.recording_url || week.recording_url ? (
+                 <iframe 
+                  src={activeSession?.recording_url || week.recording_url} 
+                  className="w-full h-full border-none"
+                  allow="autoplay"
+                  title="Class Recording"
+                 />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center space-y-4">
+                    <div className="w-12 h-12 text-muted-foreground/30 mx-auto border border-border rounded-full flex items-center justify-center">?</div>
+                    <p className="text-muted-foreground/60 text-xs uppercase tracking-widest">RECORDING NOT FOUND: Processing Buffer...</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Session Playlist */}
+            {week.sessions && week.sessions.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <History className="w-4 h-4 text-yellow-500" />
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-yellow-500/80">Archived Sessions</h4>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {week.sessions.map((sess) => {
+                    const isActive = activeSession?.id === sess.id;
+                    return (
+                      <button 
+                        key={sess.id}
+                        onClick={() => setActiveSession(sess)}
+                        className={`group p-4 bg-card border text-left transition-all duration-300 rounded-2xl relative overflow-hidden ${
+                          isActive 
+                            ? 'border-yellow-500 ring-1 ring-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.1)]' 
+                            : 'border-border hover:border-yellow-500/40'
+                        }`}
+                      >
+                        {isActive && (
+                          <div className="absolute top-0 right-0 p-2">
+                             <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+                          </div>
+                        )}
+                        <div className="space-y-2 relative z-10">
+                          <div className="flex items-center gap-2">
+                            <PlayCircle className={`w-4 h-4 ${isActive ? 'text-yellow-500' : 'text-muted-foreground/40 group-hover:text-yellow-500/60'}`} />
+                            <span className={`text-xs font-bold truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                              {sess.title}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2 text-[9px] text-muted-foreground/60 uppercase font-black tracking-widest ml-6">
+                            <Clock className="w-3 h-3" />
+                            {new Date(sess.session_date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                          </div>
+                        </div>
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
             )}
           </div>
+        </div>
 
           {/* Assignment & Resources Section */}
           {week.assignment_instructions && (

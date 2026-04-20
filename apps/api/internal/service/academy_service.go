@@ -713,6 +713,20 @@ func (s *academyService) GetStudentSession(ctx context.Context, studentID uuid.U
 	return session, nil
 }
 
+// Class Sessions
+
+func (s *academyService) AdminCreateClassSession(ctx context.Context, sess *domain.ClassSession) error {
+	return s.repo.CreateClassSession(ctx, sess)
+}
+
+func (s *academyService) AdminUpdateClassSession(ctx context.Context, sess *domain.ClassSession) error {
+	return s.repo.UpdateClassSession(ctx, sess)
+}
+
+func (s *academyService) AdminDeleteClassSession(ctx context.Context, id int) error {
+	return s.repo.DeleteClassSession(ctx, id)
+}
+
 func generateSlug(name string) string {
 	// Simple slug generator: lowercase and hyphens
 	res := bytes.NewBufferString("")
