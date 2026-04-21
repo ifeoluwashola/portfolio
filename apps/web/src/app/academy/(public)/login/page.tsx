@@ -49,10 +49,19 @@ export default function StudentLoginPage() {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-500/20 via-yellow-400 to-yellow-500/20" />
 
         <div className="flex flex-col items-center mb-10 mt-2 text-center">
-          <div className="w-12 h-12 bg-background rounded-lg border border-border flex items-center justify-center mb-6 shadow-inner text-yellow-500">
-            <Terminal className="w-6 h-6" />
+          <div className="mb-6 transition-all duration-500 hover:scale-105 active:scale-95">
+            <img 
+              src="/logo-academy-dark.png" 
+              alt="Kybern Academy" 
+              className="hidden dark:block h-12 w-auto drop-shadow-[0_0_15px_rgba(234,179,8,0.1)]" 
+            />
+            <img 
+              src="/logo-academy-light.png" 
+              alt="Kybern Academy" 
+              className="block dark:hidden h-12 w-auto" 
+            />
           </div>
-          <h1 className="text-2xl font-bold text-foreground font-mono tracking-tight">Student Portal</h1>
+          <h1 className="text-2xl font-bold text-foreground font-mono tracking-tight uppercase tracking-widest">Student Portal</h1>
           <p className="text-muted-foreground font-mono text-sm mt-3">{"{ access_granted: false }"}</p>
         </div>
 

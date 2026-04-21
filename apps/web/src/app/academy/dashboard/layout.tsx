@@ -131,14 +131,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         ${!isSidebarOpen ? "lg:w-20" : "lg:w-72"}
       `}>
         <div className={`p-8 border-b border-border/50 flex items-center justify-between overflow-hidden ${!isSidebarOpen ? "px-5" : ""}`}>
-          <Link href="/academy" className="flex items-center gap-3 group min-w-max">
-            <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 group-hover:shadow-[0_0_15px_rgba(234,179,8,0.2)] transition-all">
-              <Terminal className="w-5 h-5" />
-            </div>
-            {isSidebarOpen && (
-              <div className="transition-all duration-300 opacity-100">
-                <h1 className="text-sm font-bold tracking-tight text-foreground uppercase whitespace-nowrap">Kybern Academy</h1>
-                <p className="text-[10px] text-yellow-500/60 font-bold uppercase tracking-widest">Student Portal</p>
+          <Link href="/academy" className="flex items-center gap-3 transition-opacity hover:opacity-80 min-w-max">
+            {isSidebarOpen ? (
+              <>
+                <img 
+                  src="/logo-academy-dark.png" 
+                  alt="Kybern Academy" 
+                  className="hidden dark:block h-8 w-auto" 
+                />
+                <img 
+                  src="/logo-academy-light.png" 
+                  alt="Kybern Academy" 
+                  className="block dark:hidden h-8 w-auto" 
+                />
+              </>
+            ) : (
+              <div className="w-10 h-10 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+                <Terminal className="w-5 h-5 transition-transform group-hover:scale-110" />
               </div>
             )}
           </Link>

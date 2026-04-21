@@ -12,16 +12,18 @@ export async function AcademyNavbar() {
       <div className="flex h-16 items-center justify-between px-6 max-w-7xl mx-auto gap-4">
 
         {/* Logo */}
-        <Link href="/academy" className="flex items-center gap-2.5 group flex-shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
-            <Terminal className="w-4 h-4 text-yellow-500" />
-          </div>
-          <span className="text-sm font-black uppercase tracking-widest text-foreground group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors">
-            Kybern
-          </span>
-          <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground border border-border px-1.5 py-0.5 rounded">
-            Academy
-          </span>
+        <Link href="/academy" className="flex items-center gap-3 transition-opacity hover:opacity-80 flex-shrink-0">
+          <img 
+            src="/logo-academy-dark.png" 
+            alt="Kybern Academy" 
+            className="hidden dark:block h-8 w-auto" 
+          />
+          <img 
+            src="/logo-academy-light.png" 
+            alt="Kybern Academy" 
+            className="block dark:hidden h-8 w-auto" 
+          />
+          <span className="sr-only">Kybern Academy</span>
         </Link>
 
         {/* Desktop nav links */}
