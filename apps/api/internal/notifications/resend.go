@@ -321,6 +321,9 @@ func (n *ResendNotifier) SendAdminInviteEmail(firstName, email, tempPassword str
                 .cred-value:last-child { margin-bottom: 0; }
                 .alert-box { background-color: rgba(234, 179, 8, 0.05); border-left: 4px solid #eab308; padding: 16px; margin: 32px 0; border-radius: 0 8px 8px 0; }
                 .alert-text { color: #eab308; font-size: 13px; font-weight: 600; line-height: 1.5; }
+                .button-container { text-align: center; margin-top: 32px; margin-bottom: 16px; }
+                .button { display: inline-block; background-color: #eab308; color: #020617; text-decoration: none; padding: 14px 28px; border-radius: 6px; font-weight: 800; font-size: 14px; font-family: monospace; letter-spacing: 1px; transition: background-color 0.2s; }
+                .button:hover { background-color: #facc15; }
                 .footer { background-color: #020617; padding: 32px; text-align: center; border-top: 1px solid #1e293b; font-size: 11px; color: #475569; }
             </style>
         </head>
@@ -343,6 +346,10 @@ func (n *ResendNotifier) SendAdminInviteEmail(firstName, email, tempPassword str
                     <div class="alert-box">
                         <div class="alert-text">Security Requirement: You must rotate this initialization secret upon your first interaction with the portal. Do not transmit these credentials over unsecured channels.</div>
                     </div>
+
+                    <div class="button-container">
+                        <a href="%s/admin" class="button">ACCEPT INVITATION</a>
+                    </div>
                 </div>
                 <div class="footer">
                     KYBERN SYSTEM ADMINISTRATION<br/>
@@ -353,7 +360,7 @@ func (n *ResendNotifier) SendAdminInviteEmail(firstName, email, tempPassword str
         </html>
     `
     
-    htmlBody := fmt.Sprintf(htmlTemplate, firstName, email, tempPassword)
+    htmlBody := fmt.Sprintf(htmlTemplate, firstName, email, tempPassword, n.frontendURL)
     params := &resend.SendEmailRequest{
         From:    sender,
         To:      []string{email},
