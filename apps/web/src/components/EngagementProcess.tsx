@@ -7,51 +7,51 @@ export function EngagementProcess() {
       title: "Discovery & Alignment",
       description: "Diagnose before we prescribe. We start by understanding your business objectives, current infrastructure, team capabilities, and budget constraints.",
       icon: Search,
-      color: "text-emerald-400",
-      bgColor: "bg-emerald-500/10",
-      borderColor: "border-emerald-500/30",
+      color: "text-[#eab308]",
+      bgColor: "bg-[#eab308]/10",
+      borderColor: "border-slate-800",
     },
     {
       id: "02",
       title: "Tailored Architecture Design",
       description: "The right tool for the right stage. Whether you need lightweight serverless optimization or robust container orchestration, we design a custom blueprint that fits your specific runway.",
       icon: Compass,
-      color: "text-sky-400",
-      bgColor: "bg-sky-500/10",
-      borderColor: "border-sky-500/30",
+      color: "text-[#eab308]",
+      bgColor: "bg-[#eab308]/10",
+      borderColor: "border-slate-800",
     },
     {
       id: "03",
       title: "Phased Execution & Automation",
       description: "Zero-downtime implementation. We implement the architecture in safe, incremental phases, translating manual processes into reliable Infrastructure as Code.",
       icon: Cog,
-      color: "text-indigo-400",
-      bgColor: "bg-indigo-500/10",
-      borderColor: "border-indigo-500/30",
+      color: "text-[#eab308]",
+      bgColor: "bg-[#eab308]/10",
+      borderColor: "border-slate-800",
     },
     {
       id: "04",
       title: "Handoff & Team Enablement",
       description: "We don't build black boxes. We deliver comprehensive documentation and actively upskill your internal team so they confidently own the new infrastructure.",
       icon: ArrowRightLeft,
-      color: "text-rose-400",
-      bgColor: "bg-rose-500/10",
-      borderColor: "border-rose-500/30",
+      color: "text-[#eab308]",
+      bgColor: "bg-[#eab308]/10",
+      borderColor: "border-slate-800",
     }
   ];
 
   return (
-    <section id="methodology" className="py-24 sm:py-32 bg-background border-t border-border relative overflow-hidden">
+    <section id="methodology" className="py-24 sm:py-32 bg-[#0f172a] border-t border-slate-800 relative overflow-hidden">
       {/* Background Glow */}
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-emerald-900/10 via-background to-background"></div>
+      <div className="absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#eab308]/10 via-background to-background"></div>
       
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl lg:text-center mb-16 sm:mb-24">
-          <h2 className="text-base font-semibold leading-7 text-emerald-400 tracking-widest uppercase">How We Work</h2>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+          <h2 className="text-base font-semibold leading-7 text-[#eab308] tracking-widest uppercase">How We Work</h2>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
             Our Engagement Methodology: Engineered for Your Business
           </p>
-          <p className="mt-6 text-lg leading-8 text-muted-foreground">
+          <p className="mt-6 text-lg leading-8 text-slate-400">
             We tailor solutions to your budget and goals rather than forcing specific technologies. Here is our proven roadmap to scaling your systems securely.
           </p>
         </div>
@@ -67,19 +67,19 @@ export function EngagementProcess() {
                 <div key={step.id} className={`relative flex flex-col md:flex-row items-center ${isEven ? 'md:flex-row-reverse' : ''} md:py-8`}>
                   
                   {/* Timeline Node */}
-                  <div className={`absolute left-8 md:left-1/2 flex h-12 w-12 -ml-6 items-center justify-center rounded-full border border-border bg-card shadow-[0_0_15px_rgba(0,0,0,0.5)] z-10 transition-transform duration-500 hover:scale-125`}>
+                  <div className={`absolute left-8 md:left-1/2 flex h-12 w-12 -ml-6 items-center justify-center rounded-full border border-slate-800 bg-slate-900 shadow-[0_0_15px_rgba(0,0,0,0.5)] z-10 transition-transform duration-500 hover:scale-125`}>
                     <step.icon className={`h-5 w-5 ${step.color}`} aria-hidden="true" />
                   </div>
 
                   {/* Content Box */}
                   <div className={`w-full md:w-1/2 pl-24 pr-0 md:px-16 py-4 ${isEven ? 'md:text-left' : 'md:text-right'}`}>
-                    <div className={`relative group p-8 rounded-2xl bg-card/40 backdrop-blur-sm border ${step.borderColor} transition-all duration-300 hover:bg-card/60 hover:-translate-y-2 hover:shadow-xl`}>
+                    <div className={`relative group p-8 rounded-2xl bg-slate-900 backdrop-blur-sm border ${step.borderColor} transition-all duration-300 hover:bg-slate-900 hover:-translate-y-2 hover:shadow-xl`}>
                       <div className={`absolute inset-0 bg-gradient-to-br to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl ${step.bgColor}`}></div>
                       
                       <div className={`flex flex-col ${isEven ? 'md:items-start' : 'md:items-end'} items-start relative z-10`}>
                         <span className={`text-5xl font-black opacity-20 ${step.color} mb-4 tracking-tighter`}>{step.id}.</span>
-                        <h3 className="text-xl font-bold text-foreground mb-3">{step.title}</h3>
-                        <p className="text-muted-foreground leading-relaxed">
+                        <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                        <p className="text-slate-400 leading-relaxed">
                           {step.description}
                         </p>
                       </div>
