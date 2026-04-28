@@ -227,7 +227,19 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 		_ = s.repo.SetNextPaymentDue(ctx, targetStudentID, nil)
 		log.Printf("[Webhook] Student %s fully paid (ref: %s)\n", targetStudentID, event.Data.Reference)
 	} else {
-		nextDue := time.Now().Add(30 * 24 * time.Hour)
+		// cohort_start_date constraint: Installment clock should not start before the cohort begins.
+		// Set cohort start date (May 30, 2026)
+		cohortStartDate := time.Date(2026, 5, 30, 0, 0, 0, 0, time.UTC)
+		
+		var nextDue time.Time
+		if time.Now().Before(cohortStartDate) {
+			// Student paid early, clock starts from cohort start date
+			nextDue = cohortStartDate.Add(30 * 24 * time.Hour)
+		} else {
+			// Cohort has already started, clock starts from current timestamp
+			nextDue = time.Now().Add(30 * 24 * time.Hour)
+		}
+
 		_ = s.repo.SetNextPaymentDue(ctx, targetStudentID, &nextDue)
 		_ = s.repo.SetBillingStatus(ctx, targetStudentID, "good_standing")
 		log.Printf("[Webhook] Student %s paid %d kobo. Next due: %s\n", targetStudentID, event.Data.Amount, nextDue.Format(time.RFC3339))
@@ -346,12 +358,19 @@ func (s *academyService) GetAdminApplications(ctx context.Context) (*domain.Admi
 		}
 	}
 
+	billingOverview, _ := s.repo.GetBillingOverview(ctx)
+	totalRevenue := 0
+	if billingOverview != nil {
+		// Convert from kobo to Naira for the Cohort dashboard which expects Naira
+		totalRevenue = billingOverview.TotalRevenue / 100
+	}
+
 	return &domain.AdminCohortResponse{
 		Metrics: domain.AdminCohortStats{
 			TotalApplications: len(apps),
 			PaidSeats:         paidSeats,
 			PendingSeats:      pendingSeats,
-			TotalRevenue:      paidSeats * 10000,
+			TotalRevenue:      totalRevenue,
 		},
 		Applications: apps,
 	}, nil
