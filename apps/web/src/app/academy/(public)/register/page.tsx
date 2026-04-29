@@ -52,7 +52,7 @@ export default function RegisterPage() {
         {/* Navigation */}
         <Link 
           href="/academy" 
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground/50 hover:text-yellow-500 transition-colors mb-12 group"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-yellow-600 dark:hover:text-yellow-500 transition-colors mb-12 group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Overview
@@ -61,17 +61,17 @@ export default function RegisterPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16">
           {/* Left Column: Context */}
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 text-[10px] font-black uppercase tracking-widest mb-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-500 text-[10px] font-black uppercase tracking-widest mb-6">
               <Zap className="w-3 h-3 fill-current" />
               Cohort 1 Admission
             </div>
             
-            <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight mb-8">
+            <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-tight mb-8">
               Begin Your <br />
-              <span className="text-yellow-500">Cloud Command.</span>
+              <span className="text-yellow-600 dark:text-yellow-500">Cloud Command.</span>
             </h1>
 
-            <p className="text-muted-foreground/80 text-lg leading-relaxed mb-10">
+            <p className="text-muted-foreground text-lg leading-relaxed mb-10">
               Admission to Kybern Academy prioritises candidates demonstrating
               high commitment to the 16-week immersive schedule.
             </p>
@@ -79,28 +79,28 @@ export default function RegisterPage() {
             <div className="space-y-6">
               {[
                 { 
-                  icon: <ShieldCheck className="w-5 h-5 text-emerald-500" />, 
+                  icon: <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-500" />, 
                   title: "Secure Enrollment", 
                   desc: "Your application triggers an instant Paystack secure gateway session." 
                 },
                 { 
-                  icon: <Terminal className="w-5 h-5 text-cyan-500" />, 
+                  icon: <Terminal className="w-5 h-5 text-cyan-600 dark:text-cyan-500" />, 
                   title: "Provisioning", 
                   desc: "Upon successful payment, your student credentials are provisioned in < 60s." 
                 },
                 { 
-                  icon: <CheckCircle2 className="w-5 h-5 text-yellow-500" />, 
+                  icon: <CheckCircle2 className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />, 
                   title: "The 16-Week Lock", 
                   desc: "Includes 12 weeks of live training + 4 weeks of high-stakes capstone." 
                 }
               ].map((item, idx) => (
                 <div key={idx} className="flex gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center flex-shrink-0">
                     {item.icon}
                   </div>
                   <div>
                     <h3 className="text-foreground font-bold text-sm mb-1">{item.title}</h3>
-                    <p className="text-muted-foreground/60 text-sm leading-relaxed">{item.desc}</p>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{item.desc}</p>
                   </div>
                 </div>
               ))}
@@ -112,11 +112,11 @@ export default function RegisterPage() {
             {/* Header */}
             <div className="mb-8 pb-8 border-b border-border">
                <h2 className="text-xl font-bold text-foreground mb-2">Student Registration</h2>
-               <p className="text-sm text-muted-foreground/60">Provide your technical background and select a plan.</p>
+               <p className="text-sm text-muted-foreground">Provide your technical background and select a plan.</p>
             </div>
 
             {error && (
-              <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-400 text-sm">
+              <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-sm">
                 <AlertCircle className="w-5 h-5 flex-shrink-0" />
                 {error}
               </div>
@@ -126,7 +126,7 @@ export default function RegisterPage() {
               {/* Basic Info Group */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">First Name</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">First Name</label>
                   <input 
                     name="first_name" required
                     className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
@@ -134,7 +134,7 @@ export default function RegisterPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Last Name</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Last Name</label>
                   <input 
                     name="last_name" required
                     className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
@@ -144,7 +144,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Email Address</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
                 <input 
                   type="email" name="email" required
                   className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
@@ -154,7 +154,7 @@ export default function RegisterPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Experience Level</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Experience Level</label>
                   <select 
                     name="experience_level"
                     className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors appearance-none"
@@ -165,7 +165,7 @@ export default function RegisterPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Phone</label>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Phone</label>
                   <input 
                     name="phone" required
                     className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
@@ -175,7 +175,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Current Role / Student Status</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Current Role / Student Status</label>
                 <input 
                   name="current_role" required
                   className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
@@ -184,7 +184,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Why do you want to join Kybern Academy?</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Why do you want to join Kybern Academy?</label>
                 <textarea 
                   name="goal" required
                   className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors min-h-[80px]"
@@ -194,39 +194,39 @@ export default function RegisterPage() {
 
               {/* Hardware / Readiness */}
               <div className="space-y-6 pt-4 border-t border-border/50">
-                <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-card/50 border border-border">
+                <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border">
                   <div className="flex items-center gap-3">
-                    <Laptop className="w-5 h-5 text-muted-foreground/50" />
-                    <span className="text-sm text-muted-foreground">I own a working laptop (8GB+ RAM)</span>
+                    <Laptop className="w-5 h-5 text-muted-foreground" />
+                    <span className="text-sm text-foreground">I own a working laptop (8GB+ RAM)</span>
                   </div>
-                  <input type="checkbox" name="has_laptop" required className="accent-yellow-500 w-5 h-5" />
+                  <input type="checkbox" name="has_laptop" required className="accent-yellow-600 dark:accent-yellow-500 w-5 h-5" />
                 </div>
               </div>
 
               {/* Payment Plan selection */}
               <div className="space-y-4 pt-4 border-t border-border/50">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 ml-1">Select Investment Plan</label>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Select Investment Plan</label>
                 
                 <div 
                   onClick={() => setPaymentPlan("full")}
                   className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer group ${
                     paymentPlan === "full" 
-                      ? "border-yellow-500 bg-yellow-500/5" 
-                      : "border-border hover:border-border/80 bg-background/50"
+                      ? "border-yellow-500 bg-yellow-500/10" 
+                      : "border-border hover:border-yellow-500/30 bg-background"
                   }`}
                 >
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-foreground font-bold mb-1">Full Tuition</p>
-                      <p className="text-xs text-muted-foreground/60">Single payment for complete 16-week access.</p>
+                      <p className="text-xs text-muted-foreground">Single payment for complete 16-week access.</p>
                     </div>
                     <div className="text-right">
                        <p className="text-xl font-black text-foreground font-mono">₦250k</p>
-                       <p className="text-[10px] text-yellow-500 font-bold uppercase">Paid in Full</p>
+                       <p className="text-[10px] text-yellow-600 dark:text-yellow-500 font-bold uppercase">Paid in Full</p>
                     </div>
                   </div>
                   {paymentPlan === "full" && (
-                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-background">
+                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-card">
                       <CheckCircle2 className="w-4 h-4" />
                     </div>
                   )}
@@ -236,22 +236,22 @@ export default function RegisterPage() {
                   onClick={() => setPaymentPlan("installment")}
                   className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer group ${
                     paymentPlan === "installment" 
-                      ? "border-yellow-500 bg-yellow-500/5" 
-                      : "border-border hover:border-border/80 bg-background/50"
+                      ? "border-yellow-500 bg-yellow-500/10" 
+                      : "border-border hover:border-yellow-500/30 bg-background"
                   }`}
                 >
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-foreground font-bold mb-1">Flexible Ledger</p>
-                      <p className="text-xs text-muted-foreground/60">₦100k now, balance spread over 3 payments.</p>
+                      <p className="text-xs text-muted-foreground">₦100k now, balance spread over 3 payments.</p>
                     </div>
                     <div className="text-right">
                        <p className="text-xl font-black text-foreground font-mono">₦100k</p>
-                       <p className="text-[10px] text-muted-foreground/60 font-bold uppercase">Deposit</p>
+                       <p className="text-[10px] text-muted-foreground font-bold uppercase">Deposit</p>
                     </div>
                   </div>
                   {paymentPlan === "installment" && (
-                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-background">
+                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-card">
                       <CheckCircle2 className="w-4 h-4" />
                     </div>
                   )}
@@ -280,7 +280,7 @@ export default function RegisterPage() {
                 )}
               </button>
 
-              <div className="flex items-center justify-center gap-6 text-[10px] text-muted-foreground/40 uppercase font-black tracking-widest mt-6">
+              <div className="flex items-center justify-center gap-6 text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-6">
                 <div className="flex items-center gap-2">
                   <CreditCard className="w-3 h-3" />
                   Secured by Paystack
