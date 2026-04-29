@@ -109,10 +109,10 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
             ))}
           </div>
           <div className="mt-8 flex justify-center gap-4">
-            <Link href="/consulting" className="bg-[#eab308] hover:bg-yellow-400 text-[#0f172a] px-8 py-4 rounded-md text-lg font-bold transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)] flex items-center gap-2">
-              Explore Consulting <ArrowRight className="w-5 h-5" />
+            <Link href="/consulting" className="bg-[#eab308] hover:bg-yellow-400 text-[#0f172a] px-5 py-3 md:px-8 md:py-4 rounded-md text-sm md:text-lg font-bold transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)] flex items-center gap-2">
+              Explore Consulting <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
             </Link>
-            <Link href="/academy" className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-8 py-4 rounded-md text-lg font-bold transition-all">
+            <Link href="/academy" className="bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 px-5 py-3 md:px-8 md:py-4 rounded-md text-sm md:text-lg font-bold transition-all">
               Join Academy
             </Link>
           </div>
