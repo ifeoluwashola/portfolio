@@ -24,32 +24,57 @@ const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Kybern Partners | DevOps & Cloud Infrastructure Consulting",
-    template: "%s | Kybern Partners",
+    default:
+      "Kybern Nexus | Software Consultancy, Cloud Engineering Academy & IoT Solutions",
+    template: "%s | Kybern Nexus",
   },
   description:
-    "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
+    "Kybern Nexus engineers reality — from enterprise software and cloud-native infrastructure consulting, to production-grade cloud engineering training at Kybern Academy, to custom IoT and smart device solutions. We build, scale, and teach the systems that power modern business.",
   keywords: [
-    "DevOps Consultant",
-    "Cloud Cost Optimization",
-    "AWS Infrastructure Audit",
+    // Consultancy pillar
+    "Software Consultancy",
+    "IT Consulting",
+    "Cloud Infrastructure Consulting",
+    "Enterprise Software Development",
+    "Cloud-Native Architecture",
+    "DevOps Consulting",
+    "AWS Infrastructure",
     "GCP Scaling",
     "Kubernetes Migration",
-    "CI/CD Pipeline Hardening",
+    "CI/CD Pipeline",
     "Site Reliability Engineering",
+    "Terraform",
     "GitOps",
-    "Terraform Expert",
+    "Cloud Cost Optimization",
+    // Academy pillar
+    "Kybern Academy",
+    "Cloud Engineering Training",
+    "DevOps Training",
+    "Kubernetes Training",
+    "Terraform Training",
+    "Hands-On Cloud Labs",
+    "Production-Grade Engineering Course",
+    // IoT pillar
+    "IoT Solutions",
+    "Smart Device Engineering",
+    "Embedded Systems",
+    // Brand
+    "Kybern Nexus",
   ],
   openGraph: {
-    title: "Kybern Partners | DevOps & Cloud Infrastructure Consulting",
+    title:
+      "Kybern Nexus | Software Consultancy, Cloud Engineering Academy & IoT Solutions",
     description:
-      "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
+      "We engineer reality — enterprise software consulting, production-grade cloud engineering training at Kybern Academy, and custom IoT solutions. Building, scaling, and teaching the systems that power modern business.",
     type: "website",
+    siteName: "Kybern Nexus",
   },
   twitter: {
-    title: "Kybern Partners | DevOps & Cloud Infrastructure Consulting",
+    card: "summary_large_image",
+    title:
+      "Kybern Nexus | Software Consultancy, Cloud Academy & IoT",
     description:
-      "Enterprise-grade DevOps and Cloud Infrastructure consulting. We partner with high-growth engineering teams to cut cloud costs, harden CI/CD pipelines, and scale reliably.",
+      "Enterprise software consulting · Cloud engineering training · IoT solutions — Kybern Nexus engineers reality.",
   },
 };
 
