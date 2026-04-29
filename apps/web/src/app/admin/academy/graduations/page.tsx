@@ -81,24 +81,24 @@ export default function AdminGraduationsPage() {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center py-20 text-slate-500 gap-3">
+        <div className="flex flex-col items-center justify-center py-20 text-muted-foreground gap-3">
           <Loader2 className="animate-spin" size={32} />
           <span>Scanning for new submissions...</span>
         </div>
       ) : capstones.length === 0 ? (
-        <div className="bg-slate-900/30 border border-dashed border-slate-800 rounded-2xl py-20 text-center space-y-4">
-          <div className="flex justify-center text-slate-700">
+        <div className="bg-card/30 border border-dashed border-border rounded-2xl py-20 text-center space-y-4">
+          <div className="flex justify-center text-muted-foreground/50">
              <FileText size={48} />
           </div>
           <div className="space-y-1">
             <h3 className="text-white font-medium text-lg">No Pending Submissions</h3>
-            <p className="text-slate-500 text-sm">The graduation queue is currently empty.</p>
+            <p className="text-muted-foreground text-sm">The graduation queue is currently empty.</p>
           </div>
         </div>
       ) : (
         <div className="grid gap-6">
           {capstones.map((cap) => (
-            <div key={cap.id} className="bg-[#0f172a] border border-slate-800 rounded-2xl overflow-hidden hover:border-[#eab308]/30 transition-all group">
+            <div key={cap.id} className="bg-background border border-border rounded-2xl overflow-hidden hover:border-[#eab308]/30 transition-all group">
               <div className="p-6 flex flex-col md:flex-row gap-6">
                 {/* Project Meta */}
                 <div className="flex-1 space-y-4">
@@ -109,14 +109,14 @@ export default function AdminGraduationsPage() {
                       </div>
                       <div>
                         <h3 className="text-white font-bold text-lg">{cap.project_title}</h3>
-                        <p className="text-slate-500 text-xs uppercase tracking-widest font-semibold flex items-center gap-1">
+                        <p className="text-muted-foreground text-xs uppercase tracking-widest font-semibold flex items-center gap-1">
                           BY {cap.student_name} <span className="w-1 h-1 rounded-full bg-slate-700 mx-1"></span> {new Date(cap.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  <p className="text-slate-300 text-sm leading-relaxed line-clamp-3">
+                  <p className="text-foreground text-sm leading-relaxed line-clamp-3">
                     {cap.description}
                   </p>
 
@@ -134,7 +134,7 @@ export default function AdminGraduationsPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="md:w-48 flex flex-col justify-center border-t md:border-t-0 md:border-l border-slate-800 p-6 md:p-0 md:pl-6 bg-slate-900/30 md:bg-transparent">
+                <div className="md:w-48 flex flex-col justify-center border-t md:border-t-0 md:border-l border-border p-6 md:p-0 md:pl-6 bg-card/30 md:bg-transparent">
                   <button 
                     onClick={() => {
                       setSelectedCapstone(cap);
@@ -157,7 +157,7 @@ export default function AdminGraduationsPage() {
       {/* Approval Details Modal */}
       {selectedCapstone && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-[#0f172a] border border-slate-800 max-w-xl w-full rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+          <div className="bg-background border border-border max-w-xl w-full rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
             <div className="flex items-center gap-3 text-[#eab308] mb-8">
               <GraduationCap size={32} />
               <h2 className="text-2xl font-bold">Finalize Graduation</h2>
@@ -165,9 +165,9 @@ export default function AdminGraduationsPage() {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-slate-500">Cohort Name</label>
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Cohort Name</label>
                 <input 
-                  className="w-full bg-[#020617] border border-slate-800 rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
+                  className="w-full bg-[#020617] border border-border rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
                   value={cohortName}
                   onChange={(e) => setCohortName(e.target.value)}
                 />
@@ -175,18 +175,18 @@ export default function AdminGraduationsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                  <div className="space-y-2">
-                   <label className="text-xs font-bold uppercase tracking-widest text-slate-500">LinkedIn URL</label>
+                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">LinkedIn URL</label>
                    <input 
-                     className="w-full bg-[#020617] border border-slate-800 rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
+                     className="w-full bg-[#020617] border border-border rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
                      placeholder="https://linkedin.com/in/..."
                      value={linkedinUrl}
                      onChange={(e) => setLinkedinUrl(e.target.value)}
                    />
                  </div>
                  <div className="space-y-2">
-                   <label className="text-xs font-bold uppercase tracking-widest text-slate-500">GitHub URL</label>
+                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">GitHub URL</label>
                    <input 
-                     className="w-full bg-[#020617] border border-slate-800 rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
+                     className="w-full bg-[#020617] border border-border rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
                      placeholder="https://github.com/..."
                      value={githubUrl}
                      onChange={(e) => setGitHubUrl(e.target.value)}

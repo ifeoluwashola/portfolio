@@ -194,21 +194,21 @@ export default function AdminStudentsPage() {
         </div>
 
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
           <input
             type="text"
             placeholder="Search students..."
-            className="bg-slate-900/50 border border-slate-800 rounded-full pl-10 pr-4 py-2 text-white w-full md:w-64 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+            className="bg-card/50 border border-border rounded-full pl-10 pr-4 py-2 text-white w-full md:w-64 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
       </div>
 
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="bg-card/50 border border-border rounded-2xl overflow-hidden shadow-2xl">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-950/50 text-slate-500 text-[10px] uppercase font-black tracking-[0.2em]">
+            <tr className="bg-background/50 text-muted-foreground text-[10px] uppercase font-black tracking-[0.2em]">
               <th className="px-6 py-5 font-semibold">Student Identity</th>
               <th className="px-6 py-5 font-semibold">Status Matrix</th>
               <th className="px-6 py-5 font-semibold">Participation</th>
@@ -218,18 +218,18 @@ export default function AdminStudentsPage() {
           </thead>
           <tbody className="divide-y divide-slate-800/50">
             {loading ? (
-              <tr><td colSpan={4} className="px-6 py-24 text-center text-slate-500">
+              <tr><td colSpan={4} className="px-6 py-24 text-center text-muted-foreground">
                 <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
                 Synchronizing student data...
               </td></tr>
             ) : filteredStudents.length === 0 ? (
-              <tr><td colSpan={4} className="px-6 py-24 text-center text-slate-500 uppercase tracking-widest text-xs">Zero records match the active query.</td></tr>
+              <tr><td colSpan={4} className="px-6 py-24 text-center text-muted-foreground uppercase tracking-widest text-xs">Zero records match the active query.</td></tr>
             ) : filteredStudents.map((student) => (
               <tr key={student.id} className="hover:bg-slate-800/20 transition-all group">
                 <td className="px-6 py-5">
                   <div className="flex flex-col">
-                    <span className="text-slate-100 font-bold group-hover:text-primary transition-colors">{student.first_name} {student.last_name}</span>
-                    <span className="text-slate-500 text-[11px] font-mono">{student.email}</span>
+                    <span className="text-foreground font-bold group-hover:text-primary transition-colors">{student.first_name} {student.last_name}</span>
+                    <span className="text-muted-foreground text-[11px] font-mono">{student.email}</span>
                   </div>
                 </td>
                 <td className="px-6 py-5">
@@ -271,8 +271,8 @@ export default function AdminStudentsPage() {
                         </span>
                      </div>
                      <div className="flex flex-col">
-                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Live Ops</span>
-                        <span className="text-xs font-bold text-slate-300">{student.attended_count}/{student.total_held_sessions}</span>
+                        <span className="text-[10px] font-black text-muted-foreground uppercase tracking-tighter">Live Ops</span>
+                        <span className="text-xs font-bold text-foreground">{student.attended_count}/{student.total_held_sessions}</span>
                      </div>
                    </button>
                 </td>
@@ -348,8 +348,8 @@ export default function AdminStudentsPage() {
 
       {/* Probation Modal */}
       {showProbationModal && selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-slate-900 border border-amber-500/30 max-w-md w-full rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card border border-amber-500/30 max-w-md w-full rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex items-center gap-3 text-amber-500 mb-6 font-black tracking-tight uppercase">
               <Info size={24} />
               <h2>Apply Academic Probation</h2>
@@ -358,7 +358,7 @@ export default function AdminStudentsPage() {
               Changing status for <span className="text-white font-bold">{selectedStudent.first_name} {selectedStudent.last_name}</span>. This will trigger a notification email and move the student into a &quot;Monitored&quot; state for 14 days.
             </p>
             <div className="flex gap-4">
-              <button onClick={() => setShowProbationModal(false)} className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 transition-all text-sm">Abort</button>
+              <button onClick={() => setShowProbationModal(false)} className="flex-1 py-3 bg-slate-800 text-foreground font-bold rounded-xl hover:bg-slate-700 transition-all text-sm">Abort</button>
               <button onClick={handleApplyProbation} className="flex-1 py-3 bg-amber-500 text-amber-950 font-black rounded-xl hover:bg-amber-400 transition-all text-sm uppercase">Apply Status</button>
             </div>
           </div>
@@ -367,8 +367,8 @@ export default function AdminStudentsPage() {
 
       {/* Warning Modal */}
       {showWarnModal && selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-slate-900 border border-primary/30 max-w-md w-full rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card border border-primary/30 max-w-md w-full rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex items-center gap-3 text-primary mb-6 font-black tracking-tight uppercase">
               <AlertTriangle size={24} />
               <h2>New Disciplinary Ledger</h2>
@@ -377,7 +377,7 @@ export default function AdminStudentsPage() {
             <div className="space-y-4 mb-8">
               <textarea
                 placeholder="Detail the infraction for official student notification..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white text-sm min-h-[120px] focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                className="w-full bg-background border border-border rounded-xl p-4 text-white text-sm min-h-[120px] focus:ring-2 focus:ring-primary/50 outline-none transition-all"
                 value={warnReason}
                 onChange={(e) => setWarnReason(e.target.value)}
               />
@@ -386,7 +386,7 @@ export default function AdminStudentsPage() {
             <div className="flex gap-4">
               <button 
                 onClick={() => { setShowWarnModal(false); setWarnReason(""); }}
-                className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 transition-all text-sm"
+                className="flex-1 py-3 bg-slate-800 text-foreground font-bold rounded-xl hover:bg-slate-700 transition-all text-sm"
               >
                 Cancel
               </button>
@@ -403,8 +403,8 @@ export default function AdminStudentsPage() {
 
       {/* Disqualify Modal */}
       {showDisqualifyModal && selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-300">
-          <div className="bg-slate-900 border border-rose-900/50 max-w-lg w-full rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card border border-rose-900/50 max-w-lg w-full rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
             <div className="flex items-center gap-3 text-rose-500 mb-6 font-black tracking-tight uppercase">
               <ShieldAlert size={24} />
               <h2>Final Termination Sequence</h2>
@@ -418,14 +418,14 @@ export default function AdminStudentsPage() {
             <div className="space-y-4">
               <textarea
                 placeholder="Official reason for terminal revocation..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white text-sm min-h-[120px] focus:ring-2 focus:ring-rose-500 outline-none transition-all"
+                className="w-full bg-background border border-border rounded-xl p-4 text-white text-sm min-h-[120px] focus:ring-2 focus:ring-rose-500 outline-none transition-all"
                 value={disqualifyReason}
                 onChange={(e) => setDisqualifyReason(e.target.value)}
               />
             </div>
 
             <div className="flex gap-4 mt-8">
-              <button onClick={() => setShowDisqualifyModal(false)} className="flex-1 py-3 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 transition-all text-sm">Abort</button>
+              <button onClick={() => setShowDisqualifyModal(false)} className="flex-1 py-3 bg-slate-800 text-foreground font-bold rounded-xl hover:bg-slate-700 transition-all text-sm">Abort</button>
               <button 
                 onClick={handleDisqualify}
                 disabled={!disqualifyReason || disqualifyReason.length < 5}
@@ -440,33 +440,33 @@ export default function AdminStudentsPage() {
 
       {/* Attendance Detail Modal */}
       {showAttendanceModal && selectedStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-in fade-in duration-300">
-           <div className="bg-slate-900 border border-slate-800 max-w-2xl w-full rounded-2xl p-0 shadow-2xl flex flex-col h-[80vh] overflow-hidden animate-in zoom-in-95 duration-300">
-              <div className="p-6 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-md animate-in fade-in duration-300">
+           <div className="bg-card border border-border max-w-2xl w-full rounded-2xl p-0 shadow-2xl flex flex-col h-[80vh] overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-6 border-b border-border bg-background/50 flex items-center justify-between">
                  <div>
                     <h2 className="text-xl font-black text-white tracking-tight uppercase">Attendance Ledger</h2>
-                    <p className="text-slate-500 text-xs mt-1">Audit trail for <span className="text-primary">{selectedStudent.first_name} {selectedStudent.last_name}</span></p>
+                    <p className="text-muted-foreground text-xs mt-1">Audit trail for <span className="text-primary">{selectedStudent.first_name} {selectedStudent.last_name}</span></p>
                  </div>
-                 <button onClick={() => setShowAttendanceModal(false)} className="p-2 hover:bg-white/5 rounded-lg text-slate-500 hover:text-white transition-all">&times; Close</button>
+                 <button onClick={() => setShowAttendanceModal(false)} className="p-2 hover:bg-white/5 rounded-lg text-muted-foreground hover:text-white transition-all">&times; Close</button>
               </div>
 
               <div className="flex-1 overflow-y-auto p-6">
                  {fetchingAttendance ? (
-                    <div className="flex flex-col items-center justify-center h-full text-slate-500 italic text-sm">
+                    <div className="flex flex-col items-center justify-center h-full text-muted-foreground italic text-sm">
                        <Loader2 className="animate-spin mb-4 text-primary" />
                        Synchronizing local attendance records...
                     </div>
                  ) : attendanceHistory.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-slate-500 italic text-sm uppercase tracking-widest">
+                    <div className="flex items-center justify-center h-full text-muted-foreground italic text-sm uppercase tracking-widest">
                        Zero session data recorded for this student.
                     </div>
                  ) : (
                     <div className="space-y-3">
                        {attendanceHistory.map((rec, i) => (
-                          <div key={i} className="bg-slate-950/50 border border-slate-800/50 rounded-xl p-4 flex items-center justify-between group hover:border-slate-700 transition-all">
+                          <div key={i} className="bg-background/50 border border-border/50 rounded-xl p-4 flex items-center justify-between group hover:border-border transition-all">
                              <div className="flex flex-col">
                                 <span className="text-sm font-bold text-white tracking-tight">{rec.session_title}</span>
-                                <span className="text-[10px] font-mono text-slate-500 flex items-center gap-2">
+                                <span className="text-[10px] font-mono text-muted-foreground flex items-center gap-2">
                                    {new Date(rec.scheduled_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                                    <span className="h-1 w-1 rounded-full bg-slate-800" />
                                    {rec.status.toUpperCase()}
@@ -493,12 +493,12 @@ export default function AdminStudentsPage() {
                  )}
               </div>
               
-              <div className="p-6 bg-slate-950/50 border-t border-slate-800 flex items-center justify-between">
+              <div className="p-6 bg-background/50 border-t border-border flex items-center justify-between">
                  <div className="flex items-center gap-4 text-[10px] font-black uppercase tracking-widest">
-                    <span className="text-slate-500">Global Coverage</span>
+                    <span className="text-muted-foreground">Global Coverage</span>
                     <span className="text-white text-lg">{Math.round(selectedStudent.attendance_rate)}%</span>
                  </div>
-                 <button onClick={() => setShowAttendanceModal(false)} className="px-6 py-2 bg-slate-800 text-slate-300 font-bold rounded-lg hover:bg-slate-700 transition-all text-sm">Dismiss</button>
+                 <button onClick={() => setShowAttendanceModal(false)} className="px-6 py-2 bg-slate-800 text-foreground font-bold rounded-lg hover:bg-slate-700 transition-all text-sm">Dismiss</button>
               </div>
            </div>
         </div>

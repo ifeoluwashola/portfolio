@@ -120,7 +120,7 @@ export default async function AboutPage() {
                 </div>
               )}
 
-              <div className="prose prose-invert prose-emerald text-muted-foreground">
+              <div className="prose dark:prose-invert prose-emerald text-muted-foreground">
                 {profile.bio.split('\n\n').map((paragraph, idx) => (
                   <p key={idx} className="text-lg leading-relaxed mt-4 first:mt-0">
                     {paragraph}

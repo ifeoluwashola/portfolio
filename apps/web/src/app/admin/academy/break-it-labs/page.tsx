@@ -196,7 +196,7 @@ export default function AdminLabsPage() {
                   <h3 className="text-xl font-bold">{lab.title}</h3>
                   <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                     lab.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
-                    lab.status === 'solved' ? 'bg-primary/10 text-primary' : 'bg-slate-500/10 text-slate-500'
+                    lab.status === 'solved' ? 'bg-primary/10 text-primary' : 'bg-slate-500/10 text-muted-foreground'
                   }`}>
                     {lab.status}
                   </span>
@@ -297,7 +297,7 @@ export default function AdminLabsPage() {
                         <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                           <Terminal className="w-3 h-3" /> Proposed Solution_
                         </div>
-                        <div className="bg-slate-950 border border-border/50 rounded-xl p-6 font-mono text-[11px] overflow-x-auto text-emerald-400 leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
+                        <div className="bg-background border border-border/50 rounded-xl p-6 font-mono text-[11px] overflow-x-auto text-emerald-400 leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
                           {sub.proposed_fix}
                         </div>
                       </div>
@@ -373,7 +373,7 @@ export default function AdminLabsPage() {
                     defaultValue={selectedLab?.broken_code}
                     required
                     rows={8}
-                    className="w-full bg-slate-950 border border-border rounded-lg px-4 py-2 font-mono text-sm text-red-400 outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-2 font-mono text-sm text-red-400 outline-none focus:ring-1 focus:ring-primary"
                     placeholder="The broken configuration..."
                   />
                 </div>
@@ -385,7 +385,7 @@ export default function AdminLabsPage() {
                     defaultValue={selectedLab?.solution_code}
                     required
                     rows={8}
-                    className="w-full bg-slate-950 border border-border rounded-lg px-4 py-2 font-mono text-sm text-emerald-400 outline-none focus:ring-1 focus:ring-primary"
+                    className="w-full bg-background border border-border rounded-lg px-4 py-2 font-mono text-sm text-emerald-400 outline-none focus:ring-1 focus:ring-primary"
                     placeholder="The correct fix..."
                   />
                 </div>

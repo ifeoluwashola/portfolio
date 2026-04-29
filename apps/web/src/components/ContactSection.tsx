@@ -70,69 +70,69 @@ export function ContactSection() {
     }
   };
   return (
-    <section id="contact" className="py-24 sm:py-32 bg-[#0f172a] border-t border-slate-800 relative overflow-hidden">
+    <section id="contact" className="py-24 sm:py-32 bg-kn-bg border-t border-kn-border relative overflow-hidden">
       {/* Background glow for contact section */}
       <div className="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80" aria-hidden="true">
-        <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-[#eab308]/20 to-transparent opacity-10 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
+        <div className="relative left-[calc(50%-11rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[30deg] bg-gradient-to-tr from-kn-accent/20 to-transparent opacity-10 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]" />
       </div>
 
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center mb-16">
-          <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="text-3xl font-bold tracking-tight text-kn-heading sm:text-4xl">
             Let&apos;s Optimize Your Cloud ROI
           </h2>
-          <p className="mt-4 text-lg leading-8 text-slate-400">
+          <p className="mt-4 text-lg leading-8 text-kn-muted">
             Whether you need a comprehensive infrastructure audit or wish to harden your deployment pipelines, we&apos;re ready to help you scale securely.
           </p>
         </div>
 
         <div className="mx-auto max-w-xl lg:max-w-2xl">
-          <div className="bg-slate-900 backdrop-blur-sm border border-slate-800 rounded-2xl p-8 sm:p-10 shadow-lg relative h-full">
+          <div className="bg-kn-card backdrop-blur-sm border border-kn-border rounded-2xl p-8 sm:p-10 shadow-lg relative h-full">
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="firstName" className="text-white">First Name</Label>
-                  <Input id="firstName" value={formData.firstName} onChange={handleChange} required placeholder="Jane" className="bg-[#0f172a] border-slate-800" />
+                  <Label htmlFor="firstName" className="text-kn-heading">First Name</Label>
+                  <Input id="firstName" value={formData.firstName} onChange={handleChange} required placeholder="Jane" className="bg-kn-bg border-kn-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="lastName" className="text-white">Last Name</Label>
-                  <Input id="lastName" value={formData.lastName} onChange={handleChange} required placeholder="Doe" className="bg-[#0f172a] border-slate-800" />
+                  <Label htmlFor="lastName" className="text-kn-heading">Last Name</Label>
+                  <Input id="lastName" value={formData.lastName} onChange={handleChange} required placeholder="Doe" className="bg-kn-bg border-kn-border" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">Email</Label>
+                <Label htmlFor="email" className="text-kn-heading">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
-                  <Input id="email" type="email" value={formData.email} onChange={handleChange} required placeholder="jane@example.com" className="pl-10 bg-[#0f172a] border-slate-800" />
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-kn-faded" />
+                  <Input id="email" type="email" value={formData.email} onChange={handleChange} required placeholder="jane@example.com" className="pl-10 bg-kn-bg border-kn-border" />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="company" className="text-white">Company</Label>
-                  <Input id="company" value={formData.company} onChange={handleChange} placeholder="Acme Corp" className="bg-[#0f172a] border-slate-800" />
+                  <Label htmlFor="company" className="text-kn-heading">Company</Label>
+                  <Input id="company" value={formData.company} onChange={handleChange} placeholder="Acme Corp" className="bg-kn-bg border-kn-border" />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="role" className="text-white">Role / Position</Label>
-                  <Input id="role" value={formData.role} onChange={handleChange} placeholder="CTO, Founder, etc." className="bg-[#0f172a] border-slate-800" />
+                  <Label htmlFor="role" className="text-kn-heading">Role / Position</Label>
+                  <Input id="role" value={formData.role} onChange={handleChange} placeholder="CTO, Founder, etc." className="bg-kn-bg border-kn-border" />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="message" className="text-white">How can we help you?</Label>
+                <Label htmlFor="message" className="text-kn-heading">How can we help you?</Label>
                 <Textarea 
                   id="message" 
                   value={formData.message}
                   onChange={handleChange}
                   required
                   placeholder="Tell me about your infrastructure challenges..." 
-                  className="min-h-[150px] bg-[#0f172a] border-slate-800 resize-y" 
+                  className="min-h-[150px] bg-kn-bg border-kn-border resize-y" 
                 />
               </div>
 
               {status === "success" && (
-                <div className="p-3 bg-[#eab308]/10 border border-slate-800 rounded-lg flex items-center gap-2 text-yellow-600 dark:text-[#eab308]">
+                <div className="p-3 bg-kn-accent-bg border border-kn-accent/30 rounded-lg flex items-center gap-2 text-kn-accent">
                   <CheckCircle2 className="w-5 h-5" />
                   <span>Consultation requested successfully!</span>
                 </div>
@@ -145,7 +145,7 @@ export function ContactSection() {
                 </div>
               )}
 
-              <Button type="submit" disabled={isSubmitting} className="w-full bg-yellow-600 hover:bg-[#eab308] text-white font-semibold py-6 text-lg rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-70">
+              <Button type="submit" disabled={isSubmitting} className="w-full bg-kn-accent hover:brightness-110 text-kn-bg font-semibold py-6 text-lg rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-70">
                 <Send className="w-5 h-5" />
                 {isSubmitting ? "Sending..." : "Book Consultation"}
               </Button>

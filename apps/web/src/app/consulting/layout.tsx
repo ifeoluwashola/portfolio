@@ -7,7 +7,7 @@ export default function ConsultingLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-[#0f172a] min-h-screen text-slate-200 font-sans selection:bg-[#eab308] selection:text-[#0f172a]">
+    <div className="bg-kn-bg min-h-screen text-kn-body font-sans selection:bg-kn-accent/30 selection:text-kn-heading">
       <KybernNexusNavbar />
       <div className="flex-1 pt-20">
         {children}

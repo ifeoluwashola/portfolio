@@ -46,75 +46,115 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* Kybern Nexus brand tokens */
+  --color-kn-bg: var(--kn-bg);
+  --color-kn-bg-deep: var(--kn-bg-deep);
+  --color-kn-card: var(--kn-card);
+  --color-kn-heading: var(--kn-heading);
+  --color-kn-body: var(--kn-body);
+  --color-kn-muted: var(--kn-muted);
+  --color-kn-faded: var(--kn-faded);
+  --color-kn-border: var(--kn-border);
+  --color-kn-accent: var(--kn-accent);
+  --color-kn-accent-bg: var(--kn-accent-bg);
 }
 
 :root {
-  --background: oklch(0.96 0.01 80); /* Warm beige/off-white */
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(0.98 0.005 80); /* Slightly lighter for contrast */
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(0.96 0.01 80);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.92 0.015 80);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.92 0.015 80);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.92 0.015 80);
-  --accent-foreground: oklch(0.205 0 0);
+  --background: #f8fafc; /* slate-50, matches --kn-bg */
+  --foreground: #0f172a; /* slate-900 */
+  --card: #ffffff; /* pure white, matches --kn-card */
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  --primary: #0f172a;
+  --primary-foreground: #f8fafc;
+  --secondary: #f1f5f9; /* slate-100 */
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9; /* slate-100 */
+  --muted-foreground: #64748b; /* slate-500 */
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
   --destructive: oklch(0.58 0.22 27);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --border: #e2e8f0; /* slate-200, matches --kn-border */
+  --input: #e2e8f0;
+  --ring: #94a3b8; /* slate-400 */
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0f172a;
+  --sidebar-primary-foreground: #f8fafc;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #94a3b8;
+
+  /* Kybern Nexus brand tokens — Light */
+  --kn-bg: #f8fafc;
+  --kn-bg-deep: #f1f5f9;
+  --kn-card: #ffffff;
+  --kn-heading: #0f172a;
+  --kn-body: #475569;
+  --kn-muted: #64748b;
+  --kn-faded: #94a3b8;
+  --kn-border: #e2e8f0;
+  --kn-accent: #ca8a04;
+  --kn-accent-bg: rgba(202, 138, 4, 0.08);
+  --kn-accent-glow: rgba(202, 138, 4, 0.15);
+  --kn-overlay: rgba(248, 250, 252, 0.80);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.87 0.00 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.371 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --background: #0f172a; /* slate-900/midnight, matches --kn-bg */
+  --foreground: #f8fafc; /* slate-50 */
+  --card: #1e293b; /* slate-800, matches --kn-card */
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #e2e8f0; /* slate-200 */
+  --primary-foreground: #0f172a;
+  --secondary: #334155; /* slate-700 */
+  --secondary-foreground: #f8fafc;
+  --muted: #334155;
+  --muted-foreground: #94a3b8; /* slate-400 */
+  --accent: #334155;
+  --accent-foreground: #f8fafc;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --border: #334155; /* slate-700, matches --kn-border */
+  --input: #475569; /* slate-600 */
+  --ring: #64748b; /* slate-500 */
   --chart-1: oklch(0.809 0.105 251.813);
   --chart-2: oklch(0.623 0.214 259.815);
   --chart-3: oklch(0.546 0.245 262.881);
   --chart-4: oklch(0.488 0.243 264.376);
   --chart-5: oklch(0.424 0.199 265.638);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar: #0f172a;
+  --sidebar-foreground: #f8fafc;
   --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --sidebar-primary-foreground: #f8fafc;
+  --sidebar-accent: #1e293b;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #334155;
+  --sidebar-ring: #64748b;
+
+  /* Kybern Nexus brand tokens — Dark */
+  --kn-bg: #0f172a;
+  --kn-bg-deep: #0b1120;
+  --kn-card: #1e293b;
+  --kn-heading: #f8fafc;
+  --kn-body: #cbd5e1;
+  --kn-muted: #94a3b8;
+  --kn-faded: #64748b;
+  --kn-border: #334155;
+  --kn-accent: #eab308;
+  --kn-accent-bg: rgba(234, 179, 8, 0.1);
+  --kn-accent-glow: rgba(234, 179, 8, 0.2);
+  --kn-overlay: rgba(15, 23, 42, 0.75);
 }
 
 @layer base {

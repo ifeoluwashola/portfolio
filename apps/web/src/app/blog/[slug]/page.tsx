@@ -21,18 +21,18 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     <article className="min-h-screen bg-transparent py-24 sm:py-32">
       <div className="mx-auto max-w-4xl px-6 lg:px-8">
         <header className="mb-14">
-          <time dateTime={post.meta.date} className="text-[#eab308] block mb-2 text-sm font-semibold">
+          <time dateTime={post.meta.date} className="text-kn-accent block mb-2 text-sm font-semibold">
             {post.meta.date ? format(parseISO(post.meta.date), 'MMMM d, yyyy') : 'Unknown Date'}
           </time>
-          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-4">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-kn-heading mb-4">
             {post.meta.title}
           </h1>
-          <p className="text-xl text-slate-400">
+          <p className="text-xl text-kn-muted">
             {post.meta.description}
           </p>
         </header>
 
-        <div className="prose prose-invert lg:prose-lg max-w-none prose-a:text-[#eab308] hover:prose-a:text-yellow-400 prose-pre:bg-slate-900 prose-pre:border-slate-800 prose-pre:border prose-headings:text-white prose-p:text-slate-300">
+        <div className="prose dark:prose-invert lg:prose-lg max-w-none prose-a:text-kn-accent hover:prose-a:brightness-110 prose-pre:bg-kn-card prose-pre:border-kn-border prose-pre:border prose-headings:text-kn-heading prose-p:text-kn-body">
           <MDXRemote source={post.content} />
         </div>
 
