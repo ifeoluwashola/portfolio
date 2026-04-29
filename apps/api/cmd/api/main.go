@@ -261,10 +261,11 @@ func main() {
 	loggingHandler := middleware.RequestLogger(logger)(mux)
 	finalHandler := c.Handler(loggingHandler)
 
-	// Launch payment lock cron as a background goroutine.
-	// It respects context cancellation for graceful shutdown.
+	// Launch background workers as goroutines.
+	// Both respect context cancellation for graceful shutdown.
 	cronCtx, cronCancel := context.WithCancel(context.Background())
 	go academySvc.RunPaymentLockCron(cronCtx)
+	go academySvc.RunClassSessionAutomator(cronCtx)
 
 	// 10. Start Server
 	srv := &http.Server{

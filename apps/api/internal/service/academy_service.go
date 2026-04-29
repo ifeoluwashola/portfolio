@@ -905,6 +905,36 @@ func (s *academyService) RunPaymentLockCron(ctx context.Context) {
 	}
 }
 
+// RunClassSessionAutomator runs as a background goroutine. Every 60 seconds it checks
+// for scheduled class sessions whose time has come and flips them to 'live'.
+func (s *academyService) RunClassSessionAutomator(ctx context.Context) {
+	log.Println("[Automator] Class Session Automator started — running every 60 seconds")
+	ticker := time.NewTicker(60 * time.Second)
+	defer ticker.Stop()
+
+	// Initial run
+	if affected, err := s.repo.AutoStartScheduledSessions(ctx); err == nil && affected > 0 {
+		log.Printf("[Automator] Flipped %d sessions to live\n", affected)
+	}
+
+	for {
+		select {
+		case <-ticker.C:
+			affected, err := s.repo.AutoStartScheduledSessions(ctx)
+			if err != nil {
+				log.Printf("[Automator] Error updating scheduled sessions: %v\n", err)
+				continue
+			}
+			if affected > 0 {
+				log.Printf("[Automator] Flipped %d sessions to live\n", affected)
+			}
+		case <-ctx.Done():
+			log.Println("[Automator] Class Session Automator shutting down")
+			return
+		}
+	}
+}
+
 func (s *academyService) runLockPass(ctx context.Context) {
 	overdue, err := s.repo.GetOverdueBillings(ctx)
 	if err != nil {

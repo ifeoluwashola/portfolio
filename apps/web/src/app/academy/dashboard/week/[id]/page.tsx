@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, use, useCallback, useRef } from "react";
 import ReactMarkdown from "react-markdown";
 import { 
   PlayCircle, 
@@ -70,47 +70,85 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   const hasArchivedSessions = publishedSessions.some(s => s.status === 'archived');
   const isAllArchived = publishedSessions.length > 0 && publishedSessions.every(s => s.status === 'archived');
 
-  useEffect(() => {
-    async function fetchWeekData() {
-      try {
-        const data = await getDashboardData();
-        if (data && !data.error) {
-          const foundWeek = (data.weeks || []).find((w: CohortWeek) => w.id === parseInt(id));
-          const foundAss = (data.assignments || []).find((a: Assignment) => a.week_id === parseInt(id));
-          setWeek(foundWeek || null);
-          setAssignment(foundAss || null);
-          if (foundAss) setGithubUrl(foundAss.github_url);
-          
-          if (data.total_held_sessions !== undefined) {
-             setAttendance({
-                rate: data.attendance_rate,
-                attended: data.attended_count,
-                total: data.total_held_sessions
-             });
-          }
-          
-          if (foundWeek?.sessions && foundWeek.sessions.length > 0) {
-            // Since sessions are already filtered by visibility_status='published' in the service,
-            // we just need to find the best candidate for the "Live Bridge" or "Video Player".
-            // Priority: Live > Scheduled (Soonest) > Archived (Latest)
-            const liveSess = foundWeek.sessions.find((s: ClassSession) => s.status === 'live');
-            const scheduledSess = [...foundWeek.sessions]
-              .filter((s: ClassSession) => s.status === 'scheduled')
-              .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
-            const archivedSessions = foundWeek.sessions.filter((s: ClassSession) => s.status === 'archived');
-            const archivedSess = archivedSessions.length > 0 ? archivedSessions[archivedSessions.length - 1] : null;
-            
-            setActiveSession(liveSess || scheduledSess || archivedSess || null);
-          }
+  // Core data-fetching logic, extracted so it can be reused by both the
+  // initial load effect and the background polling effect.
+  const fetchWeekData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const data = await getDashboardData();
+      if (data && !data.error) {
+        const foundWeek = (data.weeks || []).find((w: CohortWeek) => w.id === parseInt(id));
+        const foundAss = (data.assignments || []).find((a: Assignment) => a.week_id === parseInt(id));
+        setWeek(foundWeek || null);
+        setAssignment(foundAss || null);
+        if (foundAss) setGithubUrl(foundAss.github_url);
+
+        if (data.total_held_sessions !== undefined) {
+          setAttendance({
+            rate: data.attendance_rate,
+            attended: data.attended_count,
+            total: data.total_held_sessions
+          });
         }
-      } catch (err) {
-        console.error("Failed to fetch week data:", err);
-      } finally {
-        setLoading(false);
+
+        if (foundWeek?.sessions && foundWeek.sessions.length > 0) {
+          // Priority: Live > Scheduled (Soonest) > Archived (Latest)
+          const liveSess = foundWeek.sessions.find((s: ClassSession) => s.status === 'live');
+          const scheduledSess = [...foundWeek.sessions]
+            .filter((s: ClassSession) => s.status === 'scheduled')
+            .sort((a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime())[0];
+          const archivedSessions = foundWeek.sessions.filter((s: ClassSession) => s.status === 'archived');
+          const archivedSess = archivedSessions.length > 0 ? archivedSessions[archivedSessions.length - 1] : null;
+
+          setActiveSession(liveSess || scheduledSess || archivedSess || null);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch week data:", err);
+    } finally {
+      if (!silent) setLoading(false);
+    }
+  }, [id]);
+
+  // Initial data load
+  useEffect(() => {
+    fetchWeekData(false);
+  }, [fetchWeekData]);
+
+  // Smart polling: only activates when the active session is 'scheduled'
+  // and its start time is within 5 minutes. Polls silently every 30 seconds
+  // so the UI transitions automatically when the backend flips it to 'live'.
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    // Clear any existing poll before deciding to re-establish
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+
+    if (
+      activeSession?.status === 'scheduled' &&
+      activeSession.scheduled_at
+    ) {
+      const msUntilSession = new Date(activeSession.scheduled_at).getTime() - Date.now();
+      const FIVE_MINUTES_MS = 5 * 60 * 1000;
+
+      if (msUntilSession <= FIVE_MINUTES_MS) {
+        // Session is within the 5-minute window or has already passed — poll every 20 seconds
+        pollingRef.current = setInterval(() => {
+          fetchWeekData(true); // silent = true, no loading flicker
+        }, 20_000);
       }
     }
-    fetchWeekData();
-  }, [id]);
+
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+        pollingRef.current = null;
+      }
+    };
+  }, [activeSession, fetchWeekData]);
 
   async function handleSubmitAssignment(e: React.FormEvent) {
     e.preventDefault();

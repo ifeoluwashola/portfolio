@@ -625,6 +625,19 @@ func (r *AcademyRepository) GetClassSessionByID(ctx context.Context, id int) (*d
 	return s, nil
 }
 
+func (r *AcademyRepository) AutoStartScheduledSessions(ctx context.Context) (int64, error) {
+	query := `
+		UPDATE class_sessions 
+		SET status = 'live' 
+		WHERE status = 'scheduled' AND scheduled_at <= CURRENT_TIMESTAMP
+	`
+	tag, err := r.db.Exec(ctx, query)
+	if err != nil {
+		return 0, err
+	}
+	return tag.RowsAffected(), nil
+}
+
 func (r *AcademyRepository) RecordAttendance(ctx context.Context, sessionID int, studentID uuid.UUID) error {
 	query := `
 		INSERT INTO session_attendance (session_id, student_id)

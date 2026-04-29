@@ -123,6 +123,7 @@ type AcademyRepository interface {
 	DeleteClassSession(ctx context.Context, id int) error
 	GetClassSessionsByWeek(ctx context.Context, weekID int) ([]*ClassSession, error)
 	GetClassSessionByID(ctx context.Context, id int) (*ClassSession, error)
+	AutoStartScheduledSessions(ctx context.Context) (int64, error)
 
 	// Attendance
 	RecordAttendance(ctx context.Context, sessionID int, studentID uuid.UUID) error
@@ -188,6 +189,7 @@ type AcademyService interface {
 	GetBillingHub(ctx context.Context, studentID uuid.UUID) (*BillingHubResponse, error)
 	InitializeInstallmentPayment(ctx context.Context, studentID uuid.UUID, amountKobo int) (*AcademyApplyResponse, error)
 	RunPaymentLockCron(ctx context.Context)
+	RunClassSessionAutomator(ctx context.Context)
 
 	// Class Sessions
 	AdminCreateClassSession(ctx context.Context, session *ClassSession) error

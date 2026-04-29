@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { 
   getAllStudents, 
   warnStudent, 
@@ -53,18 +53,20 @@ export default function AdminStudentsPage() {
   const [attendanceHistory, setAttendanceHistory] = useState<any[]>([]);
   const [fetchingAttendance, setFetchingAttendance] = useState(false);
 
-  const fetchStudents = async () => {
-    setLoading(true);
+  const fetchStudents = useCallback(async () => {
+    // We don't set loading(true) here to avoid the full-page spinner during background polls
     const data = await getAllStudents();
     if (Array.isArray(data)) {
       setStudents(data);
     }
     setLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchStudents();
-  }, []);
+    const interval = setInterval(fetchStudents, 60_000);
+    return () => clearInterval(interval);
+  }, [fetchStudents]);
 
   const handleWarn = async () => {
     if (!selectedStudent || !warnReason.trim()) {

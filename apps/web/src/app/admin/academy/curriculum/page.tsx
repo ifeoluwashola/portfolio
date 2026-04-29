@@ -95,17 +95,29 @@ export default function CurriculumManager() {
     }
   }
 
-  async function refreshWeeks() {
-    const res = await fetch(`/api/admin/proxy/v1/admin/academy/weeks`);
-    if (res.ok) {
-      const weeksData = await res.json();
-      setWeeks(weeksData);
-      if (editingWeek) {
-        const updatedWeek = weeksData.find((w: CohortWeek) => w.id === editingWeek.id);
-        if (updatedWeek) setEditingWeek(updatedWeek);
+  const refreshWeeks = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/admin/proxy/v1/admin/academy/weeks`, { cache: 'no-store' });
+      if (res.ok) {
+        const weeksData = await res.json();
+        setWeeks(weeksData);
+        if (editingWeek) {
+          const updatedWeek = weeksData.find((w: CohortWeek) => w.id === editingWeek.id);
+          if (updatedWeek) setEditingWeek(updatedWeek);
+        }
       }
+    } catch (err) {
+      console.error("Refresh failed", err);
     }
-  }
+  }, [editingWeek]);
+
+  // Background polling for admin to see live status changes automatically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      refreshWeeks();
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [refreshWeeks]);
 
   async function handleAddSession() {
     if (!editingWeek || !newSession?.title) return;

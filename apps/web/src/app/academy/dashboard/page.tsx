@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Terminal, CheckCircle2, Clock, Calendar, ArrowRight, ExternalLink, AlertTriangle, ShieldX } from "lucide-react";
 import Link from "next/link";
 import { getDashboardData, getBillingStatus } from "../actions";
+import { AutoRefresher } from "@/components/academy/auto-refresher";
 
 interface CohortWeek {
   id: number;
@@ -43,6 +44,7 @@ export default async function StudentDashboard() {
 
   return (
     <div className="space-y-8">
+      <AutoRefresher />
 
       {/* ── Billing CTA Widget ── */}
       {isLocked && (
