@@ -32,7 +32,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           </p>
         </header>
 
-        <div className="prose dark:prose-invert lg:prose-lg max-w-none prose-a:text-kn-accent hover:prose-a:brightness-110 prose-pre:bg-kn-card prose-pre:border-kn-border prose-pre:border prose-headings:text-kn-heading prose-p:text-kn-body">
+        <div className="prose dark:prose-invert lg:prose-lg max-w-none prose-a:text-kn-accent hover:prose-a:brightness-110 prose-pre:bg-kn-card prose-pre:text-kn-heading prose-pre:border-kn-border prose-pre:border prose-headings:text-kn-heading prose-p:text-kn-body">
           <MDXRemote source={post.content} />
         </div>
 
