@@ -103,7 +103,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="flex min-h-screen bg-background text-foreground selection:bg-yellow-500/30 selection:text-yellow-200">
       {isFirstLogin && <FirstLoginOverlay />}
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-md border-b border-border z-[60] px-6 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-md border-b border-border z-40 px-6 flex items-center justify-between">
         <Link href="/academy" className="flex items-center gap-3">
           <Terminal className="w-6 h-6 text-yellow-500" />
           <span className="text-sm font-bold uppercase tracking-widest text-foreground">Kybern Academy</span>
@@ -119,14 +119,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Sidebar Overlay for Mobile */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-background/60 backdrop-blur-sm z-[50] lg:hidden"
+          className="fixed inset-0 bg-background/60 backdrop-blur-sm z-20 lg:hidden"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        fixed inset-y-0 left-0 bg-background border-r border-border flex flex-col z-[55] transition-all duration-300 ease-in-out
+        fixed inset-y-0 left-0 bg-background border-r border-border flex flex-col z-45 transition-all duration-300 ease-in-out
         ${isMobileMenuOpen ? "translate-x-0 w-[280px]" : "-translate-x-full lg:translate-x-0"}
         ${!isSidebarOpen ? "lg:w-20" : "lg:w-72"}
       `}>
@@ -262,7 +262,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area */}
       <main className={`flex-1 min-h-screen transition-all duration-300 pt-24 lg:pt-0 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}>
-        <div className="p-6 sm:p-10 max-w-6xl mx-auto">
+        <div className="p-4 sm:p-10 max-w-6xl mx-auto">
           {children}
         </div>
       </main>

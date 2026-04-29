@@ -38,7 +38,11 @@ export function ModeToggle({ variant = "default" }: { variant?: "default" | "aca
         )} />
         <span className="sr-only">Toggle theme</span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent 
+        align={isAcademy ? "start" : "end"} 
+        side={isAcademy ? "right" : "bottom"}
+        sideOffset={isAcademy ? 10 : 4}
+      >
         <DropdownMenuItem onClick={() => setTheme("light")}>
           Light
         </DropdownMenuItem>

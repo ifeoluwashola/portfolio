@@ -145,16 +145,16 @@ export default function BillingHubPage() {
   };
 
   return (
-    <div className="space-y-8 max-w-3xl">
+    <div className="space-y-8 max-w-3xl overflow-hidden sm:overflow-visible">
 
       {/* ── Page Header ── */}
-      <div className="flex items-center gap-4">
-        <div className="w-12 h-12 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+      <div className="flex items-start sm:items-center gap-4">
+        <div className="w-12 h-12 bg-yellow-500/10 border border-yellow-500/20 rounded-xl flex items-center justify-center text-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.1)] flex-shrink-0">
           <CreditCard className="w-6 h-6" />
         </div>
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground text-foreground">Billing & Invoices</h1>
-          <p className="text-muted-foreground text-sm">₦250,000 Cloud Native Mentorship — Payment Ledger</p>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground truncate sm:whitespace-normal">Billing & Invoices</h1>
+          <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">₦250,000 Cloud Native Mentorship — Payment Ledger</p>
         </div>
       </div>
 
@@ -173,13 +173,13 @@ export default function BillingHubPage() {
       )}
 
       {/* ── Ledger Overview Card ── */}
-      <div className="bg-card border border-border rounded-3xl p-8 relative overflow-hidden">
+      <div className="bg-card border border-border rounded-3xl p-4 sm:p-8 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-[0.03] text-foreground">
           <CreditCard className="w-48 h-48 -mr-8 -mt-8" />
         </div>
 
         {/* Status + summary row */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 relative z-10">
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-bold uppercase tracking-wider ${statusCfg.cls}`}>
             {statusCfg.icon}
             {statusCfg.label}
@@ -193,7 +193,7 @@ export default function BillingHubPage() {
         </div>
 
         {/* Amount bars */}
-        <div className="grid grid-cols-3 gap-4 mb-8 relative z-10">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 relative z-10">
           {[
             { label: "Total Paid", value: fmt(billing.total_paid), color: "text-emerald-600 dark:text-emerald-400" },
             { label: "Remaining", value: fmt(remainingKobo), color: remainingKobo > 0 ? "text-red-600 dark:text-red-400" : "text-emerald-600 dark:text-emerald-400" },
@@ -208,7 +208,7 @@ export default function BillingHubPage() {
 
         {/* Progress bar */}
         <div className="relative z-10">
-          <div className="flex justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2">
+          <div className="flex flex-col sm:flex-row sm:justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60 mb-2 gap-1">
             <span>Payment Progress</span>
             <span className={billing.billing_status === "paid_in_full" ? "text-yellow-500" : "text-muted-foreground"}>
               {progressPct.toFixed(0)}% Complete
@@ -222,15 +222,20 @@ export default function BillingHubPage() {
           </div>
 
           {/* Milestone ticks */}
-          <div className="flex justify-between mt-3">
+          <div className="flex justify-between mt-3 px-1">
             {[
-              { pct: 40, label: "Deposit (₦100k)" },
-              { pct: 70, label: "2nd Payment" },
-              { pct: 100, label: "Cleared" },
-            ].map(({ pct, label }) => (
-              <div key={label} className="flex flex-col items-center gap-1" style={{ marginLeft: pct === 40 ? "40%" : 0 }}>
-                <div className={`w-1 h-2 rounded-full ${billing.total_paid >= (TOTAL_DUE_KOBO * pct) / 100 ? "bg-yellow-500" : "bg-muted-foreground/30"}`} />
-                <span className="text-[9px] text-muted-foreground/60 whitespace-nowrap">{label}</span>
+              { label: "Deposit" },
+              { label: "2nd Pmt" },
+              { label: "Cleared" },
+            ].map(({ label }, i) => (
+              <div key={label} className="flex flex-col items-center gap-1">
+                <div className={`w-1 h-2 rounded-full ${
+                  (i === 0 && billing.total_paid >= 10_000_000) ||
+                  (i === 1 && billing.total_paid >= 17_500_000) ||
+                  (i === 2 && billing.billing_status === "paid_in_full")
+                    ? "bg-yellow-500" : "bg-muted-foreground/30"
+                }`} />
+                <span className="text-[8px] sm:text-[9px] text-muted-foreground/60 whitespace-nowrap">{label}</span>
               </div>
             ))}
           </div>
@@ -239,7 +244,7 @@ export default function BillingHubPage() {
 
       {/* ── Payment Interface ── */}
       {canPay && (
-        <div className="bg-card/50 border border-border rounded-3xl p-8">
+        <div className="bg-card/50 border border-border rounded-3xl p-4 sm:p-8">
           <h3 className="text-lg font-bold mb-6 flex items-center gap-3 text-foreground">
             <span className="w-8 h-8 rounded-lg bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center">
               <CreditCard className="w-4 h-4 text-yellow-500" />
@@ -321,7 +326,7 @@ export default function BillingHubPage() {
       )}
 
       {billing.billing_status === "paid_in_full" && (
-        <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-3xl p-8 text-center">
+        <div className="bg-yellow-500/5 border border-yellow-500/20 rounded-3xl p-6 sm:p-8 text-center">
           <div className="text-5xl mb-4">🎉</div>
           <h3 className="text-xl font-bold text-yellow-600 dark:text-yellow-400 mb-2">Program Fee Cleared!</h3>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-sm mx-auto">
@@ -331,13 +336,13 @@ export default function BillingHubPage() {
       )}
 
       {/* ── Transaction History ── */}
-      <div className="bg-card/50 border border-border rounded-3xl p-8">
-        <h3 className="text-lg font-bold mb-6 flex items-center gap-3 text-foreground">
-          <span className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center">
+      <div className="bg-card/50 border border-border rounded-3xl p-4 sm:p-8">
+        <h3 className="text-base sm:text-lg font-bold mb-6 flex items-center gap-3 text-foreground flex-wrap">
+          <span className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center flex-shrink-0">
             <ReceiptText className="w-4 h-4 text-muted-foreground/60" />
           </span>
-          Transaction History
-          <span className="ml-auto text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 bg-muted px-2.5 py-1 rounded-full">
+          <span>Transaction History</span>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40 bg-muted px-2.5 py-1 rounded-full whitespace-nowrap">
             {payment_history.length} record{payment_history.length !== 1 ? "s" : ""}
           </span>
         </h3>
@@ -355,8 +360,8 @@ export default function BillingHubPage() {
                   <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">#</th>
                   <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Date</th>
                   <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Amount</th>
-                  <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Gateway</th>
-                  <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Reference</th>
+                  <th className="hidden sm:table-cell text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Gateway</th>
+                  <th className="hidden sm:table-cell text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Reference</th>
                   <th className="text-left px-5 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">Status</th>
                 </tr>
               </thead>
@@ -371,12 +376,12 @@ export default function BillingHubPage() {
                     <td className="px-5 py-4">
                       <span className="font-bold font-mono text-emerald-600 dark:text-emerald-400 text-sm">{fmt(tx.amount_paid)}</span>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="hidden sm:table-cell px-5 py-4">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 bg-muted px-2 py-0.5 rounded-full">
                         {tx.gateway}
                       </span>
                     </td>
-                    <td className="px-5 py-4">
+                    <td className="hidden sm:table-cell px-5 py-4">
                       <div className="flex items-center gap-2">
                         <code className="text-[11px] text-muted-foreground/60 font-mono bg-background px-2 py-1 rounded-lg border border-border">
                           {fmtRef(tx.reference_id)}
