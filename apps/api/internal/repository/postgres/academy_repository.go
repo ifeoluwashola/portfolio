@@ -83,13 +83,16 @@ func (r *AcademyRepository) UpdateApplicationStatusByID(ctx context.Context, id 
 func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*domain.CohortApplication, error) {
 	query := `
 		SELECT 
-			id, first_name, last_name, email, phone, 
-			COALESCE(role, ''), COALESCE(goal, ''), 
-			COALESCE(experience_level, 'Not Specified'), 
-			COALESCE(has_laptop, FALSE), 
-			reference, payment_status, created_at
-		FROM cohort_applications
-		ORDER BY created_at DESC
+			ca.id, ca.first_name, ca.last_name, ca.email, ca.phone, 
+			COALESCE(ca.role, ''), COALESCE(ca.goal, ''), 
+			COALESCE(ca.experience_level, 'Not Specified'), 
+			COALESCE(ca.has_laptop, FALSE), 
+			ca.reference, ca.payment_status, ca.created_at,
+			COALESCE(sb.billing_status, '') AS billing_status
+		FROM cohort_applications ca
+		LEFT JOIN students s ON s.email = ca.email
+		LEFT JOIN student_billing sb ON sb.student_id = s.id
+		ORDER BY ca.created_at DESC
 	`
 	rows, err := r.db.Query(ctx, query)
 	if err != nil {
@@ -103,13 +106,14 @@ func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*
 		err := rows.Scan(
 			&app.ID, &app.FirstName, &app.LastName, &app.Email, &app.Phone, &app.CurrentRole,
 			&app.Goal, &app.ExperienceLevel, &app.HasLaptop, &app.Reference, &app.PaymentStatus, &app.CreatedAt,
+			&app.BillingStatus,
 		)
 		if err != nil {
 			return nil, err
 		}
 		apps = append(apps, app)
 	}
-	
+
 	if err = rows.Err(); err != nil {
 		return nil, err
 	}
@@ -121,6 +125,7 @@ func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*
 
 	return apps, nil
 }
+
 
 func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string) (*domain.Student, error) {
 	query := `

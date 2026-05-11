@@ -13,6 +13,7 @@ interface CohortApplication {
   phone: string;
   current_role: string;
   payment_status: string;
+  billing_status: string; // live billing ledger status; empty if no student record yet
   created_at: string;
 }
 
@@ -218,6 +219,10 @@ export default function AdminCohortPage() {
               ) : (
                 data.applications.map((app) => {
                   const isPaid = app.payment_status === "Paid";
+                  // Show scholarship button unless billing is fully paid.
+                  // Covers: pending applicants (no billing yet), good_standing students
+                  // (installment payers), and partial-scholarship recipients.
+                  const isFullyPaid = app.billing_status === "paid_in_full" || isPaid;
                   const cleanPhone = app.phone.replace(/[^+\d]/g, "");
 
                   return (
@@ -245,7 +250,7 @@ export default function AdminCohortPage() {
                           >
                             Open WhatsApp
                           </a>
-                          {!isPaid && (
+                          {!isFullyPaid && (
                             <button
                               onClick={() => {
                                 setSelectedAppId(app.id);

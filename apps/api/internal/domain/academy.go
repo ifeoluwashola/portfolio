@@ -300,6 +300,9 @@ type CohortApplication struct {
 	PaymentStatus   string    `json:"payment_status"`
 	Reference       string    `json:"reference"`
 	CreatedAt       time.Time `json:"created_at"`
+	// BillingStatus is the live billing ledger status for enrolled students.
+	// Empty string means no student record exists yet (still pending application).
+	BillingStatus string `json:"billing_status"`
 }
 
 type AcademyLoginRequest struct {
