@@ -100,6 +100,42 @@ func (h *AcademyHandler) HandleGetAdminApplications(w http.ResponseWriter, r *ht
 	}
 }
 
+func (h *AcademyHandler) HandleGrantScholarship(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	idStr := r.PathValue("id")
+	appID, err := uuid.Parse(idStr)
+	if err != nil {
+		http.Error(w, "Invalid application ID", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.GrantScholarshipRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if req.AmountNaira <= 0 {
+		http.Error(w, "Scholarship amount must be greater than zero", http.StatusBadRequest)
+		return
+	}
+
+	amountKobo := req.AmountNaira * 100
+
+	err = h.svc.GrantScholarship(r.Context(), appID, amountKobo)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Scholarship granted successfully"})
+}
+
 func (h *AcademyHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

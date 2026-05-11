@@ -66,7 +66,9 @@ type AcademyRepository interface {
 	CreateApplication(ctx context.Context, app *CohortApplication) error
 	UpdatePaymentStatus(ctx context.Context, reference, status string) error
 	GetApplicationByReference(ctx context.Context, reference string) (*CohortApplication, error)
+	GetApplicationByID(ctx context.Context, id uuid.UUID) (*CohortApplication, error)
 	GetAdminCohortApplications(ctx context.Context) ([]*CohortApplication, error)
+	UpdateApplicationStatusByID(ctx context.Context, id uuid.UUID, status string) error
 
 	// Billing & Installments
 	CreateStudentBilling(ctx context.Context, studentID uuid.UUID) error
@@ -144,6 +146,7 @@ type AcademyService interface {
 	ChangePassword(ctx context.Context, studentID uuid.UUID, req *AcademyChangePasswordRequest) error
 	ForgotPassword(ctx context.Context, req *AcademyForgotPasswordRequest) error
 	ResetPassword(ctx context.Context, req *AcademyResetPasswordRequest) error
+	GrantScholarship(ctx context.Context, applicationID uuid.UUID, amountKobo int) error
 
 	GetCurriculum(ctx context.Context) ([]*CohortWeek, error)
 	UpdateCohortWeek(ctx context.Context, req *UpdateWeekRequest) error
@@ -245,6 +248,10 @@ type AcademyApplyRequest struct {
 // BillingPaymentRequest is used by the billing dashboard to initiate a new payment.
 type BillingPaymentRequest struct {
 	// AmountNaira is the human-facing amount in Naira; the backend converts to kobo.
+	AmountNaira int `json:"amount_naira"`
+}
+
+type GrantScholarshipRequest struct {
 	AmountNaira int `json:"amount_naira"`
 }
 

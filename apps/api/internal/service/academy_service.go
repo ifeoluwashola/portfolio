@@ -252,6 +252,96 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 	return nil
 }
 
+func (s *academyService) GrantScholarship(ctx context.Context, applicationID uuid.UUID, amountKobo int) error {
+	app, err := s.repo.GetApplicationByID(ctx, applicationID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch application: %w", err)
+	}
+
+	var targetStudentID uuid.UUID
+	var isProvisioningRequired bool
+	var studentEmail = app.Email
+	var firstName = app.FirstName
+
+	// Check if student exists
+	student, err := s.repo.GetStudentByEmail(ctx, studentEmail)
+	if err != nil {
+		isProvisioningRequired = true
+		targetStudentID = app.ID
+	} else {
+		targetStudentID = student.ID
+	}
+
+	if isProvisioningRequired {
+		tempPassword, _ := generateTempPassword(8)
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
+		if err != nil {
+			return fmt.Errorf("failed to hash temp password: %w", err)
+		}
+
+		newStudent := &domain.Student{
+			ID:           targetStudentID,
+			FirstName:    firstName,
+			LastName:     app.LastName,
+			Email:        studentEmail,
+			PasswordHash: string(hashedPassword),
+			IsFirstLogin: true,
+			CreatedAt:    time.Now(),
+		}
+
+		if err = s.repo.CreateStudent(ctx, newStudent); err != nil {
+			return fmt.Errorf("failed to provision student account: %w", err)
+		}
+
+		if err = s.repo.CreateStudentBilling(ctx, targetStudentID); err != nil {
+			return fmt.Errorf("failed to create student billing: %w", err)
+		}
+
+		_ = s.notification.SendStudentWelcomeEmail(firstName, studentEmail, tempPassword)
+	}
+
+	// Record the payment
+	ph := &domain.PaymentHistory{
+		StudentID:   targetStudentID,
+		AmountPaid:  amountKobo,
+		Gateway:     "SYSTEM_SCHOLARSHIP",
+		ReferenceID: uuid.New().String(),
+	}
+	_ = s.repo.InsertPaymentHistory(ctx, ph)
+
+	// Update billing totals
+	newTotal, err := s.repo.IncrementBillingPaid(ctx, targetStudentID, amountKobo)
+	if err != nil {
+		return fmt.Errorf("failed to increment billing: %w", err)
+	}
+
+	const totalDueKobo = 25_000_000 // ₦250,000
+	newPaymentStatus := "Partial"
+
+	if newTotal >= totalDueKobo {
+		_ = s.repo.SetBillingStatus(ctx, targetStudentID, "paid_in_full")
+		_ = s.repo.SetNextPaymentDue(ctx, targetStudentID, nil)
+		newPaymentStatus = "Paid"
+	} else {
+		cohortStartDate := time.Date(2026, 5, 30, 0, 0, 0, 0, time.UTC)
+		var nextDue time.Time
+		if time.Now().Before(cohortStartDate) {
+			nextDue = cohortStartDate.Add(30 * 24 * time.Hour)
+		} else {
+			nextDue = time.Now().Add(30 * 24 * time.Hour)
+		}
+		_ = s.repo.SetNextPaymentDue(ctx, targetStudentID, &nextDue)
+		_ = s.repo.SetBillingStatus(ctx, targetStudentID, "good_standing")
+	}
+
+	// Update application status
+	if err = s.repo.UpdateApplicationStatusByID(ctx, applicationID, newPaymentStatus); err != nil {
+		return fmt.Errorf("failed to update application status: %w", err)
+	}
+
+	return nil
+}
+
 // generateTempPassword is defined in auth_service.go (shared across the service package)
 
 func (s *academyService) LoginStudent(ctx context.Context, req *domain.AcademyLoginRequest) (*domain.AcademyAuthResponse, error) {
@@ -351,9 +441,10 @@ func (s *academyService) GetAdminApplications(ctx context.Context) (*domain.Admi
 	var pendingSeats int
 
 	for _, app := range apps {
-		if app.PaymentStatus == "Paid" {
+		switch app.PaymentStatus {
+		case "Paid", "Partial":
 			paidSeats++
-		} else {
+		default:
 			pendingSeats++
 		}
 	}

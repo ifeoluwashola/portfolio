@@ -219,3 +219,12 @@ export async function getCohortApplications() {
   if (result.error) return { error: result.error, status: result.status };
   return { data: result.data, status: result.status };
 }
+
+export async function grantScholarship(id: string, amountNaira: number) {
+  const result = await adminFetch(`/v1/admin/applications/${id}/grant-scholarship`, {
+    method: "POST",
+    body: JSON.stringify({ amount_naira: amountNaira }),
+  });
+  if (result.error) return { error: result.error, status: result.status };
+  return { success: true };
+}

@@ -53,6 +53,33 @@ func (r *AcademyRepository) GetApplicationByReference(ctx context.Context, refer
 	return app, nil
 }
 
+func (r *AcademyRepository) GetApplicationByID(ctx context.Context, id uuid.UUID) (*domain.CohortApplication, error) {
+	query := `
+		SELECT id, first_name, last_name, email, phone, role, goal, experience_level, has_laptop, reference, payment_status, created_at
+		FROM cohort_applications
+		WHERE id = $1
+	`
+	app := &domain.CohortApplication{}
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&app.ID, &app.FirstName, &app.LastName, &app.Email, &app.Phone, &app.CurrentRole,
+		&app.Goal, &app.ExperienceLevel, &app.HasLaptop, &app.Reference, &app.PaymentStatus, &app.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return app, nil
+}
+
+func (r *AcademyRepository) UpdateApplicationStatusByID(ctx context.Context, id uuid.UUID, status string) error {
+	query := `
+		UPDATE cohort_applications
+		SET payment_status = $1
+		WHERE id = $2
+	`
+	_, err := r.db.Exec(ctx, query, status, id)
+	return err
+}
+
 func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*domain.CohortApplication, error) {
 	query := `
 		SELECT 

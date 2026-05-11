@@ -204,6 +204,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/contacts/{id}", authMW.RequireAuth(contactHandler.HandleGetContactByID))
 	mux.HandleFunc("GET /api/v1/admin/blog/stats", authMW.RequireAuth(blogHandler.GetAdminStats))
 	mux.HandleFunc("GET /api/v1/admin/cohort-applications", authMW.RequireAuth(academyHandler.HandleGetAdminApplications))
+	mux.HandleFunc("POST /api/v1/admin/applications/{id}/grant-scholarship", authMW.RequireAuth(academyHandler.HandleGrantScholarship))
 
 	// Projects (admin)
 	mux.HandleFunc("PUT /api/v1/projects/{id}", authMW.RequireAuth(projectDataHandler.HandleUpdateProject))
