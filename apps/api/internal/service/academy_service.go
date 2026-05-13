@@ -19,6 +19,9 @@ import (
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/notifications"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
 )
 
@@ -511,9 +514,10 @@ func (s *academyService) SubmitAssignment(ctx context.Context, studentID uuid.UU
 	}
 
 	ass := &domain.Assignment{
-		StudentID: studentID,
-		WeekID:    req.WeekID,
-		GitHubURL: req.GitHubURL,
+		StudentID:         studentID,
+		WeekID:            req.WeekID,
+		GitHubURL:         req.GitHubURL,
+		SubmissionFileKey: req.SubmissionFileKey,
 	}
 
 	return s.repo.CreateAssignment(ctx, ass)
@@ -1237,4 +1241,33 @@ func (s *academyService) GetStudentAttendanceHistory(ctx context.Context, studen
 
 func (s *academyService) GetSessionAttendance(ctx context.Context, sessionID int) ([]*domain.Student, error) {
 	return s.repo.GetSessionAttendance(ctx, sessionID)
+}
+
+func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string) (string, string, error) {
+	if s.config.S3BucketName == "" {
+		return "", "", errors.New("S3 bucket not configured")
+	}
+
+	cfg, err := awsconfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to load AWS config: %w", err)
+	}
+
+	client := s3.NewFromConfig(cfg)
+	presignClient := s3.NewPresignClient(client)
+
+	fileKey := fmt.Sprintf("assignments/%s/%s-%s", studentID.String(), uuid.New().String(), filename)
+
+	req, err := presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(s.config.S3BucketName),
+		Key:    aws.String(fileKey),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = 5 * time.Minute
+	})
+
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate presigned URL: %w", err)
+	}
+
+	return req.URL, fileKey, nil
 }

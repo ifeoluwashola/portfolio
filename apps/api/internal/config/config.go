@@ -18,6 +18,7 @@ type Config struct {
 	FrontendURL       string
 	JWTSecret         string
 	RedisURL          string
+	S3BucketName      string
 }
 
 func LoadConfig() *Config {
@@ -60,6 +61,7 @@ func LoadConfig() *Config {
 		JWTSecret:         jwtSecret,
 		RedisURL:          getEnv("REDIS_URL", ""),
 		DatabaseURL:       dbURL,
+		S3BucketName:      getEnv("S3_BUCKET_NAME", ""),
 	}
 }
 

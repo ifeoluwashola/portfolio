@@ -448,6 +448,43 @@ func (h *AcademyHandler) HandleSubmitAssignment(w http.ResponseWriter, r *http.R
 	w.WriteHeader(http.StatusOK)
 }
 
+func (h *AcademyHandler) HandleGetUploadURL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		return
+	}
+
+	stID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		http.Error(w, "Invalid student ID formatted", http.StatusBadRequest)
+		return
+	}
+
+	filename := r.URL.Query().Get("filename")
+	if filename == "" {
+		http.Error(w, "Missing filename parameter", http.StatusBadRequest)
+		return
+	}
+
+	url, key, err := h.svc.GeneratePresignedUploadURL(r.Context(), stID, filename)
+	if err != nil {
+		http.Error(w, "Failed to generate upload URL: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"upload_url": url,
+		"file_key":   key,
+	})
+}
+
 // Phase 5: Break-It Labs Handlers
 
 func (h *AcademyHandler) HandleListLabs(w http.ResponseWriter, r *http.Request) {
