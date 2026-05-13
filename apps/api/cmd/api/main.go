@@ -184,6 +184,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/academy/dashboard", authMW.RequireStudentAuth(academyHandler.HandleGetStudentDashboard))
 	mux.HandleFunc("POST /api/v1/academy/assignments", authMW.RequireStudentAuth(academyHandler.HandleSubmitAssignment))
 	mux.HandleFunc("GET /api/v1/media/upload-url", authMW.RequireStudentAuth(academyHandler.HandleGetUploadURL))
+	mux.HandleFunc("GET /api/v1/media/download-url", authMW.RequireStudentAuth(academyHandler.HandleGetDownloadURL))
 	mux.HandleFunc("POST /api/v1/labs/{id}/submit", authMW.RequireStudentAuth(academyHandler.HandleSubmitLabFix))
 	mux.HandleFunc("POST /api/v1/labs/submissions/{id}/comments", authMW.RequireStudentAuth(academyHandler.HandleAddSubmissionComment))
 	mux.HandleFunc("POST /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleSubmitCapstone))
@@ -199,6 +200,7 @@ func main() {
 	// Admin management
 	mux.HandleFunc("POST /api/v1/admin/invite", inviteLimit(authMW.RequireAuth(authHandler.HandleInviteAdmin)))
 	mux.HandleFunc("POST /api/v1/admin/change-password", loginLimit(authMW.RequireAuth(authHandler.HandleChangePassword)))
+	mux.HandleFunc("GET /api/v1/admin/media/download-url", authMW.RequireAuth(academyHandler.HandleGetDownloadURL))
 
 	// Contacts & Blog (admin)
 	mux.HandleFunc("/api/v1/contacts", authMW.RequireAuth(contactHandler.HandleGetContacts))

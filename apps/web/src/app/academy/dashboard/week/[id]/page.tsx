@@ -18,6 +18,7 @@ import {
   UploadCloud
 } from "lucide-react";
 import { getDashboardData, submitAssignment, getS3UploadUrl } from "../../../actions";
+import { SecureFilePreview } from "@/components/ui/SecureFilePreview";
 
 interface CourseMaterial {
   title: string;
@@ -519,6 +520,21 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                       <p className="text-sm text-muted-foreground leading-relaxed font-medium">
                         &quot;{assignment.admin_feedback}&quot;
                       </p>
+                    </div>
+                  )}
+
+                  {/* Uploaded Asset Preview */}
+                  {assignment?.submission_file_key && (
+                    <div className="space-y-2">
+                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                        Uploaded Asset
+                      </p>
+                      <SecureFilePreview
+                        fileKey={assignment.submission_file_key}
+                        fileName={assignment.submission_file_key.split("-").slice(1).join("-") || "submission"}
+                        mode="student"
+                      />
                     </div>
                   )}
 

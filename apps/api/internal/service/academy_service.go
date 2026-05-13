@@ -1271,3 +1271,30 @@ func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, student
 
 	return req.URL, fileKey, nil
 }
+
+func (s *academyService) GeneratePresignedDownloadURL(ctx context.Context, fileKey string) (string, error) {
+	if s.config.S3BucketName == "" {
+		return "", errors.New("S3 bucket not configured")
+	}
+
+	cfg, err := awsconfig.LoadDefaultConfig(ctx)
+	if err != nil {
+		return "", fmt.Errorf("failed to load AWS config: %w", err)
+	}
+
+	client := s3.NewFromConfig(cfg)
+	presignClient := s3.NewPresignClient(client)
+
+	req, err := presignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.config.S3BucketName),
+		Key:    aws.String(fileKey),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = 15 * time.Minute
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("failed to generate presigned download URL: %w", err)
+	}
+
+	return req.URL, nil
+}
