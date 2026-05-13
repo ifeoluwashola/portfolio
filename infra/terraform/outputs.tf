@@ -12,3 +12,8 @@ output "vpc_id" {
   description = "ID of the VPC"
   value       = module.vpc.vpc_id
 }
+
+output "s3_bucket_name" {
+  description = "Name of the S3 bucket for academy uploads"
+  value       = module.s3.bucket_name
+}

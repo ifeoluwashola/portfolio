@@ -51,6 +51,7 @@ interface Assignment {
   status: 'pending' | 'passed' | 'failed';
   admin_feedback?: string;
   week_id: number;
+  submission_file_key?: string;
 }
 
 export default function WeekPage({ params }: { params: Promise<{ id: string }> }) {
@@ -160,12 +161,12 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
     setSubmitStatus("COMMITTING...");
 
     try {
-      let fileKey = undefined;
+      let fileKey: string | undefined = undefined;
 
       if (submissionFile) {
         setSubmitStatus("UPLOADING TO S3...");
         const presignRes = await getS3UploadUrl(submissionFile.name);
-        if (presignRes.error) {
+        if ("error" in presignRes) {
           throw new Error(presignRes.error);
         }
         
