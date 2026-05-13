@@ -12,5 +12,5 @@ variable "environment" {
 variable "allowed_origins" {
   description = "Allowed origins for CORS"
   type        = list(string)
-  default     = ["http://localhost:3000", "https://kyberncloud.com", "https://www.kyberncloud.com"]
+  default     = ["http://localhost:3000", "https://kyberncloud.com", "https://www.kyberncloud.com", "api.kyberncloud.com"]
 }
