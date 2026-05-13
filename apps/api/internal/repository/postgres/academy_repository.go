@@ -367,18 +367,18 @@ func (r *AcademyRepository) UpdateWeek(ctx context.Context, week *domain.CohortW
 
 func (r *AcademyRepository) CreateAssignment(ctx context.Context, ass *domain.Assignment) error {
 	query := `
-		INSERT INTO assignments (student_id, week_id, github_url, status, created_at)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO assignments (student_id, week_id, github_url, submission_file_key, status, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		ON CONFLICT (student_id, week_id) DO UPDATE 
-		SET github_url = EXCLUDED.github_url, status = 'pending', created_at = CURRENT_TIMESTAMP
+		SET github_url = EXCLUDED.github_url, submission_file_key = EXCLUDED.submission_file_key, status = 'pending', created_at = CURRENT_TIMESTAMP
 	`
-	_, err := r.db.Exec(ctx, query, ass.StudentID, ass.WeekID, ass.GitHubURL, "pending", time.Now())
+	_, err := r.db.Exec(ctx, query, ass.StudentID, ass.WeekID, ass.GitHubURL, ass.SubmissionFileKey, "pending", time.Now())
 	return err
 }
 
 func (r *AcademyRepository) GetStudentAssignments(ctx context.Context, studentID uuid.UUID) ([]*domain.Assignment, error) {
 	query := `
-		SELECT a.id, a.student_id, a.week_id, w.week_number, a.github_url, a.status, a.admin_feedback, a.created_at
+		SELECT a.id, a.student_id, a.week_id, w.week_number, a.github_url, a.submission_file_key, a.status, a.admin_feedback, a.created_at
 		FROM assignments a
 		JOIN cohort_weeks w ON a.week_id = w.id
 		WHERE a.student_id = $1
@@ -392,7 +392,7 @@ func (r *AcademyRepository) GetStudentAssignments(ctx context.Context, studentID
 	var asses []*domain.Assignment
 	for rows.Next() {
 		a := &domain.Assignment{}
-		err := rows.Scan(&a.ID, &a.StudentID, &a.WeekID, &a.WeekNumber, &a.GitHubURL, &a.Status, &a.AdminFeedback, &a.CreatedAt)
+		err := rows.Scan(&a.ID, &a.StudentID, &a.WeekID, &a.WeekNumber, &a.GitHubURL, &a.SubmissionFileKey, &a.Status, &a.AdminFeedback, &a.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -407,7 +407,7 @@ func (r *AcademyRepository) GetStudentAssignments(ctx context.Context, studentID
 
 func (r *AcademyRepository) GetAllAssignments(ctx context.Context) ([]*domain.Assignment, error) {
 	query := `
-		SELECT a.id, a.student_id, s.first_name || ' ' || s.last_name as student_name, a.week_id, w.week_number, a.github_url, a.status, a.admin_feedback, a.created_at
+		SELECT a.id, a.student_id, s.first_name || ' ' || s.last_name as student_name, a.week_id, w.week_number, a.github_url, a.submission_file_key, a.status, a.admin_feedback, a.created_at
 		FROM assignments a
 		JOIN students s ON a.student_id = s.id
 		JOIN cohort_weeks w ON a.week_id = w.id
@@ -422,7 +422,7 @@ func (r *AcademyRepository) GetAllAssignments(ctx context.Context) ([]*domain.As
 	var asses []*domain.Assignment
 	for rows.Next() {
 		a := &domain.Assignment{}
-		err := rows.Scan(&a.ID, &a.StudentID, &a.StudentName, &a.WeekID, &a.WeekNumber, &a.GitHubURL, &a.Status, &a.AdminFeedback, &a.CreatedAt)
+		err := rows.Scan(&a.ID, &a.StudentID, &a.StudentName, &a.WeekID, &a.WeekNumber, &a.GitHubURL, &a.SubmissionFileKey, &a.Status, &a.AdminFeedback, &a.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -446,12 +446,12 @@ func (r *AcademyRepository) UpdateAssignmentGrade(ctx context.Context, id uuid.U
 
 func (r *AcademyRepository) GetAssignmentByWeek(ctx context.Context, studentID uuid.UUID, weekID int) (*domain.Assignment, error) {
 	query := `
-		SELECT id, student_id, week_id, github_url, status, admin_feedback, created_at
+		SELECT id, student_id, week_id, github_url, submission_file_key, status, admin_feedback, created_at
 		FROM assignments
 		WHERE student_id = $1 AND week_id = $2
 	`
 	a := &domain.Assignment{}
-	err := r.db.QueryRow(ctx, query, studentID, weekID).Scan(&a.ID, &a.StudentID, &a.WeekID, &a.GitHubURL, &a.Status, &a.AdminFeedback, &a.CreatedAt)
+	err := r.db.QueryRow(ctx, query, studentID, weekID).Scan(&a.ID, &a.StudentID, &a.WeekID, &a.GitHubURL, &a.SubmissionFileKey, &a.Status, &a.AdminFeedback, &a.CreatedAt)
 	if err != nil {
 		return nil, err
 	}

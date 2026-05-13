@@ -201,7 +201,7 @@ export async function getStudentStatus() {
   }
 }
 
-export async function submitAssignment(weekId: number, githubUrl: string) {
+export async function submitAssignment(weekId: number, githubUrl: string, submissionFileKey?: string) {
   const token = (await cookies()).get("academy_token")?.value;
   if (!token) return { error: "Unauthorized" };
 
@@ -212,7 +212,7 @@ export async function submitAssignment(weekId: number, githubUrl: string) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify({ week_id: weekId, github_url: githubUrl }),
+      body: JSON.stringify({ week_id: weekId, github_url: githubUrl, submission_file_key: submissionFileKey || null }),
     });
 
     if (!res.ok) {
@@ -608,3 +608,55 @@ export async function initializeApplication(formData: FormData, paymentPlan: "fu
   }
 }
 
+export async function checkMaterialAccess() {
+  const cookieStore = await cookies();
+  const authCookie = cookieStore.get("auth_token")?.value;
+  if (authCookie) {
+    // Admin, grant access
+    return { granted: true };
+  }
+
+  const academyCookie = cookieStore.get("academy_token")?.value;
+  if (!academyCookie) {
+    return { granted: false, reason: "unauthenticated" };
+  }
+
+  // Check student status
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/billing`, {
+      headers: { "Authorization": `Bearer ${academyCookie}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return { granted: false, reason: "unauthorized" };
+    
+    const billing = await res.json() as StudentBilling;
+    if (billing.billing_status === "payment_locked") {
+      return { granted: false, reason: "locked" };
+    }
+    return { granted: true };
+  } catch {
+    return { granted: false, reason: "error" };
+  }
+}
+
+export async function getS3UploadUrl(filename: string) {
+  const token = (await cookies()).get("academy_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/media/upload-url?filename=${encodeURIComponent(filename)}`, {
+      headers: {
+        "Authorization": `Bearer ${token}`,
+      },
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      return { error: `Failed to generate upload URL: ${errorText}` };
+    }
+    return await res.json() as { upload_url: string; file_key: string };
+  } catch {
+    return { error: "Connection to API failed" };
+  }
+}

@@ -26,3 +26,9 @@ module "ec2" {
   ssh_key_name         = var.ssh_key_name
   ssh_public_key       = var.ssh_public_key
 }
+
+module "s3" {
+  source       = "./modules/s3"
+  project_name = var.project_name
+  environment  = "prod"
+}

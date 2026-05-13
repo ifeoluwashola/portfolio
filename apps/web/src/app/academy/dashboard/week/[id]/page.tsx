@@ -14,9 +14,10 @@ import {
   Eye,
   EyeOff,
   Clock,
-  History
+  History,
+  UploadCloud
 } from "lucide-react";
-import { getDashboardData, submitAssignment } from "../../../actions";
+import { getDashboardData, submitAssignment, getS3UploadUrl } from "../../../actions";
 
 interface CourseMaterial {
   title: string;
@@ -50,6 +51,7 @@ interface Assignment {
   status: 'pending' | 'passed' | 'failed';
   admin_feedback?: string;
   week_id: number;
+  submission_file_key?: string;
 }
 
 export default function WeekPage({ params }: { params: Promise<{ id: string }> }) {
@@ -58,6 +60,9 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   const [assignment, setAssignment] = useState<Assignment | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState("");
+  const [submissionFile, setSubmissionFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [githubUrl, setGithubUrl] = useState("");
   const [showTranscript, setShowTranscript] = useState(false);
   const [activeSession, setActiveSession] = useState<ClassSession | null>(null);
@@ -153,9 +158,33 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   async function handleSubmitAssignment(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
+    setSubmitStatus("COMMITTING...");
 
     try {
-      const result = await submitAssignment(parseInt(id), githubUrl);
+      let fileKey: string | undefined = undefined;
+
+      if (submissionFile) {
+        setSubmitStatus("UPLOADING TO S3...");
+        const presignRes = await getS3UploadUrl(submissionFile.name);
+        if ("error" in presignRes) {
+          throw new Error(presignRes.error);
+        }
+        
+        const uploadUrl = presignRes.upload_url;
+        fileKey = presignRes.file_key;
+
+        const uploadRes = await fetch(uploadUrl, {
+          method: "PUT",
+          body: submissionFile,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload file to S3");
+        }
+      }
+
+      setSubmitStatus("COMMITTING...");
+      const result = await submitAssignment(parseInt(id), githubUrl, fileKey);
 
       if (result.error) {
         throw new Error(result.error);
@@ -166,13 +195,34 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
       if (data && !data.error) {
         const foundAss = (data.assignments || []).find((a: Assignment) => a.week_id === parseInt(id));
         setAssignment(foundAss || null);
+        setSubmissionFile(null);
       }
     } catch (err) {
       console.error("Submission failed:", err);
     } finally {
       setSubmitting(false);
+      setSubmitStatus("");
     }
   }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setSubmissionFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSubmissionFile(e.target.files[0]);
+    }
+  };
 
   if (loading) return <div className="flex items-center gap-2 text-yellow-500 animate-pulse tracking-widest uppercase text-sm p-10"><Loader2 className="w-4 h-4 animate-spin" /> Synchronizing Module {id}...</div>;
   if (!week) return <div className="text-red-400 p-10">Module ID Invalid: Critical link failure.</div>;
@@ -433,6 +483,33 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                     </div>
                   </div>
 
+                  {/* Drag and Drop File Upload */}
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
+                      Supplementary Document (Optional)
+                      {assignment?.submission_file_key && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Uploaded</span>}
+                    </label>
+                    <div 
+                      className={`relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl transition-all ${submissionFile ? 'border-yellow-500 bg-yellow-500/5' : 'border-[#0f172a] hover:border-[#eab308] hover:bg-[#0f172a]/20 bg-background'}`}
+                      onDragOver={handleDragOver}
+                      onDrop={handleDrop}
+                      onClick={() => !submitting && assignment?.status !== 'passed' && fileInputRef.current?.click()}
+                    >
+                      <input 
+                        type="file" 
+                        ref={fileInputRef}
+                        className="hidden" 
+                        onChange={handleFileSelect}
+                        disabled={submitting || assignment?.status === 'passed'}
+                      />
+                      <UploadCloud className={`w-8 h-8 mb-4 ${submissionFile ? 'text-yellow-500' : 'text-slate-600'}`} />
+                      <p className="text-sm font-semibold text-slate-300 text-center">
+                        {submissionFile ? submissionFile.name : "Drag & drop file here or click to browse"}
+                      </p>
+                      <p className="text-xs text-slate-500 mt-2 text-center">Max size: 50MB (PDF, DOCX, ZIP, PNG, etc.)</p>
+                    </div>
+                  </div>
+
                   {assignment?.admin_feedback && (
                     <div className="p-4 bg-background border-l-2 border-yellow-500/40 rounded-r-xl space-y-2">
                       <p className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-2">
@@ -455,7 +532,10 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                     }`}
                   >
                     {submitting ? (
-                      <Loader2 className="w-6 h-6 animate-spin" />
+                      <>
+                        <Loader2 className="w-6 h-6 animate-spin" />
+                        <span className="tracking-widest text-sm">{submitStatus || "COMMITTING..."}</span>
+                      </>
                     ) : (
                       <>
                         <Send className={`w-5 h-5 ${assignment?.status === 'passed' ? "" : "group-hover:translate-x-1 group-hover:-translate-y-1"} transition-transform`} />

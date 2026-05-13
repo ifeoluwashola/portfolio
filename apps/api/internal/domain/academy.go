@@ -154,6 +154,7 @@ type AcademyService interface {
 	SubmitAssignment(ctx context.Context, studentID uuid.UUID, req *SubmitAssignmentRequest) error
 	GetAdminSubmissions(ctx context.Context) ([]*Assignment, error)
 	GradeSubmission(ctx context.Context, req *GradeAssignmentRequest) error
+	GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string) (string, string, error)
 
 	// Break-It Labs
 	ListLabs(ctx context.Context) ([]*BreakItLab, error)
@@ -386,15 +387,16 @@ type CohortWeek struct {
 }
 
 type Assignment struct {
-	ID            uuid.UUID `json:"id"`
-	StudentID     uuid.UUID `json:"student_id"`
-	StudentName   string    `json:"student_name,omitempty"`
-	WeekID        int       `json:"week_id"`
-	WeekNumber    int       `json:"week_number,omitempty"`
-	GitHubURL     string    `json:"github_url"`
-	Status        string    `json:"status"` // pending, passed, failed
-	AdminFeedback *string   `json:"admin_feedback"`
-	CreatedAt     time.Time `json:"created_at"`
+	ID                uuid.UUID `json:"id"`
+	StudentID         uuid.UUID `json:"student_id"`
+	StudentName       string    `json:"student_name,omitempty"`
+	WeekID            int       `json:"week_id"`
+	WeekNumber        int       `json:"week_number,omitempty"`
+	GitHubURL         string    `json:"github_url"`
+	SubmissionFileKey *string   `json:"submission_file_key,omitempty"`
+	Status            string    `json:"status"` // pending, passed, failed
+	AdminFeedback     *string   `json:"admin_feedback"`
+	CreatedAt         time.Time `json:"created_at"`
 }
 
 type UpdateWeekRequest struct {
@@ -407,8 +409,9 @@ type UpdateWeekRequest struct {
 }
 
 type SubmitAssignmentRequest struct {
-	WeekID    int    `json:"week_id"`
-	GitHubURL string `json:"github_url"`
+	WeekID            int     `json:"week_id"`
+	GitHubURL         string  `json:"github_url"`
+	SubmissionFileKey *string `json:"submission_file_key,omitempty"`
 }
 
 type GradeAssignmentRequest struct {
