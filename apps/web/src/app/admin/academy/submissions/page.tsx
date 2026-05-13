@@ -10,10 +10,12 @@ import {
   Check,
   X,
   ChevronRight,
-  Github
+  Github,
+  Paperclip
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SecureFilePreview } from "@/components/ui/SecureFilePreview";
 
 interface Assignment {
   id: string;
@@ -25,6 +27,7 @@ interface Assignment {
   status: 'pending' | 'passed' | 'failed';
   admin_feedback?: string;
   created_at: string;
+  submission_file_key?: string;
 }
 
 export default function SubmissionsHub() {
@@ -185,9 +188,9 @@ export default function SubmissionsHub() {
 
       {/* Grading Modal */}
       {gradingSub && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
-          <div className="bg-card w-full max-w-xl border border-border rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] overflow-hidden">
-            <div className="p-8 border-b border-border bg-muted/20 relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm overflow-y-auto">
+          <div className="bg-card w-full max-w-xl border border-border rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] flex flex-col max-h-[90vh] my-4">
+            <div className="p-8 border-b border-border bg-muted/20 relative sticky top-0 z-10">
               <div className="flex items-center gap-4 mb-4">
                 <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg mb-2">
                   {gradingSub.student_name.slice(0, 2).toUpperCase()}
@@ -209,7 +212,22 @@ export default function SubmissionsHub() {
               </a>
             </div>
             
-            <div className="p-8 space-y-6">
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-card">
+              {/* Submitted File Preview */}
+              {gradingSub.submission_file_key && (
+                <div className="space-y-2 pt-1">
+                  <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <Paperclip className="w-3 h-3 text-yellow-500" />
+                    Submitted Asset
+                  </p>
+                  <SecureFilePreview
+                    fileKey={gradingSub.submission_file_key}
+                    fileName={gradingSub.submission_file_key.split("-").slice(1).join("-") || "submission"}
+                    mode="admin"
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
                 <label className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground px-1">
                   <MessageSquare className="w-4 h-4" />
@@ -223,8 +241,10 @@ export default function SubmissionsHub() {
                   disabled={isGrading}
                 />
               </div>
+            </div>
 
-              <div className="flex gap-3 pt-2">
+            <div className="p-8 border-t border-border bg-muted/20 sticky bottom-0 z-10">
+              <div className="flex gap-3">
                 <Button 
                   type="button" 
                   variant="ghost" 

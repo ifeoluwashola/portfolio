@@ -265,30 +265,34 @@ export default function CurriculumManager() {
 
       {/* Edit Modal */}
       {editingWeek && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm overflow-y-auto">
-          <div className="my-8 bg-card w-full max-w-2xl border border-border rounded-2xl shadow-2xl overflow-hidden relative">
-            <button 
-              onClick={() => setEditingWeek(null)}
-              className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            <div className="p-6 border-b border-border bg-muted/30">
-              <h2 className="text-xl font-bold tracking-tight uppercase">Module Management: Week {editingWeek.week_number}</h2>
-              <p className="text-sm text-muted-foreground mt-1">Configure live environment, materials, and recording metadata.</p>
-            </div>
-            
-            <form onSubmit={handleUpdateWeek} className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2 md:col-span-2">
-                  <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Module Title</label>
-                  <input 
-                    className="w-full p-2 bg-background border border-border rounded-md text-sm font-semibold tracking-tight"
-                    value={editingWeek.title}
-                    onChange={(e) => setEditingWeek({...editingWeek, title: e.target.value})}
-                  />
-                </div>
+        <div className="fixed inset-0 z-[100] flex items-start justify-center p-4 bg-background/80 backdrop-blur-sm overflow-y-auto">
+            <form onSubmit={handleUpdateWeek} className="flex flex-col max-h-[90vh]">
+              <div className="p-6 border-b border-border bg-muted/30 relative sticky top-0 z-10">
+                <button 
+                  type="button"
+                  onClick={() => setEditingWeek(null)}
+                  className="absolute top-4 right-4 p-2 text-muted-foreground hover:text-foreground"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <h2 className="text-xl font-bold tracking-tight uppercase">Module Management: Week {editingWeek.week_number}</h2>
+                <p className="text-sm text-muted-foreground mt-1">Configure live environment, materials, and recording metadata.</p>
               </div>
+              
+              <div className="flex-1 p-6 space-y-6 overflow-y-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2 md:col-span-2">
+                    <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Module Title</label>
+                    <input 
+                      className="w-full p-2 bg-background border border-border rounded-md text-sm font-semibold tracking-tight"
+                      value={editingWeek.title}
+                      onChange={(e) => setEditingWeek({...editingWeek, title: e.target.value})}
+                    />
+                  </div>
+                </div>
+
+
+
 
 
               <div className="space-y-4">
@@ -534,7 +538,9 @@ export default function CurriculumManager() {
                 />
               </div>
 
-              <div className="flex gap-3 pt-4 border-t border-border">
+              </div>
+
+              <div className="p-6 border-t border-border bg-muted/30 sticky bottom-0 z-10 flex gap-3">
                 <Button 
                   type="button" 
                   variant="ghost" 
@@ -553,7 +559,6 @@ export default function CurriculumManager() {
                 </Button>
               </div>
             </form>
-          </div>
         </div>
       )}
     </div>

@@ -485,6 +485,30 @@ func (h *AcademyHandler) HandleGetUploadURL(w http.ResponseWriter, r *http.Reque
 	})
 }
 
+func (h *AcademyHandler) HandleGetDownloadURL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	fileKey := r.URL.Query().Get("key")
+	if fileKey == "" {
+		http.Error(w, "Missing key parameter", http.StatusBadRequest)
+		return
+	}
+
+	url, err := h.svc.GeneratePresignedDownloadURL(r.Context(), fileKey)
+	if err != nil {
+		http.Error(w, "Failed to generate download URL: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"download_url": url,
+	})
+}
+
 // Phase 5: Break-It Labs Handlers
 
 func (h *AcademyHandler) HandleListLabs(w http.ResponseWriter, r *http.Request) {

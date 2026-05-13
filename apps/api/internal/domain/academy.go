@@ -155,6 +155,7 @@ type AcademyService interface {
 	GetAdminSubmissions(ctx context.Context) ([]*Assignment, error)
 	GradeSubmission(ctx context.Context, req *GradeAssignmentRequest) error
 	GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string) (string, string, error)
+	GeneratePresignedDownloadURL(ctx context.Context, fileKey string) (string, error)
 
 	// Break-It Labs
 	ListLabs(ctx context.Context) ([]*BreakItLab, error)
