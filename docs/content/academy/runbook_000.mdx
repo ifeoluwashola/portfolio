@@ -1,0 +1,33 @@
+# >_ RUNBOOK 000: Pre-Flight & Environment Setup
+
+**STATUS:** REQUIRED PRIOR TO FIRST LIVE OPS SESSION
+**OBJECTIVE:** Provision your local workstation with the standard Kybern Academy engineering toolkit.
+
+Welcome to Kybern Academy. Before we can grant you access to the Live Ops Bridge, you must configure your local terminal. In DevOps, your terminal is your primary weapon. Let's get it set up.
+
+## Phase 1: The Terminal environment
+You need a Unix-like terminal to interact with cloud servers.
+* **Mac Users:** You are good to go. Open Spotlight (Cmd + Space) and type `Terminal`. (Optional upgrade: Download **iTerm2** for a better experience).
+* **Linux Users:** You already know what to do.
+* **Windows Users (CRITICAL):** Do not use Command Prompt. You must install **WSL (Windows Subsystem for Linux)**. 
+  1. Open PowerShell as Administrator.
+  2. Run this command: `wsl --install`
+  3. Restart your computer. You now have an Ubuntu terminal on your Windows machine.
+  4. Follow this guide to set up [WSL](https://learn.microsoft.com/en-us/windows/wsl/install).
+
+## Phase 2: The Code Editor
+We do not write code in Microsoft Word. We use a dedicated IDE (Integrated Development Environment).
+1. Download and install **Visual Studio Code (VS Code)** from [code.visualstudio.com](https://code.visualstudio.com/).
+2. Open VS Code and install the following extensions (click the square icon on the left sidebar):
+   - HashiCorp Terraform
+   - Docker
+   - YAML
+
+## Phase 3: Version Control (Git & GitHub)
+DevOps runs on Git. You will submit all your Kybern Break-It Labs via GitHub Pull Requests.
+1. Create a free account at [github.com](https://github.com/).
+2. Download and install **Git** for your operating system from [git-scm.com](https://git-scm.com/).
+3. Open your terminal and introduce yourself to Git by running these two commands (replace with your details):
+   ```bash
+   git config --global user.name "Your Full Name"
+   git config --global user.email "your.email@example.com"
