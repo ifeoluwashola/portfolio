@@ -91,7 +91,7 @@ func main() {
 
 	resendNotifier := notifications.NewResendNotifier(cfg)
 	authSvc := service.NewAuthService(userRepo, cfg, tokenCache, resendNotifier)
-	academySvc := service.NewAcademyService(academyRepo, cfg, resendNotifier)
+	academySvc := service.NewAcademyService(academyRepo, cfg, tokenCache, resendNotifier)
 
 	// 6. Initialize Auth Middleware (dependency injected)
 	authMW := middleware.NewAuthMiddleware(cfg.JWTSecret, tokenCache)
