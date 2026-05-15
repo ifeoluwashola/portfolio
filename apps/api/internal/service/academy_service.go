@@ -16,6 +16,7 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/cache"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/notifications"
@@ -28,13 +29,15 @@ import (
 type academyService struct {
 	repo         domain.AcademyRepository
 	config       *config.Config
+	tokenCache   cache.TokenCache
 	notification *notifications.ResendNotifier
 }
 
-func NewAcademyService(repo domain.AcademyRepository, cfg *config.Config, notification *notifications.ResendNotifier) domain.AcademyService {
+func NewAcademyService(repo domain.AcademyRepository, cfg *config.Config, tokenCache cache.TokenCache, notification *notifications.ResendNotifier) domain.AcademyService {
 	return &academyService{
 		repo:         repo,
 		config:       cfg,
+		tokenCache:   tokenCache,
 		notification: notification,
 	}
 }
@@ -386,6 +389,33 @@ func (s *academyService) ChangePassword(ctx context.Context, studentID uuid.UUID
 	}
 
 	return s.repo.UpdateStudentPassword(ctx, studentID, string(hashedPassword))
+}
+
+func (s *academyService) RevokeToken(ctx context.Context, rawToken string) error {
+	hash := HashToken(rawToken) // using the exported HashToken from auth_service.go
+
+	// Parse the token to get expiry for TTL
+	token, _ := jwt.Parse(rawToken, func(token *jwt.Token) (interface{}, error) {
+		return []byte(s.config.JWTSecret), nil
+	})
+
+	var ttl time.Duration = 7 * 24 * time.Hour // default student TTL
+	if token != nil {
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			if exp, ok := claims["exp"].(float64); ok {
+				remaining := time.Until(time.Unix(int64(exp), 0))
+				if remaining > 0 {
+					ttl = remaining
+				}
+			}
+		}
+	}
+
+	// Write to cache (fast path)
+	if s.tokenCache != nil {
+		_ = s.tokenCache.Revoke(ctx, hash, ttl)
+	}
+	return nil // For students, since we don't have DB token table like admin, we rely entirely on cache for now
 }
 
 func (s *academyService) ForgotPassword(ctx context.Context, req *domain.AcademyForgotPasswordRequest) error {

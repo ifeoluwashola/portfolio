@@ -213,10 +213,7 @@ func (h *AcademyHandler) HandleAcademyLogout(w http.ResponseWriter, r *http.Requ
 	if authHeader != "" {
 		parts := strings.Split(authHeader, " ")
 		if len(parts) == 2 {
-			// Note: AcademyService needs RevokeToken or similar, 
-			// but since it's shared middleware logic, we can just call it if we have access to AuthService or just let middleware handle it if we want.
-			// However, for consistency, let's assume we can revoke it.
-			// I'll add RevokeToken to AcademyService if needed, or just clear cookie.
+			_ = h.svc.RevokeToken(r.Context(), parts[1])
 		}
 	}
 
@@ -261,6 +258,15 @@ func (h *AcademyHandler) HandleAcademyChangePassword(w http.ResponseWriter, r *h
 	if err != nil {
 		http.Error(w, "Failed to change password: "+err.Error(), http.StatusInternalServerError)
 		return
+	}
+
+	// Revoke current token so all active sessions are terminated
+	authHeader := r.Header.Get("Authorization")
+	if authHeader != "" {
+		parts := strings.Split(authHeader, " ")
+		if len(parts) == 2 {
+			_ = h.svc.RevokeToken(r.Context(), parts[1])
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)

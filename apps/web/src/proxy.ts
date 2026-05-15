@@ -22,8 +22,17 @@ interface NextRequestInit extends RequestInit {
 const sessionCache = new Map<string, { data: SessionData, expiry: number }>();
 const CACHE_TTL = 30 * 1000; // 30 seconds
 
+async function hashTokenEdge(token: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(token);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 async function fetchBackendSession(token: string, type: 'admin' | 'student'): Promise<SessionData | null> {
-  const cacheKey = `${type}:${token}`;
+  const hashedToken = await hashTokenEdge(token);
+  const cacheKey = `${type}:${hashedToken}`;
   const cached = sessionCache.get(cacheKey);
   
   if (cached && cached.expiry > Date.now()) {
@@ -72,10 +81,22 @@ export async function proxy(request: NextRequest) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
 
+    const lastActive = request.cookies.get('admin_last_active')?.value;
+    const now = Date.now();
+    const INACTIVITY_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+
+    if (lastActive && (now - parseInt(lastActive, 10)) > INACTIVITY_TIMEOUT) {
+      const response = NextResponse.redirect(new URL('/admin/login', request.url));
+      response.cookies.delete('auth_token');
+      response.cookies.delete('admin_last_active');
+      return response;
+    }
+
     const session = await fetchBackendSession(token.value, 'admin');
     if (!session) {
       const response = NextResponse.redirect(new URL('/admin/login', request.url));
       response.cookies.delete('auth_token');
+      response.cookies.delete('admin_last_active');
       return response;
     }
 
@@ -88,6 +109,15 @@ export async function proxy(request: NextRequest) {
     if (session.is_first_login === true && pathname !== '/admin/change-password') {
       return NextResponse.redirect(new URL('/admin/change-password', request.url));
     }
+
+    const response = NextResponse.next();
+    response.cookies.set('admin_last_active', now.toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/admin',
+    });
+    return response;
   }
 
   // ===== STUDENT PORTAL ROUTING =====

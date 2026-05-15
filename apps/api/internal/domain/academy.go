@@ -146,6 +146,7 @@ type AcademyService interface {
 	ChangePassword(ctx context.Context, studentID uuid.UUID, req *AcademyChangePasswordRequest) error
 	ForgotPassword(ctx context.Context, req *AcademyForgotPasswordRequest) error
 	ResetPassword(ctx context.Context, req *AcademyResetPasswordRequest) error
+	RevokeToken(ctx context.Context, rawToken string) error
 	GrantScholarship(ctx context.Context, applicationID uuid.UUID, amountKobo int) error
 
 	GetCurriculum(ctx context.Context) ([]*CohortWeek, error)
