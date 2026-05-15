@@ -67,6 +67,30 @@ async function fetchBackendSession(token: string, type: 'admin' | 'student'): Pr
   }
 }
 
+async function refreshSession(type: 'admin' | 'student', refreshToken: string): Promise<{ token: string, refreshToken: string } | null> {
+  const endpoint = type === 'admin' 
+    ? `${API_BASE_URL}/v1/admin/refresh` 
+    : `${API_BASE_URL}/v1/academy/refresh`;
+
+  try {
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Cookie': `${type === 'admin' ? 'auth_refresh_token' : 'academy_refresh_token'}=${refreshToken}`
+      }
+    });
+
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.success || !data.token || !data.refresh_token) return null;
+    
+    return { token: data.token, refreshToken: data.refresh_token };
+  } catch (err) {
+    console.error(`Refresh failed for ${type}:`, err);
+    return null;
+  }
+}
+
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -76,7 +100,23 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next();
     }
 
-    const token = request.cookies.get('auth_token');
+    let token = request.cookies.get('auth_token')?.value;
+    const refreshToken = request.cookies.get('auth_refresh_token')?.value;
+    let newTokens: { token: string, refreshToken: string } | null = null;
+
+    if (!token && refreshToken) {
+      newTokens = await refreshSession('admin', refreshToken);
+      if (newTokens) {
+        token = newTokens.token;
+      } else {
+        const response = NextResponse.redirect(new URL('/admin/login', request.url));
+        response.cookies.delete('auth_token');
+        response.cookies.delete('auth_refresh_token');
+        response.cookies.delete('admin_last_active');
+        return response;
+      }
+    }
+
     if (!token) {
       return NextResponse.redirect(new URL('/admin/login', request.url));
     }
@@ -88,14 +128,16 @@ export async function proxy(request: NextRequest) {
     if (lastActive && (now - parseInt(lastActive, 10)) > INACTIVITY_TIMEOUT) {
       const response = NextResponse.redirect(new URL('/admin/login', request.url));
       response.cookies.delete('auth_token');
+      response.cookies.delete('auth_refresh_token');
       response.cookies.delete('admin_last_active');
       return response;
     }
 
-    const session = await fetchBackendSession(token.value, 'admin');
+    const session = await fetchBackendSession(token, 'admin');
     if (!session) {
       const response = NextResponse.redirect(new URL('/admin/login', request.url));
       response.cookies.delete('auth_token');
+      response.cookies.delete('auth_refresh_token');
       response.cookies.delete('admin_last_active');
       return response;
     }
@@ -111,6 +153,25 @@ export async function proxy(request: NextRequest) {
     }
 
     const response = NextResponse.next();
+    
+    // Update cookies if refreshed
+    if (newTokens) {
+      response.cookies.set('auth_token', newTokens.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 15 * 60,
+      });
+      response.cookies.set('auth_refresh_token', newTokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 24 * 60 * 60,
+      });
+    }
+
     response.cookies.set('admin_last_active', now.toString(), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -127,15 +188,31 @@ export async function proxy(request: NextRequest) {
   }
 
   if (pathname.startsWith('/academy/dashboard')) {
-    const studentToken = request.cookies.get('academy_token');
+    let studentToken = request.cookies.get('academy_token')?.value;
+    const studentRefreshToken = request.cookies.get('academy_refresh_token')?.value;
+    let newTokens: { token: string, refreshToken: string } | null = null;
+
+    if (!studentToken && studentRefreshToken) {
+      newTokens = await refreshSession('student', studentRefreshToken);
+      if (newTokens) {
+        studentToken = newTokens.token;
+      } else {
+        const response = NextResponse.redirect(new URL('/academy/login', request.url));
+        response.cookies.delete('academy_token');
+        response.cookies.delete('academy_refresh_token');
+        return response;
+      }
+    }
+
     if (!studentToken) {
       return NextResponse.redirect(new URL('/academy/login', request.url));
     }
 
-    const session = await fetchBackendSession(studentToken.value, 'student');
+    const session = await fetchBackendSession(studentToken, 'student');
     if (!session) {
       const response = NextResponse.redirect(new URL('/academy/login', request.url));
       response.cookies.delete('academy_token');
+      response.cookies.delete('academy_refresh_token');
       return response;
     }
 
@@ -148,7 +225,43 @@ export async function proxy(request: NextRequest) {
       session.billing_status === 'payment_locked' &&
       !pathname.startsWith('/academy/dashboard/billing')
     ) {
-      return NextResponse.redirect(new URL('/academy/dashboard/billing', request.url));
+      const response = NextResponse.redirect(new URL('/academy/dashboard/billing', request.url));
+      if (newTokens) {
+        response.cookies.set('academy_token', newTokens.token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 15 * 60,
+        });
+        response.cookies.set('academy_refresh_token', newTokens.refreshToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          path: '/',
+          maxAge: 7 * 24 * 60 * 60,
+        });
+      }
+      return response;
+    }
+
+    if (newTokens) {
+      const response = NextResponse.next();
+      response.cookies.set('academy_token', newTokens.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 15 * 60,
+      });
+      response.cookies.set('academy_refresh_token', newTokens.refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        path: '/',
+        maxAge: 7 * 24 * 60 * 60,
+      });
+      return response;
     }
   }
 

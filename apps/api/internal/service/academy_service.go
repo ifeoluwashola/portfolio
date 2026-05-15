@@ -28,14 +28,16 @@ import (
 
 type academyService struct {
 	repo         domain.AcademyRepository
+	refreshRepo  domain.RefreshTokenRepository
 	config       *config.Config
 	tokenCache   cache.TokenCache
 	notification *notifications.ResendNotifier
 }
 
-func NewAcademyService(repo domain.AcademyRepository, cfg *config.Config, tokenCache cache.TokenCache, notification *notifications.ResendNotifier) domain.AcademyService {
+func NewAcademyService(repo domain.AcademyRepository, refreshRepo domain.RefreshTokenRepository, cfg *config.Config, tokenCache cache.TokenCache, notification *notifications.ResendNotifier) domain.AcademyService {
 	return &academyService{
 		repo:         repo,
+		refreshRepo:  refreshRepo,
 		config:       cfg,
 		tokenCache:   tokenCache,
 		notification: notification,
@@ -258,6 +260,15 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 	return nil
 }
 
+func (s *academyService) RevokeRefreshTokens(ctx context.Context, refreshToken string) error {
+	hash := hashToken(refreshToken)
+	rt, err := s.refreshRepo.GetRefreshTokenByHash(ctx, hash)
+	if err != nil {
+		return nil // already gone or invalid
+	}
+	return s.refreshRepo.RevokeRefreshTokenFamily(ctx, rt.FamilyID)
+}
+
 func (s *academyService) GrantScholarship(ctx context.Context, applicationID uuid.UUID, amountKobo int) error {
 	app, err := s.repo.GetApplicationByID(ctx, applicationID)
 	if err != nil {
@@ -367,7 +378,7 @@ func (s *academyService) LoginStudent(ctx context.Context, req *domain.AcademyLo
 		"is_first_login": student.IsFirstLogin,
 		"status":         student.Status,
 		"type":           "student",
-		"exp":            time.Now().Add(7 * 24 * time.Hour).Unix(),
+		"exp":            time.Now().Add(15 * time.Minute).Unix(),
 		"iat":            time.Now().Unix(),
 	})
 
@@ -376,10 +387,96 @@ func (s *academyService) LoginStudent(ctx context.Context, req *domain.AcademyLo
 		return nil, fmt.Errorf("failed to sign token: %w", err)
 	}
 
+	// Generate refresh token
+	refreshToken := uuid.New().String()
+	rtHash := hashToken(refreshToken)
+	familyID := uuid.New()
+
+	rt := &domain.RefreshToken{
+		TokenHash: rtHash,
+		UserType:  "student",
+		UserID:    student.ID.String(),
+		FamilyID:  familyID,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+	}
+
+	err = s.refreshRepo.CreateRefreshToken(ctx, rt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create refresh token: %w", err)
+	}
+
+	return &domain.AcademyAuthResponse{
+		Token:        tokenString,
+		RefreshToken: refreshToken,
+		IsFirstLogin: student.IsFirstLogin,
+	}, nil
+}
+
+func (s *academyService) RefreshStudentToken(ctx context.Context, refreshToken string) (*domain.AcademyAuthResponse, string, error) {
+	hash := hashToken(refreshToken)
+	rt, err := s.refreshRepo.GetRefreshTokenByHash(ctx, hash)
+	if err != nil {
+		return nil, "", errors.New("invalid refresh token")
+	}
+
+	if rt.Revoked || rt.ExpiresAt.Before(time.Now()) {
+		if rt.Revoked {
+			// Detection: if a revoked token is reused, revoke the entire family
+			_ = s.refreshRepo.RevokeRefreshTokenFamily(ctx, rt.FamilyID)
+		}
+		return nil, "", errors.New("refresh token expired or revoked")
+	}
+
+	// Single-use rotation
+	_ = s.refreshRepo.RevokeRefreshToken(ctx, rt.ID)
+
+	// Get student from DB
+	studentID, err := uuid.Parse(rt.UserID)
+	if err != nil {
+		return nil, "", errors.New("invalid student id in token")
+	}
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return nil, "", errors.New("student not found")
+	}
+
+	// Issue new access token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":            student.ID,
+		"email":          student.Email,
+		"is_first_login": student.IsFirstLogin,
+		"status":         student.Status,
+		"type":           "student",
+		"exp":            time.Now().Add(15 * time.Minute).Unix(),
+		"iat":            time.Now().Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(s.config.JWTSecret))
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to sign token: %w", err)
+	}
+
+	// Issue new refresh token (rotating)
+	newRefreshToken := uuid.New().String()
+	newRtHash := hashToken(newRefreshToken)
+
+	newRt := &domain.RefreshToken{
+		TokenHash: newRtHash,
+		UserType:  "student",
+		UserID:    rt.UserID,
+		FamilyID:  rt.FamilyID,
+		ExpiresAt: time.Now().Add(7 * 24 * time.Hour),
+	}
+
+	err = s.refreshRepo.CreateRefreshToken(ctx, newRt)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create refresh token: %w", err)
+	}
+
 	return &domain.AcademyAuthResponse{
 		Token:        tokenString,
 		IsFirstLogin: student.IsFirstLogin,
-	}, nil
+	}, newRefreshToken, nil
 }
 
 func (s *academyService) ChangePassword(ctx context.Context, studentID uuid.UUID, req *domain.AcademyChangePasswordRequest) error {

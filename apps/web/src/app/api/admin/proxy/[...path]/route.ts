@@ -51,25 +51,52 @@ async function proxyRequest(req: NextRequest, { params }: { params: Promise<{ pa
       fetchOptions.body = await req.text();
     }
 
-    const res = await fetch(`${targetUrl}${queryString}`, fetchOptions);
+    let res = await fetch(`${targetUrl}${queryString}`, fetchOptions);
+    let newTokensData: any = null;
 
-    // Handle redirects manually to ensure browser follows them
-    if (res.status === 302 || res.status === 301) {
-      const location = res.headers.get("Location");
-      if (location) {
-        return NextResponse.redirect(new URL(location, req.url));
+    if (res.status === 401) {
+      const refreshToken = cookieStore.get("auth_refresh_token")?.value;
+      if (refreshToken) {
+        const refreshRes = await fetch(`${API_BASE_URL}/v1/admin/refresh`, {
+          method: "POST",
+          headers: { "Cookie": `auth_refresh_token=${refreshToken}` },
+          cache: "no-store",
+        });
+
+        if (refreshRes.ok) {
+          const data = await refreshRes.json();
+          if (data.success && data.token) {
+            newTokensData = data;
+            headers["Authorization"] = `Bearer ${data.token}`;
+            res = await fetch(`${targetUrl}${queryString}`, fetchOptions);
+          }
+        }
       }
     }
 
-    // Stream response back
+    if (res.status === 302 || res.status === 301) {
+      const location = res.headers.get("Location");
+      if (location) return NextResponse.redirect(new URL(location, req.url));
+    }
+
     const responseBody = await res.text();
-    return new NextResponse(responseBody, {
+    const response = new NextResponse(responseBody, {
       status: res.status,
-      headers: {
-        "Content-Type": res.headers.get("Content-Type") || "application/json",
-      },
+      headers: { "Content-Type": res.headers.get("Content-Type") || "application/json" },
     });
-  } catch {
+
+    if (newTokensData) {
+      response.cookies.set("auth_token", newTokensData.token, {
+        httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 15 * 60, path: "/", sameSite: "lax",
+      });
+      response.cookies.set("auth_refresh_token", newTokensData.refresh_token, {
+        httpOnly: true, secure: process.env.NODE_ENV === "production", maxAge: 24 * 60 * 60, path: "/", sameSite: "lax",
+      });
+    }
+
+    return response;
+  } catch (err) {
+    console.error("Admin Proxy error:", err);
     return NextResponse.json({ error: "Proxy request failed" }, { status: 502 });
   }
 }

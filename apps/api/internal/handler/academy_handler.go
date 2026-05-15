@@ -190,8 +190,21 @@ func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Reque
 		HttpOnly: true,
 		Secure:   true, // Should be true in production
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   7 * 24 * 60 * 60, // 7 days
+		MaxAge:   15 * 60, // 15 minutes
 	})
+
+	// Set refresh token cookie
+	if resp.RefreshToken != "" {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "academy_refresh_token",
+			Value:    resp.RefreshToken,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   7 * 24 * 60 * 60, // 7 days
+		})
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -199,6 +212,54 @@ func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success":        true,
 		"is_first_login": resp.IsFirstLogin,
+	})
+}
+
+func (h *AcademyHandler) HandleRefreshStudentToken(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	cookie, err := r.Cookie("academy_refresh_token")
+	if err != nil {
+		writeJSONError(w, "Missing refresh token", http.StatusUnauthorized)
+		return
+	}
+
+	resp, newRefreshToken, err := h.svc.RefreshStudentToken(r.Context(), cookie.Value)
+	if err != nil {
+		writeJSONError(w, err.Error(), http.StatusUnauthorized)
+		return
+	}
+
+	// Set new cookies
+	http.SetCookie(w, &http.Cookie{
+		Name:     "academy_token",
+		Value:    resp.Token,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   15 * 60,
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "academy_refresh_token",
+		Value:    newRefreshToken,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   7 * 24 * 60 * 60,
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"success":       true,
+		"token":         resp.Token,
+		"refresh_token": newRefreshToken,
 	})
 }
 
@@ -217,7 +278,7 @@ func (h *AcademyHandler) HandleAcademyLogout(w http.ResponseWriter, r *http.Requ
 		}
 	}
 
-	// Clear the academy_token cookie
+	// Clear both cookies
 	http.SetCookie(w, &http.Cookie{
 		Name:     "academy_token",
 		Value:    "",
@@ -225,6 +286,19 @@ func (h *AcademyHandler) HandleAcademyLogout(w http.ResponseWriter, r *http.Requ
 		MaxAge:   -1,
 		HttpOnly: true,
 	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "academy_refresh_token",
+		Value:    "",
+		Path:     "/",
+		MaxAge:   -1,
+		HttpOnly: true,
+	})
+
+	// Revoke refresh token family if present
+	if rtCookie, err := r.Cookie("academy_refresh_token"); err == nil {
+		_ = h.svc.RevokeRefreshTokens(r.Context(), rtCookie.Value)
+	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]string{"message": "Logged out successfully"})

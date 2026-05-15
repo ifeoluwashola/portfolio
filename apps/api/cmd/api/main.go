@@ -90,8 +90,8 @@ func main() {
 	blogSvc := service.NewBlogService(blogRepo)
 
 	resendNotifier := notifications.NewResendNotifier(cfg)
-	authSvc := service.NewAuthService(userRepo, cfg, tokenCache, resendNotifier)
-	academySvc := service.NewAcademyService(academyRepo, cfg, tokenCache, resendNotifier)
+	authSvc := service.NewAuthService(userRepo, userRepo, cfg, tokenCache, resendNotifier)
+	academySvc := service.NewAcademyService(academyRepo, userRepo, cfg, tokenCache, resendNotifier)
 
 	// 6. Initialize Auth Middleware (dependency injected)
 	authMW := middleware.NewAuthMiddleware(cfg.JWTSecret, tokenCache)
@@ -129,6 +129,7 @@ func main() {
 
 	// Admin Auth (public: login only — NO register endpoint)
 	mux.HandleFunc("POST /api/v1/admin/login", loginLimit(authHandler.HandleLogin))
+	mux.HandleFunc("POST /api/v1/admin/refresh", authHandler.HandleRefreshToken)
 	mux.HandleFunc("POST /api/v1/admin/logout", authMW.RequireAuth(authHandler.HandleLogout))
 	mux.HandleFunc("GET /api/v1/auth/session", authMW.RequireAuth(authHandler.HandleGetSession))
 
@@ -142,6 +143,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/academy/apply", academyHandler.HandleApply)
 	mux.HandleFunc("POST /api/v1/paystack/webhook", academyHandler.HandlePaystackWebhook)
 	mux.HandleFunc("POST /api/v1/academy/login", loginLimit(academyHandler.HandleAcademyLogin))
+	mux.HandleFunc("POST /api/v1/academy/refresh", academyHandler.HandleRefreshStudentToken)
 	mux.HandleFunc("POST /api/v1/academy/logout", authMW.RequireStudentAuth(academyHandler.HandleAcademyLogout))
 	mux.HandleFunc("GET /api/v1/academy/session", authMW.RequireStudentAuth(academyHandler.HandleGetSession))
 	mux.HandleFunc("POST /api/v1/academy/forgot-password", loginLimit(academyHandler.HandleAcademyForgotPassword))
