@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type User struct {
@@ -31,11 +33,32 @@ type UserRepository interface {
 	CleanupExpiredTokens(ctx context.Context) error
 }
 
+type RefreshToken struct {
+	ID        uuid.UUID `json:"id"`
+	TokenHash string    `json:"token_hash"`
+	UserType  string    `json:"user_type"` // 'admin' or 'student'
+	UserID    string    `json:"user_id"`   // string representation of ID
+	FamilyID  uuid.UUID `json:"family_id"`
+	ExpiresAt time.Time `json:"expires_at"`
+	Revoked   bool      `json:"revoked"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type RefreshTokenRepository interface {
+	CreateRefreshToken(ctx context.Context, rt *RefreshToken) error
+	GetRefreshTokenByHash(ctx context.Context, hash string) (*RefreshToken, error)
+	RevokeRefreshTokenFamily(ctx context.Context, familyID uuid.UUID) error
+	RevokeRefreshToken(ctx context.Context, id uuid.UUID) error
+	CleanupExpiredRefreshTokens(ctx context.Context) error
+}
+
 type AuthService interface {
 	LoginUser(ctx context.Context, email, password string) (*AdminAuthResponse, error)
+	RefreshAdminToken(ctx context.Context, refreshToken string) (*AdminAuthResponse, string, error)
 	InviteAdmin(ctx context.Context, inviterID int, req *InviteAdminRequest) error
 	ChangeAdminPassword(ctx context.Context, userID int, req *ChangeAdminPasswordRequest) error
 	RevokeToken(ctx context.Context, rawToken string) error
+	RevokeRefreshTokens(ctx context.Context, refreshToken string) error
 	GetAdminSession(ctx context.Context, userID int) (*AdminSessionResponse, error)
 }
 
@@ -57,6 +80,7 @@ type ChangeAdminPasswordRequest struct {
 
 type AdminAuthResponse struct {
 	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token,omitempty"`
 	IsFirstLogin bool   `json:"is_first_login"`
 	Role         string `json:"role"`
 	User         *User  `json:"user"`

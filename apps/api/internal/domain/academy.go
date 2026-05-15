@@ -143,10 +143,12 @@ type AcademyService interface {
 	ProcessWebhook(ctx context.Context, signature string, body []byte) error
 	GetAdminApplications(ctx context.Context) (*AdminCohortResponse, error)
 	LoginStudent(ctx context.Context, req *AcademyLoginRequest) (*AcademyAuthResponse, error)
+	RefreshStudentToken(ctx context.Context, refreshToken string) (*AcademyAuthResponse, string, error)
 	ChangePassword(ctx context.Context, studentID uuid.UUID, req *AcademyChangePasswordRequest) error
 	ForgotPassword(ctx context.Context, req *AcademyForgotPasswordRequest) error
 	ResetPassword(ctx context.Context, req *AcademyResetPasswordRequest) error
 	RevokeToken(ctx context.Context, rawToken string) error
+	RevokeRefreshTokens(ctx context.Context, refreshToken string) error
 	GrantScholarship(ctx context.Context, applicationID uuid.UUID, amountKobo int) error
 
 	GetCurriculum(ctx context.Context) ([]*CohortWeek, error)
@@ -315,6 +317,7 @@ type AcademyLoginRequest struct {
 
 type AcademyAuthResponse struct {
 	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token,omitempty"`
 	IsFirstLogin bool   `json:"is_first_login"`
 }
 

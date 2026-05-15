@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { API_BASE_URL } from "@/lib/api-config";
+import { adminFetch } from "../admin/actions";
 // const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
 
 interface AlumniProject {
@@ -48,26 +49,32 @@ export async function login(formData: FormData) {
       return { error: errorText || "Invalid credentials" };
     }
 
-    // Extract token from Go API's Set-Cookie header
-    const setCookieHeader = res.headers.get("Set-Cookie");
-    let token = "";
-    if (setCookieHeader) {
-      const match = setCookieHeader.match(/academy_token=([^;]+)/);
-      if (match) token = match[1];
-    }
-
     const data = await res.json();
-    const { is_first_login } = data;
+    const { is_first_login, token: bodyToken, refresh_token: bodyRefreshToken } = data;
 
-    if (!token) {
+    const finalToken = bodyToken;
+    const finalRefreshToken = bodyRefreshToken;
+
+    if (!finalToken || !finalRefreshToken) {
        return { error: "Security protocol failure: Session negotiation failed." };
     }
 
-    // Set HttpOnly cookie
-    (await cookies()).set("academy_token", token, {
+    const cookieStore = await cookies();
+    
+    // Set Access Token (15 minutes)
+    cookieStore.set("academy_token", finalToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 7 days
+      maxAge: 15 * 60,
+      path: "/",
+      sameSite: "lax",
+    });
+
+    // Set Refresh Token (7 days)
+    cookieStore.set("academy_refresh_token", finalRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
       path: "/",
       sameSite: "lax",
     });
@@ -96,7 +103,117 @@ export async function logout() {
   }
 
   (await cookies()).delete("academy_token");
+  (await cookies()).delete("academy_refresh_token");
   redirect("/academy/login");
+}
+
+export async function refreshStudentSession() {
+  const cookieStore = await cookies();
+  const refreshToken = cookieStore.get("academy_refresh_token")?.value;
+  
+  if (!refreshToken) return { success: false };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/refresh`, {
+      method: "POST",
+      headers: {
+        "Cookie": `academy_refresh_token=${refreshToken}`
+      },
+      cache: "no-store"
+    });
+
+    if (!res.ok) {
+      cookieStore.delete("academy_token");
+      cookieStore.delete("academy_refresh_token");
+      return { success: false };
+    }
+
+    const data = await res.json();
+    if (!data.success || !data.token || !data.refresh_token) {
+      return { success: false };
+    }
+
+    cookieStore.set("academy_token", data.token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 15 * 60,
+      path: "/",
+      sameSite: "lax",
+    });
+
+    cookieStore.set("academy_refresh_token", data.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24 * 7,
+      path: "/",
+      sameSite: "lax",
+    });
+
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
+}
+
+export async function academyFetch(path: string, options: RequestInit = {}) {
+  const cookieStore = await cookies();
+  let token = cookieStore.get("academy_token")?.value;
+  
+  if (!token) {
+    const refreshed = await refreshStudentSession();
+    if (refreshed.success) {
+      token = cookieStore.get("academy_token")?.value;
+    }
+  }
+
+  if (!token) {
+    return { error: "Unauthorized", status: 401 };
+  }
+
+  try {
+    const res = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+        ...(options.headers || {}),
+      },
+      cache: "no-store",
+    });
+
+    if (res.status === 401) {
+      const refreshed = await refreshStudentSession();
+      if (refreshed.success) {
+        const newToken = cookieStore.get("academy_token")?.value;
+        const retryRes = await fetch(`${API_BASE_URL}${path}`, {
+          ...options,
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${newToken}`,
+            ...(options.headers || {}),
+          },
+          cache: "no-store",
+        });
+        
+        if (!retryRes.ok) return { error: await retryRes.text(), status: retryRes.status };
+        const contentType = retryRes.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+           return { data: await retryRes.json(), status: retryRes.status };
+        }
+        return { data: null, status: retryRes.status };
+      }
+      return { error: "Unauthorized", status: 401 };
+    }
+
+    if (!res.ok) return { error: await res.text(), status: res.status };
+    const contentType = res.headers.get("content-type");
+    if (contentType?.includes("application/json")) {
+       return { data: await res.json(), status: res.status };
+    }
+    return { data: null, status: res.status };
+  } catch {
+    return { error: "API request failed", status: 500 };
+  }
 }
 
 export async function changePassword(formData: FormData) {
@@ -123,6 +240,7 @@ export async function changePassword(formData: FormData) {
     }
 
     (await cookies()).delete("academy_token");
+    (await cookies()).delete("academy_refresh_token");
     return { success: true };
   } catch {
     return { error: "Failed to update password" };
@@ -163,67 +281,24 @@ export async function resetPassword(formData: FormData) {
 }
 
 export async function getDashboardData() {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/dashboard`, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) return { error: "Failed to fetch dashboard data" };
-    return await res.json();
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch("/v1/academy/dashboard");
+  if (result.error) return { error: result.error };
+  return result.data;
 }
 
 export async function getStudentStatus() {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/dashboard`, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) return { error: "Failed to fetch student status" };
-    const data = await res.json();
-    return { status: data.status };
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch("/v1/academy/dashboard");
+  if (result.error) return { error: result.error };
+  return { status: result.data.status };
 }
 
 export async function submitAssignment(weekId: number, githubUrl: string, submissionFileKey?: string) {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/assignments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ week_id: weekId, github_url: githubUrl, submission_file_key: submissionFileKey || null }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      return { error: errorText || "Submission failed" };
-    }
-
-    return { success: true };
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch("/v1/academy/assignments", {
+    method: "POST",
+    body: JSON.stringify({ week_id: weekId, github_url: githubUrl, submission_file_key: submissionFileKey || null }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
 }
 
 export async function getAcademySession() {
@@ -232,53 +307,21 @@ export async function getAcademySession() {
 }
 
 export async function submitLabFix(labId: string, proposedFix: string) {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/labs/${labId}/submit`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ proposed_fix: proposedFix }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      return { error: errorText || "Submission failed" };
-    }
-
-    return { success: true };
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch(`/v1/labs/${labId}/submit`, {
+    method: "POST",
+    body: JSON.stringify({ proposed_fix: proposedFix }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
 }
 
 export async function addLabComment(submissionId: number, body: string) {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/labs/submissions/${submissionId}/comments`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ body }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      return { error: errorText || "Comment failed" };
-    }
-
-    return { success: true };
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch(`/v1/labs/submissions/${submissionId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ body }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
 }
 
 export async function getEligibleStudents() {
@@ -385,63 +428,30 @@ export async function getAllStudents() {
 }
 
 export async function warnStudent(id: string, reason: string) {
-  const token = (await cookies()).get("auth_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/students/${id}/warn`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` 
-      },
-      body: JSON.stringify({ reason }),
-    });
-    if (!res.ok) return { error: await res.text() };
-    return { success: true };
-  } catch {
-    return { error: "Failed to warn student" };
-  }
+  const result = await adminFetch(`/v1/admin/students/${id}/warn`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
 }
 
 export async function disqualifyStudent(id: string, reason: string) {
-  const token = (await cookies()).get("auth_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/students/${id}/disqualify`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` 
-      },
-      body: JSON.stringify({ reason }),
-    });
-    if (!res.ok) return { error: await res.text() };
-    return { success: true };
-  } catch {
-    return { error: "Failed to disqualify student" };
-  }
+  const result = await adminFetch(`/v1/admin/students/${id}/disqualify`, {
+    method: "POST",
+    body: JSON.stringify({ reason }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
 }
 
 export async function submitCapstone(data: Record<string, unknown>) {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/capstone`, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}` 
-      },
-      body: JSON.stringify(data),
-    });
-    if (!res.ok) return { error: await res.text() };
-    return { success: true };
-  } catch {
-    return { error: "Failed to submit capstone" };
-  }
+  const result = await academyFetch("/v1/academy/capstone", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
 }
 
 export async function getPendingCapstones() {
@@ -490,19 +500,9 @@ export interface BillingHub {
  * Returns kobo amounts; the UI divides by 100 for display.
  */
 export async function getBillingStatus(): Promise<StudentBilling | { error: string }> {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/billing`, {
-      headers: { "Authorization": `Bearer ${token}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return { error: "Failed to fetch billing status" };
-    return await res.json() as StudentBilling;
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch("/v1/academy/billing");
+  if (result.error) return { error: result.error };
+  return result.data as StudentBilling;
 }
 
 /**
@@ -510,19 +510,9 @@ export async function getBillingStatus(): Promise<StudentBilling | { error: stri
  * This is the primary action used by the /academy/billing page.
  */
 export async function getBillingHub(): Promise<BillingHub | { error: string }> {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/billing/hub`, {
-      headers: { "Authorization": `Bearer ${token}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return { error: "Failed to fetch billing hub" };
-    return await res.json() as BillingHub;
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch("/v1/academy/billing/hub");
+  if (result.error) return { error: result.error };
+  return result.data as BillingHub;
 }
 
 
@@ -533,32 +523,15 @@ export async function getBillingHub(): Promise<BillingHub | { error: string }> {
 export async function initiateBillingPayment(
   amountNaira: number
 ): Promise<{ authorization_url: string; reference: string } | { error: string }> {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/billing/pay`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({ amount_naira: amountNaira }),
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      return { error: errorText || "Payment initialization failed" };
-    }
-
-    const data = await res.json();
-    return {
-      authorization_url: data.authorization_url,
-      reference: data.reference,
-    };
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch("/v1/academy/billing/pay", {
+    method: "POST",
+    body: JSON.stringify({ amount_naira: amountNaira }),
+  });
+  if (result.error) return { error: result.error };
+  return {
+    authorization_url: result.data.authorization_url,
+    reference: result.data.reference,
+  };
 }
 
 /**
@@ -616,47 +589,18 @@ export async function checkMaterialAccess() {
     return { granted: true };
   }
 
-  const academyCookie = cookieStore.get("academy_token")?.value;
-  if (!academyCookie) {
-    return { granted: false, reason: "unauthenticated" };
-  }
+  const result = await academyFetch("/v1/academy/billing");
+  if (result.error) return { granted: false, reason: result.status === 401 ? "unauthenticated" : "error" };
 
-  // Check student status
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/academy/billing`, {
-      headers: { "Authorization": `Bearer ${academyCookie}` },
-      cache: "no-store",
-    });
-    if (!res.ok) return { granted: false, reason: "unauthorized" };
-    
-    const billing = await res.json() as StudentBilling;
-    if (billing.billing_status === "payment_locked") {
-      return { granted: false, reason: "locked" };
-    }
-    return { granted: true };
-  } catch {
-    return { granted: false, reason: "error" };
+  const billing = result.data as StudentBilling;
+  if (billing.billing_status === "payment_locked") {
+    return { granted: false, reason: "locked" };
   }
+  return { granted: true };
 }
 
 export async function getS3UploadUrl(filename: string) {
-  const token = (await cookies()).get("academy_token")?.value;
-  if (!token) return { error: "Unauthorized" };
-
-  try {
-    const res = await fetch(`${API_BASE_URL}/v1/media/upload-url?filename=${encodeURIComponent(filename)}`, {
-      headers: {
-        "Authorization": `Bearer ${token}`,
-      },
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      const errorText = await res.text();
-      return { error: `Failed to generate upload URL: ${errorText}` };
-    }
-    return await res.json() as { upload_url: string; file_key: string };
-  } catch {
-    return { error: "Connection to API failed" };
-  }
+  const result = await academyFetch(`/v1/media/upload-url?filename=${encodeURIComponent(filename)}`);
+  if (result.error) return { error: result.error };
+  return result.data as { upload_url: string; file_key: string };
 }

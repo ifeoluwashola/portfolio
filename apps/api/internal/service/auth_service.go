@@ -14,19 +14,22 @@ import (
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
 	repo         domain.UserRepository
+	refreshRepo  domain.RefreshTokenRepository
 	cfg          *config.Config
 	cache        cache.TokenCache
 	notification domain.NotificationService
 }
 
-func NewAuthService(repo domain.UserRepository, cfg *config.Config, tokenCache cache.TokenCache, notification domain.NotificationService) domain.AuthService {
+func NewAuthService(repo domain.UserRepository, refreshRepo domain.RefreshTokenRepository, cfg *config.Config, tokenCache cache.TokenCache, notification domain.NotificationService) domain.AuthService {
 	return &AuthService{
 		repo:         repo,
+		refreshRepo:  refreshRepo,
 		cfg:          cfg,
 		cache:        tokenCache,
 		notification: notification,
@@ -54,7 +57,7 @@ func (s *AuthService) LoginUser(ctx context.Context, email, password string) (*d
 		"username": user.Username,
 		"role":     user.Role,
 		"type":     "admin",
-		"exp":      time.Now().Add(24 * time.Hour).Unix(),
+		"exp":      time.Now().Add(15 * time.Minute).Unix(),
 		"iat":      time.Now().Unix(),
 	})
 
@@ -63,12 +66,98 @@ func (s *AuthService) LoginUser(ctx context.Context, email, password string) (*d
 		return nil, fmt.Errorf("failed to generate token: %w", err)
 	}
 
+	// Generate refresh token
+	refreshToken := uuid.New().String()
+	rtHash := hashToken(refreshToken)
+	familyID := uuid.New()
+
+	rt := &domain.RefreshToken{
+		TokenHash: rtHash,
+		UserType:  "admin",
+		UserID:    fmt.Sprintf("%d", user.ID),
+		FamilyID:  familyID,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	err = s.refreshRepo.CreateRefreshToken(ctx, rt)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create refresh token: %w", err)
+	}
+
+	return &domain.AdminAuthResponse{
+		Token:        tokenString,
+		RefreshToken: refreshToken,
+		IsFirstLogin: user.IsFirstLogin,
+		Role:         user.Role,
+		User:         user,
+	}, nil
+}
+
+func (s *AuthService) RefreshAdminToken(ctx context.Context, refreshToken string) (*domain.AdminAuthResponse, string, error) {
+	hash := hashToken(refreshToken)
+	rt, err := s.refreshRepo.GetRefreshTokenByHash(ctx, hash)
+	if err != nil {
+		return nil, "", errors.New("invalid refresh token")
+	}
+
+	if rt.Revoked || rt.ExpiresAt.Before(time.Now()) {
+		if rt.Revoked {
+			// Detection: if a revoked token is reused, revoke the entire family
+			_ = s.refreshRepo.RevokeRefreshTokenFamily(ctx, rt.FamilyID)
+		}
+		return nil, "", errors.New("refresh token expired or revoked")
+	}
+
+	// Single-use rotation
+	_ = s.refreshRepo.RevokeRefreshToken(ctx, rt.ID)
+
+	// Get user from DB
+	var userID int
+	fmt.Sscanf(rt.UserID, "%d", &userID)
+	user, err := s.repo.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, "", errors.New("user not found")
+	}
+
+	// Issue new access token
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"sub":      user.ID,
+		"email":    user.Email,
+		"username": user.Username,
+		"role":     user.Role,
+		"type":     "admin",
+		"exp":      time.Now().Add(15 * time.Minute).Unix(),
+		"iat":      time.Now().Unix(),
+	})
+
+	tokenString, err := token.SignedString([]byte(s.cfg.JWTSecret))
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	// Issue new refresh token (rotating)
+	newRefreshToken := uuid.New().String()
+	newRtHash := hashToken(newRefreshToken)
+
+	newRt := &domain.RefreshToken{
+		TokenHash: newRtHash,
+		UserType:  "admin",
+		UserID:    rt.UserID,
+		FamilyID:  rt.FamilyID,
+		ExpiresAt: time.Now().Add(24 * time.Hour),
+	}
+
+	err = s.refreshRepo.CreateRefreshToken(ctx, newRt)
+	if err != nil {
+		return nil, "", fmt.Errorf("failed to create refresh token: %w", err)
+	}
+
 	return &domain.AdminAuthResponse{
 		Token:        tokenString,
 		IsFirstLogin: user.IsFirstLogin,
 		Role:         user.Role,
 		User:         user,
-	}, nil
+	}, newRefreshToken, nil
 }
 
 func (s *AuthService) InviteAdmin(ctx context.Context, inviterID int, req *domain.InviteAdminRequest) error {
@@ -156,6 +245,15 @@ func (s *AuthService) RevokeToken(ctx context.Context, rawToken string) error {
 
 	// Write to DB (persistent fallback)
 	return s.repo.RevokeToken(ctx, hash, time.Now().Add(ttl))
+}
+
+func (s *AuthService) RevokeRefreshTokens(ctx context.Context, refreshToken string) error {
+	hash := hashToken(refreshToken)
+	rt, err := s.refreshRepo.GetRefreshTokenByHash(ctx, hash)
+	if err != nil {
+		return nil // already gone or invalid
+	}
+	return s.refreshRepo.RevokeRefreshTokenFamily(ctx, rt.FamilyID)
 }
 
 func (s *AuthService) GetAdminSession(ctx context.Context, userID int) (*domain.AdminSessionResponse, error) {

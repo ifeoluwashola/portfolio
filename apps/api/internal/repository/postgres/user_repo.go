@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -13,7 +14,7 @@ type UserRepository struct {
 	pool *pgxpool.Pool
 }
 
-func NewUserRepository(pool *pgxpool.Pool) domain.UserRepository {
+func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 	return &UserRepository{
 		pool: pool,
 	}
@@ -128,6 +129,59 @@ func (r *UserRepository) IsTokenRevoked(ctx context.Context, tokenHash string) (
 
 func (r *UserRepository) CleanupExpiredTokens(ctx context.Context) error {
 	query := `DELETE FROM revoked_tokens WHERE expires_at < NOW()`
+	_, err := r.pool.Exec(ctx, query)
+	return err
+}
+
+// --- Refresh Token Repository Implementation ---
+
+func (r *UserRepository) CreateRefreshToken(ctx context.Context, rt *domain.RefreshToken) error {
+	query := `
+		INSERT INTO refresh_tokens (token_hash, user_type, user_id, family_id, expires_at)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, created_at
+	`
+	return r.pool.QueryRow(
+		ctx,
+		query,
+		rt.TokenHash,
+		rt.UserType,
+		rt.UserID,
+		rt.FamilyID,
+		rt.ExpiresAt,
+	).Scan(&rt.ID, &rt.CreatedAt)
+}
+
+func (r *UserRepository) GetRefreshTokenByHash(ctx context.Context, hash string) (*domain.RefreshToken, error) {
+	query := `
+		SELECT id, token_hash, user_type, user_id, family_id, expires_at, revoked, created_at
+		FROM refresh_tokens
+		WHERE token_hash = $1
+	`
+	var rt domain.RefreshToken
+	err := r.pool.QueryRow(ctx, query, hash).Scan(
+		&rt.ID, &rt.TokenHash, &rt.UserType, &rt.UserID, &rt.FamilyID, &rt.ExpiresAt, &rt.Revoked, &rt.CreatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return &rt, nil
+}
+
+func (r *UserRepository) RevokeRefreshTokenFamily(ctx context.Context, familyID uuid.UUID) error {
+	query := `UPDATE refresh_tokens SET revoked = true WHERE family_id = $1`
+	_, err := r.pool.Exec(ctx, query, familyID)
+	return err
+}
+
+func (r *UserRepository) RevokeRefreshToken(ctx context.Context, id uuid.UUID) error {
+	query := `UPDATE refresh_tokens SET revoked = true WHERE id = $1`
+	_, err := r.pool.Exec(ctx, query, id)
+	return err
+}
+
+func (r *UserRepository) CleanupExpiredRefreshTokens(ctx context.Context) error {
+	query := `DELETE FROM refresh_tokens WHERE expires_at < NOW()`
 	_, err := r.pool.Exec(ctx, query)
 	return err
 }
