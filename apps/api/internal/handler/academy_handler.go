@@ -1197,4 +1197,33 @@ func (h *AcademyHandler) HandleGetSessionAttendance(w http.ResponseWriter, r *ht
 	json.NewEncoder(w).Encode(students)
 }
 
+func (h *AcademyHandler) HandleBroadcastReschedule(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		Reason string `json:"reason"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid body", http.StatusBadRequest)
+		return
+	}
+
+	if req.Reason == "" {
+		http.Error(w, "Reason is required", http.StatusBadRequest)
+		return
+	}
+
+	err := h.svc.BroadcastReschedule(r.Context(), req.Reason)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Broadcast sent successfully"})
+}
+
 

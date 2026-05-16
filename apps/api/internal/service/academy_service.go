@@ -236,8 +236,8 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 		log.Printf("[Webhook] Student %s fully paid (ref: %s)\n", targetStudentID, event.Data.Reference)
 	} else {
 		// cohort_start_date constraint: Installment clock should not start before the cohort begins.
-		// Set cohort start date (May 30, 2026)
-		cohortStartDate := time.Date(2026, 5, 30, 0, 0, 0, 0, time.UTC)
+		// Set cohort start date (June 1, 2026)
+		cohortStartDate := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
 		
 		var nextDue time.Time
 		if time.Now().Before(cohortStartDate) {
@@ -340,7 +340,7 @@ func (s *academyService) GrantScholarship(ctx context.Context, applicationID uui
 		_ = s.repo.SetNextPaymentDue(ctx, targetStudentID, nil)
 		newPaymentStatus = "Paid"
 	} else {
-		cohortStartDate := time.Date(2026, 5, 30, 0, 0, 0, 0, time.UTC)
+		cohortStartDate := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
 		var nextDue time.Time
 		if time.Now().Before(cohortStartDate) {
 			nextDue = cohortStartDate.Add(30 * 24 * time.Hour)
@@ -559,6 +559,32 @@ func (s *academyService) ResetPassword(ctx context.Context, req *domain.AcademyR
 	}
 
 	return s.repo.UpdateStudentPassword(ctx, student.ID, string(hashedPassword))
+}
+
+func (s *academyService) BroadcastReschedule(ctx context.Context, reason string) error {
+	students, err := s.repo.GetAllStudents(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to fetch students: %w", err)
+	}
+
+	oldDate := "May 16th, 2026"
+	newDate := "June 1st, 2026"
+
+	var lastErr error
+	for _, student := range students {
+		// Only notify active students
+		if student.Status != "active" {
+			continue
+		}
+
+		err := s.notification.SendCohortRescheduleEmail(student.FirstName, student.Email, oldDate, newDate, reason)
+		if err != nil {
+			log.Printf("ERROR: Failed to send reschedule email to %s: %v\n", student.Email, err)
+			lastErr = err
+		}
+	}
+
+	return lastErr
 }
 
 func (s *academyService) GetAdminApplications(ctx context.Context) (*domain.AdminCohortResponse, error) {

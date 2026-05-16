@@ -220,6 +220,7 @@ func main() {
 	mux.HandleFunc("PUT /api/v1/admin/academy/weeks", authMW.RequireAuth(academyHandler.HandleUpdateWeek))
 	mux.HandleFunc("GET /api/v1/admin/academy/submissions", authMW.RequireAuth(academyHandler.HandleGetSubmissions))
 	mux.HandleFunc("POST /api/v1/admin/academy/submissions/grade", authMW.RequireAuth(academyHandler.HandleGradeSubmission))
+	mux.HandleFunc("POST /api/v1/admin/academy/broadcast-reschedule", authMW.RequireAuth(academyHandler.HandleBroadcastReschedule))
 
 	// Break-It Labs Management (admin)
 	mux.HandleFunc("POST /api/v1/admin/labs", authMW.RequireAuth(academyHandler.HandleAdminCreateLab))
