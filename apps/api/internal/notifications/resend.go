@@ -747,3 +747,77 @@ func (n *ResendNotifier) SendPaymentConfirmationEmail(email string, amountKobo i
 	_, err := n.client.Emails.Send(params)
 	return err
 }
+
+// SendCohortRescheduleEmail informs students about a change in the cohort start date.
+func (n *ResendNotifier) SendCohortRescheduleEmail(firstName, email, oldDate, newDate, reason string) error {
+	subject := "IMPORTANT: Training Schedule Update — Kybern Academy"
+	sender := "Kybern Academy Admin <academy@kyberncloud.com>"
+
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Inter", -apple-system, sans-serif; line-height: 1.6; color: #cbd5e1; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+				.header { background-color: #020617; padding: 32px; text-align: center; border-bottom: 1px solid #1e293b; }
+				.status-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; background-color: rgba(234, 179, 8, 0.1); color: #eab308; border: 1px solid #eab308; }
+				.content { padding: 48px 32px; }
+				.schedule-hero { text-align: center; margin-bottom: 48px; }
+				.schedule-label { color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: block; }
+				.schedule-value { color: #f8fafc; font-size: 32px; font-weight: 900; margin: 0; letter-spacing: -1px; }
+				.arrow { color: #eab308; font-size: 24px; margin: 10px 0; display: block; }
+				.reason-box { background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 24px; margin: 40px 0; }
+				.reason-label { color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: block; }
+				.reason-text { color: #cbd5e1; font-size: 15px; line-height: 1.7; margin: 0; }
+				.footer { background-color: #020617; padding: 40px 32px; text-align: center; font-size: 11px; color: #475569; border-top: 1px solid #1e293b; }
+				.button { display: inline-block; background-color: #eab308; color: #020617 !important; font-weight: 900; padding: 16px 32px; border-radius: 8px; text-decoration: none; margin: 24px 0; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
+				.intro-text { color: #94a3b8; font-size: 15px; text-align: center; line-height: 1.6; margin-bottom: 32px; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<div class="status-badge">Schedule Update</div>
+				</div>
+				<div class="content">
+					<div class="schedule-hero">
+						<span class="schedule-label">Operational Realignment</span>
+						<p class="schedule-value" style="text-decoration: line-through; opacity: 0.5; font-size: 24px;">%s</p>
+						<span class="arrow">↓</span>
+						<p class="schedule-value" style="color: #eab308;">%s</p>
+					</div>
+
+					<p class="intro-text">Hello %s, we are refining our deployment schedule to ensure the highest quality of instruction and infrastructure availability for your upcoming cohort.</p>
+
+					<div class="reason-box">
+						<span class="reason-label">Internal Rationale</span>
+						<p class="reason-text">%s</p>
+					</div>
+
+					<p class="intro-text" style="font-size: 14px;">Your student portal access remains active. All curriculum materials and lab environments will synchronize with the new start date.</p>
+
+					<div style="text-align: center;">
+						<a href="%s/academy/login" class="button">Access Student Portal</a>
+					</div>
+				</div>
+				<div class="footer">
+					KYBERN ACADEMY · CLOUD NATIVE MENTORSHIP<br/>
+					BUILDING THE INFRASTRUCTURE OF THE FUTURE
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+
+	htmlBody := fmt.Sprintf(htmlTemplate, oldDate, newDate, firstName, reason, n.frontendURL)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}

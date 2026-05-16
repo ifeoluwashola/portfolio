@@ -185,6 +185,7 @@ type AcademyService interface {
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
 	ApproveCapstone(ctx context.Context, id int, req *ApproveCapstoneRequest) error
 	GetStudentSession(ctx context.Context, studentID uuid.UUID) (*StudentSessionResponse, error)
+	BroadcastReschedule(ctx context.Context, reason string) error
 
 	// Admin Command Center
 	GetBillingOverview(ctx context.Context) (*BillingOverview, error)
@@ -234,6 +235,7 @@ type NotificationService interface {
 	SendAccountSuspendedEmail(email string, minAmountKobo int, remainingBalanceKobo int) error
 	SendPaymentConfirmationEmail(email string, amountKobo int, remainingKobo int) error
 	SendAcademicProbationEmail(firstName, email, reason string) error
+	SendCohortRescheduleEmail(firstName, email, oldDate, newDate, reason string) error
 }
 
 type AcademyApplyRequest struct {
