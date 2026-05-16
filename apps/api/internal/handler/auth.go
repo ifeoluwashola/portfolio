@@ -90,11 +90,13 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	// Return metadata, but NOT the token
+	// Return metadata and tokens (required by frontend server actions)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success":        true,
 		"is_first_login": resp.IsFirstLogin,
 		"role":           resp.Role,
+		"token":          resp.Token,
+		"refresh_token":  resp.RefreshToken,
 	})
 }
 

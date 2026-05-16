@@ -208,10 +208,12 @@ func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	// Return success and is_first_login, but NOT the token
+	// Return metadata and tokens (required by frontend server actions)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"success":        true,
 		"is_first_login": resp.IsFirstLogin,
+		"token":          resp.Token,
+		"refresh_token":  resp.RefreshToken,
 	})
 }
 
