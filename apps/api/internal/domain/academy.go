@@ -94,8 +94,11 @@ type AcademyRepository interface {
 	CreateCapstoneProject(ctx context.Context, project *CapstoneProject) (int, error)
 	GetCapstoneByID(ctx context.Context, id int) (*CapstoneProject, error)
 	GetCapstoneByStudentID(ctx context.Context, studentID uuid.UUID) (*CapstoneProject, error)
+	GetCapstoneProjectsByStudent(ctx context.Context, studentID uuid.UUID) ([]*CapstoneProject, error)
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
 	UpdateCapstoneStatus(ctx context.Context, id int, status string) error
+	UpdateCapstoneStatusAndFeedback(ctx context.Context, id int, status, feedback string) error
+	DeleteAlumniProfile(ctx context.Context, slug string) error
 
 	// Assignments
 	GetWeeks(ctx context.Context) ([]*CohortWeek, error)
@@ -184,6 +187,9 @@ type AcademyService interface {
 	SubmitCapstone(ctx context.Context, studentID uuid.UUID, req *CapstoneProjectRequest) error
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
 	ApproveCapstone(ctx context.Context, id int, req *ApproveCapstoneRequest) error
+	RejectCapstone(ctx context.Context, id int, feedback string) error
+	RevokeAlumni(ctx context.Context, slug string) error
+	ManualCreateAlumni(ctx context.Context, req *ManualAlumniRequest) error
 	GetStudentSession(ctx context.Context, studentID uuid.UUID) (*StudentSessionResponse, error)
 	BroadcastReschedule(ctx context.Context, reason string) error
 
@@ -504,7 +510,8 @@ type CapstoneProject struct {
 	ArchitectureDiagramURL string    `json:"architecture_diagram_url"`
 	LiveDemoURL            string    `json:"live_demo_url"`
 	RepoURL                string    `json:"repo_url"`
-	Status                 string    `json:"status"` // pending, approved
+	Status                 string    `json:"status"` // pending, approved, needs_revision
+	Feedback               *string   `json:"feedback,omitempty"`
 	CreatedAt              time.Time `json:"created_at"`
 }
 
@@ -527,6 +534,17 @@ type ApproveCapstoneRequest struct {
 	CohortName  string `json:"cohort_name"`
 	LinkedInURL string `json:"linkedin_url"`
 	GitHubURL   string `json:"github_url"`
+}
+
+type RejectCapstoneRequest struct {
+	Feedback string `json:"feedback"`
+}
+
+type ManualAlumniRequest struct {
+	StudentID   uuid.UUID `json:"student_id"`
+	CohortName  string    `json:"cohort_name"`
+	LinkedInURL string    `json:"linkedin_url"`
+	GitHubURL   string    `json:"github_url"`
 }
 
 type MilestoneData struct {

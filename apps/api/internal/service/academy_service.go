@@ -882,6 +882,63 @@ func (s *academyService) ApproveCapstone(ctx context.Context, capstoneID int, re
 	return err
 }
 
+func (s *academyService) RejectCapstone(ctx context.Context, capstoneID int, feedback string) error {
+	return s.repo.UpdateCapstoneStatusAndFeedback(ctx, capstoneID, "needs_revision", feedback)
+}
+
+func (s *academyService) RevokeAlumni(ctx context.Context, slug string) error {
+	profile, err := s.repo.GetAlumniBySlug(ctx, slug)
+	if err != nil {
+		return err
+	}
+
+	// 1. Delete alumni profile
+	if err := s.repo.DeleteAlumniProfile(ctx, slug); err != nil {
+		return err
+	}
+
+	// 2. Revert student status
+	if err := s.repo.UpdateStudentStatus(ctx, profile.StudentID, "active", ""); err != nil {
+		return err
+	}
+
+	// 3. Revert capstone projects to pending
+	projects, err := s.repo.GetCapstoneProjectsByStudent(ctx, profile.StudentID)
+	if err == nil {
+		for _, p := range projects {
+			_ = s.repo.UpdateCapstoneStatus(ctx, p.ID, "pending")
+		}
+	}
+
+	return nil
+}
+
+func (s *academyService) ManualCreateAlumni(ctx context.Context, req *domain.ManualAlumniRequest) error {
+	student, err := s.repo.GetStudentByID(ctx, req.StudentID)
+	if err != nil {
+		return err
+	}
+
+	// 1. Update Student Status to 'graduated'
+	err = s.repo.UpdateStudentStatus(ctx, student.ID, "graduated", "")
+	if err != nil {
+		return err
+	}
+
+	// 2. Create Alumni Profile
+	slug := generateSlug(fmt.Sprintf("%s %s", student.FirstName, student.LastName))
+	profile := &domain.AlumniProfile{
+		StudentID:   student.ID,
+		Slug:        slug,
+		CohortName:  req.CohortName,
+		LinkedInURL: req.LinkedInURL,
+		GitHubURL:   req.GitHubURL,
+	}
+
+	_, err = s.repo.CreateAlumniProfile(ctx, profile)
+	return err
+}
+
 func (s *academyService) AdminUpdateAlumni(ctx context.Context, id int, req *domain.GraduateStudentRequest) error {
 	// 1. Update Profile
 	profile := &domain.AlumniProfile{

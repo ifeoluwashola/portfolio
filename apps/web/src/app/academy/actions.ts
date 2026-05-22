@@ -470,6 +470,32 @@ export async function getPendingCapstones() {
   }
 }
 
+export async function rejectCapstone(id: number, feedback: string) {
+  const result = await adminFetch(`/v1/admin/graduations/${id}/reject`, {
+    method: "POST",
+    body: JSON.stringify({ feedback }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
+export async function revokeAlumni(slug: string) {
+  const result = await adminFetch(`/v1/admin/alumni/${slug}`, {
+    method: "DELETE",
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
+export async function createManualAlumni(data: any) {
+  const result = await adminFetch(`/v1/admin/alumni/manual`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
 // ─── Billing & Installments ────────────────────────────────────────────────────
 
 export interface StudentBilling {
