@@ -2,14 +2,13 @@ name: Deploy Backend
 
 on:
   push:
-    # paths:
-    #   - 'apps/api/**'
+    paths:
+      - 'apps/api/**'
     branches:
       - main
-      - upload
   pull_request:
-    # paths:
-    #   - 'apps/api/**'
+    paths:
+      - 'apps/api/**'
     branches:
       - main
 jobs:
@@ -22,64 +21,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      # - name: Set up Go
-      #   uses: actions/setup-go@v6
-      #   with:
-      #     go-version: '1.26.0'
-
-      # - name: Run Tests
-      #   working-directory: apps/api
-      #   run: go test -v ./...
-
-      # - name: Log in to GitHub Container Registry
-      #   run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      # - name: Build Docker Image
-      #   run: |
-      #     IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
-      #     docker build -t $IMAGE_NAME -f apps/api/Dockerfile apps/api
-
-      # - name: Push Docker Image
-      #   if: github.event_name == 'push'
-      #   run: |
-      #     IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
-      #     docker push $IMAGE_NAME
-
-      - name: Write env from secrets
-        id: creds
-        run: |
-           echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
-        env:
-          SSH_PRIVATE_KEY:  ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Upload ssh key
-        if: always()
-        uses: actions/upload-artifact@v7
+      - name: Set up Go
+        uses: actions/setup-go@v6
         with:
-          name: ssh-key
-          path: key.pem
-          if-no-files-found: warn
-          include-hidden-files: true
+          go-version: '1.26.0'
 
-  # deploy:
-  #   needs: test-and-build
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push'
-  #   steps:
-  #     - name: SSH and Update
-  #       uses: appleboy/ssh-action@v1.0.3
-  #       with:
-  #         host: ${{ secrets.EC2_HOST }}
-  #         username: ubuntu
-  #         key: ${{ secrets.SSH_PRIVATE_KEY }}
-  #         script: |
-  #           # Authenticate with GHCR
-  #           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      - name: Run Tests
+        working-directory: apps/api
+        run: go test -v ./...
+
+      - name: Log in to GitHub Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build Docker Image
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
+          docker build -t $IMAGE_NAME -f apps/api/Dockerfile apps/api
+
+      - name: Push Docker Image
+        if: github.event_name == 'push'
+        run: |
+          IMAGE_NAME=ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
+          docker push $IMAGE_NAME
+
+  deploy:
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - name: SSH and Update
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Authenticate with GHCR
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-  #           # Pull latest image
-  #           docker pull ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
-  #           export IMAGE=ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
-  #           # Update standard container
-  #           # Assuming docker-compose.yml is in the root directory
-  #           docker compose up -d --no-deps api
-  #           docker image prune -f --filter "dangling=true"
+            # Pull latest image
+            docker pull ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
+            export IMAGE=ghcr.io/${{ github.repository_owner }}/kybern-api:${{ github.sha }}
+            # Update standard container
+            # Assuming docker-compose.yml is in the root directory
+            docker compose up -d --no-deps api
+            docker image prune -f --filter "dangling=true"
