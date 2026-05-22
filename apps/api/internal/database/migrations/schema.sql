@@ -230,7 +230,8 @@ CREATE TABLE capstone_projects (
     architecture_diagram_url VARCHAR(255),
     live_demo_url VARCHAR(255),
     repo_url VARCHAR(255),
-    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'approved'
+    status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'approved', 'needs_revision'
+    feedback TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

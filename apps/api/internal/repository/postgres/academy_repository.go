@@ -814,7 +814,7 @@ func (r *AcademyRepository) CreateCapstoneProject(ctx context.Context, project *
 func (r *AcademyRepository) GetCapstoneProjectsByAlumni(ctx context.Context, alumniID int) ([]*domain.CapstoneProject, error) {
 	// For backward compatibility / helper, but now Capstone is student-linked
 	query := `
-		SELECT cp.id, cp.student_id, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.created_at
+		SELECT cp.id, cp.student_id, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.feedback, cp.created_at
 		FROM capstone_projects cp
 		JOIN alumni_profiles ap ON cp.student_id = ap.student_id
 		WHERE ap.id = $1 AND cp.status = 'approved'
@@ -829,7 +829,7 @@ func (r *AcademyRepository) GetCapstoneProjectsByAlumni(ctx context.Context, alu
 	var projects []*domain.CapstoneProject
 	for rows.Next() {
 		p := &domain.CapstoneProject{}
-		err := rows.Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.CreatedAt)
+		err := rows.Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.Feedback, &p.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -843,7 +843,7 @@ func (r *AcademyRepository) GetCapstoneProjectsByAlumni(ctx context.Context, alu
 
 func (r *AcademyRepository) GetCapstoneProjectsByStudent(ctx context.Context, studentID uuid.UUID) ([]*domain.CapstoneProject, error) {
 	query := `
-		SELECT id, student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status, created_at
+		SELECT id, student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status, feedback, created_at
 		FROM capstone_projects
 		WHERE student_id = $1
 		ORDER BY created_at DESC
@@ -857,7 +857,7 @@ func (r *AcademyRepository) GetCapstoneProjectsByStudent(ctx context.Context, st
 	var projects []*domain.CapstoneProject
 	for rows.Next() {
 		p := &domain.CapstoneProject{}
-		err := rows.Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.CreatedAt)
+		err := rows.Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.Feedback, &p.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -868,7 +868,7 @@ func (r *AcademyRepository) GetCapstoneProjectsByStudent(ctx context.Context, st
 
 func (r *AcademyRepository) GetPendingCapstones(ctx context.Context) ([]*domain.CapstoneProject, error) {
 	query := `
-		SELECT cp.id, cp.student_id, s.first_name || ' ' || s.last_name as student_name, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.created_at
+		SELECT cp.id, cp.student_id, s.first_name || ' ' || s.last_name as student_name, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.feedback, cp.created_at
 		FROM capstone_projects cp
 		JOIN students s ON cp.student_id = s.id
 		WHERE cp.status = 'pending'
@@ -883,7 +883,7 @@ func (r *AcademyRepository) GetPendingCapstones(ctx context.Context) ([]*domain.
 	var projects []*domain.CapstoneProject
 	for rows.Next() {
 		p := &domain.CapstoneProject{}
-		err := rows.Scan(&p.ID, &p.StudentID, &p.StudentName, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.CreatedAt)
+		err := rows.Scan(&p.ID, &p.StudentID, &p.StudentName, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.Feedback, &p.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -893,9 +893,9 @@ func (r *AcademyRepository) GetPendingCapstones(ctx context.Context) ([]*domain.
 }
 
 func (r *AcademyRepository) GetCapstoneByID(ctx context.Context, id int) (*domain.CapstoneProject, error) {
-	query := `SELECT id, student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status, created_at FROM capstone_projects WHERE id = $1`
+	query := `SELECT id, student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status, feedback, created_at FROM capstone_projects WHERE id = $1`
 	p := &domain.CapstoneProject{}
-	err := r.db.QueryRow(ctx, query, id).Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.CreatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.Feedback, &p.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -903,9 +903,9 @@ func (r *AcademyRepository) GetCapstoneByID(ctx context.Context, id int) (*domai
 }
 
 func (r *AcademyRepository) GetCapstoneByStudentID(ctx context.Context, studentID uuid.UUID) (*domain.CapstoneProject, error) {
-	query := `SELECT id, student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status, created_at FROM capstone_projects WHERE student_id = $1`
+	query := `SELECT id, student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status, feedback, created_at FROM capstone_projects WHERE student_id = $1`
 	p := &domain.CapstoneProject{}
-	err := r.db.QueryRow(ctx, query, studentID).Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.CreatedAt)
+	err := r.db.QueryRow(ctx, query, studentID).Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.Feedback, &p.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -917,9 +917,21 @@ func (r *AcademyRepository) UpdateCapstoneStatus(ctx context.Context, id int, st
 	return err
 }
 
+func (r *AcademyRepository) UpdateCapstoneStatusAndFeedback(ctx context.Context, id int, status, feedback string) error {
+	query := `UPDATE capstone_projects SET status = $1, feedback = $2 WHERE id = $3`
+	_, err := r.db.Exec(ctx, query, status, feedback, id)
+	return err
+}
+
 func (r *AcademyRepository) DeleteCapstoneProjectsByAlumni(ctx context.Context, alumniID int) error {
 	query := `DELETE FROM capstone_projects WHERE student_id = (SELECT student_id FROM alumni_profiles WHERE id = $1)`
 	_, err := r.db.Exec(ctx, query, alumniID)
+	return err
+}
+
+func (r *AcademyRepository) DeleteAlumniProfile(ctx context.Context, slug string) error {
+	query := `DELETE FROM alumni_profiles WHERE slug = $1`
+	_, err := r.db.Exec(ctx, query, slug)
 	return err
 }
 

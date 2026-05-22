@@ -17,7 +17,10 @@ import {
 } from "lucide-react";
 import { 
   getAlumniList, 
-  updateAlumni
+  updateAlumni,
+  getEligibleStudents,
+  revokeAlumni,
+  createManualAlumni
 } from "@/app/academy/actions";
 
 interface CapstoneProject {
@@ -41,6 +44,13 @@ interface AlumniProfile {
   created_at: string;
 }
 
+interface EligibleStudent {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
 export default function AlumniManagerPage() {
   const [alumni, setAlumni] = useState<AlumniProfile[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +58,15 @@ export default function AlumniManagerPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingAlumni, setEditingAlumni] = useState<AlumniProfile | null>(null);
   
-  // Graduation Form State
+  // Revoke state
+  const [revokingAlumni, setRevokingAlumni] = useState<AlumniProfile | null>(null);
+  const [isRevoking, setIsRevoking] = useState(false);
+
+  // Manual Create state
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [eligibleStudents, setEligibleStudents] = useState<EligibleStudent[]>([]);
+  
+  // Graduation/Edit Form State
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [cohortName, setCohortName] = useState("");
   const [linkedinUrl, setLinkedinUrl] = useState("");
@@ -61,9 +79,13 @@ export default function AlumniManagerPage() {
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const alumniData = await getAlumniList();
+    const [alumniData, studentsData] = await Promise.all([
+      getAlumniList(),
+      getEligibleStudents()
+    ]);
 
     if (Array.isArray(alumniData)) setAlumni(alumniData);
+    if (Array.isArray(studentsData)) setEligibleStudents(studentsData);
     
     setLoading(false);
   }, []);
@@ -141,6 +163,42 @@ export default function AlumniManagerPage() {
     setProjects([{ project_title: "", description: "", architecture_diagram_url: "", live_demo_url: "", repo_url: "" }]);
   };
 
+  const handleRevoke = async () => {
+    if (!revokingAlumni) return;
+    setIsRevoking(true);
+    
+    const res = await revokeAlumni(revokingAlumni.slug);
+    if (res.success) {
+      setRevokingAlumni(null);
+      fetchData();
+    } else {
+      alert(res.error || "Revoke failed");
+    }
+    setIsRevoking(false);
+  };
+
+  const handleManualCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedStudentId) return;
+
+    const payload = {
+        student_id: selectedStudentId,
+        cohort_name: cohortName,
+        linkedin_url: linkedinUrl,
+        github_url: githubUrl,
+    };
+
+    const res = await createManualAlumni(payload);
+
+    if (res.success) {
+      setIsCreateModalOpen(false);
+      resetForm();
+      fetchData();
+    } else {
+      alert(res.error || "Creation failed");
+    }
+  };
+
   const filteredAlumni = alumni.filter(a => 
     a.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     a.cohort_name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -163,6 +221,16 @@ export default function AlumniManagerPage() {
             <GraduationCap className="w-4 h-4" />
             Graduation PR Queue
           </Link>
+          <button 
+            onClick={() => {
+              resetForm();
+              setIsCreateModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:bg-indigo-500 transition-all active:scale-95"
+          >
+            <PlusCircle className="w-4 h-4" />
+            Create Alumni
+          </button>
         </div>
       </div>
 
@@ -188,11 +256,19 @@ export default function AlumniManagerPage() {
           {filteredAlumni.map((member) => (
             <div key={member.id} className="bg-card border border-border rounded-2xl p-6 hover:shadow-xl transition-all group relative overflow-hidden">
                <div className="absolute top-0 right-0 p-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
+                   <button 
                     onClick={() => handleEditClick(member)}
                     className="p-2 bg-muted rounded-full block hover:bg-primary hover:text-primary-foreground transition-colors"
+                    title="Edit Alumni"
                   >
                     <Edit3 className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => setRevokingAlumni(member)}
+                    className="p-2 bg-muted rounded-full block hover:bg-red-500 hover:text-white transition-colors"
+                    title="Revoke Alumni Status"
+                  >
+                    <X className="w-4 h-4" />
                   </button>
                   <a href={`/academy/alumni/${member.slug}`} target="_blank" className="p-2 bg-muted rounded-full block hover:bg-primary hover:text-primary-foreground transition-colors">
                     <ExternalLink className="w-4 h-4" />
@@ -231,7 +307,123 @@ export default function AlumniManagerPage() {
         </div>
       )}
 
-      {/* Graduation Modal */}
+      {/* Revoke Modal */}
+      {revokingAlumni && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-background border border-border max-w-md w-full rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <h2 className="text-2xl font-bold text-red-500 mb-4 flex items-center gap-2">
+              <X className="w-6 h-6" /> Revoke Alumni Status
+            </h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to revoke <strong>{revokingAlumni.student_name}</strong>'s alumni status? This will delete their public portfolio and revert their role back to student. Their capstone projects will be set to pending.
+            </p>
+            <div className="flex gap-4 mt-8">
+              <button 
+                onClick={() => setRevokingAlumni(null)}
+                className="flex-1 px-4 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-colors"
+                disabled={isRevoking}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleRevoke}
+                disabled={isRevoking}
+                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-500 transition-colors disabled:opacity-50"
+              >
+                {isRevoking ? "Revoking..." : "Yes, Revoke Status"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Manual Create Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-card border border-border w-full max-w-xl max-h-[90vh] overflow-hidden rounded-3xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-border flex items-center justify-between bg-muted/30">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-indigo-500/10 rounded-xl text-indigo-500">
+                  <GraduationCap className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Manual Alumni Creation</h2>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest font-semibold">
+                    Bypass Capstone Flow
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setIsCreateModalOpen(false)}
+                className="p-2 hover:bg-muted rounded-full transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleManualCreate} className="flex-1 overflow-y-auto p-8 space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Select Student_</label>
+                <select 
+                  required
+                  value={selectedStudentId}
+                  onChange={(e) => setSelectedStudentId(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="" disabled>Select an eligible student...</option>
+                  {eligibleStudents.map(student => (
+                    <option key={student.id} value={student.id}>
+                      {student.first_name} {student.last_name} ({student.email})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Cohort Designation_</label>
+                <input 
+                  required
+                  type="text" 
+                  placeholder="e.g. Cloud Native Cohort 1"
+                  value={cohortName}
+                  onChange={(e) => setCohortName(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">LinkedIn Handle_</label>
+                <input 
+                  type="url" 
+                  placeholder="https://linkedin.com/in/..."
+                  value={linkedinUrl}
+                  onChange={(e) => setLinkedinUrl(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">GitHub Profile_</label>
+                <input 
+                  type="url" 
+                  placeholder="https://github.com/..."
+                  value={githubUrl}
+                  onChange={(e) => setGithubUrl(e.target.value)}
+                  className="w-full bg-muted/50 border border-border rounded-xl p-3 text-sm outline-none focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
+              <div className="pt-4 flex gap-4">
+                <button 
+                  type="submit"
+                  className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-bold text-sm shadow-xl shadow-indigo-600/20 hover:shadow-indigo-600/30 hover:bg-indigo-500 transition-all flex items-center justify-center gap-2"
+                >
+                  <GraduationCap className="w-5 h-5" />
+                  Grant Alumni Status
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Graduation/Edit Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-card border border-border w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl shadow-2xl flex flex-col animate-in zoom-in-95 duration-200">

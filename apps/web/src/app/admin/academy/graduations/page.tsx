@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPendingCapstones, approveCapstone } from "@/app/academy/actions";
+import { getPendingCapstones, approveCapstone, rejectCapstone } from "@/app/academy/actions";
 import { 
   GraduationCap, 
   Github, 
@@ -38,6 +38,11 @@ export default function AdminGraduationsPage() {
   const [linkedinUrl, setLinkedinUrl] = useState("");
   const [githubUrl, setGitHubUrl] = useState("");
 
+  // Reject Form State
+  const [rejectingCapstone, setRejectingCapstone] = useState<Capstone | null>(null);
+  const [feedback, setFeedback] = useState("");
+  const [isRejecting, setIsRejecting] = useState(false);
+
   useEffect(() => {
     fetchCapstones();
   }, []);
@@ -68,6 +73,21 @@ export default function AdminGraduationsPage() {
       alert(res.error || "Approval failed");
     }
     setApprovingId(null);
+  };
+
+  const handleReject = async () => {
+    if (!rejectingCapstone || !feedback) return;
+    setIsRejecting(true);
+
+    const res = await rejectCapstone(rejectingCapstone.id, feedback);
+    if (res.success) {
+      setRejectingCapstone(null);
+      setFeedback("");
+      fetchCapstones();
+    } else {
+      alert(res.error || "Reject failed");
+    }
+    setIsRejecting(false);
   };
 
   return (
@@ -144,8 +164,14 @@ export default function AdminGraduationsPage() {
                   >
                     <CheckCircle2 size={18} /> Approve PR
                   </button>
-                  <button className="w-full bg-slate-800 text-slate-400 font-bold py-2.5 rounded-lg hover:bg-slate-700 transition-all flex items-center justify-center gap-2">
-                    <XCircle size={18} /> Reject
+                  <button 
+                    onClick={() => {
+                      setRejectingCapstone(cap);
+                      setFeedback("");
+                    }}
+                    className="w-full bg-slate-800 text-slate-400 font-bold py-2.5 rounded-lg hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <XCircle size={18} /> Request Changes
                   </button>
                 </div>
               </div>
@@ -221,6 +247,58 @@ export default function AdminGraduationsPage() {
                      <Loader2 className="animate-spin" size={18} /> Processing...
                    </div>
                 ) : "Approve & Publish"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Request Changes Modal */}
+      {rejectingCapstone && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+          <div className="bg-background border border-border max-w-xl w-full rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="flex items-center gap-3 text-red-500 mb-8">
+              <XCircle size={32} />
+              <h2 className="text-2xl font-bold">Request Changes</h2>
+            </div>
+
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Feedback for Student</label>
+                <textarea 
+                  className="w-full bg-[#020617] border border-border rounded-xl p-3 text-white focus:ring-1 focus:ring-red-500 outline-none transition-all h-32 resize-none"
+                  placeholder="Explain what needs to be fixed..."
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                />
+              </div>
+
+              <div className="bg-red-950/20 border border-red-800/30 p-4 rounded-xl flex items-start gap-3">
+                 <AlertCircle className="text-red-500 shrink-0" size={20} />
+                 <p className="text-xs text-red-400/80 leading-relaxed">
+                   The student will be notified and the capstone status will be changed to <span className="font-bold">needs_revision</span>. It will be removed from this queue.
+                 </p>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-10">
+              <button 
+                onClick={() => setRejectingCapstone(null)}
+                className="flex-1 px-4 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-colors"
+                disabled={isRejecting}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleReject}
+                disabled={isRejecting || !feedback}
+                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-500 transition-colors disabled:opacity-50"
+              >
+                {isRejecting ? (
+                   <div className="flex items-center justify-center gap-2">
+                     <Loader2 className="animate-spin" size={18} /> Processing...
+                   </div>
+                ) : "Send Feedback"}
               </button>
             </div>
           </div>
