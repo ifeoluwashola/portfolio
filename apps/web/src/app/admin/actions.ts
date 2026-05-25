@@ -58,6 +58,14 @@ export async function adminLogin(formData: FormData) {
       sameSite: "lax",
     });
 
+    // Reset Last Active timestamp to prevent immediate timeout by proxy
+    cookieStore.set("admin_last_active", Date.now().toString(), {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      path: "/admin",
+      sameSite: "strict",
+    });
+
     return { success: true, is_first_login, role };
   } catch {
     return { error: "Connection to authentication server failed" };
@@ -82,9 +90,9 @@ export async function adminLogout() {
     }
   }
 
-  cookieStore.delete("auth_token");
-  cookieStore.delete("auth_refresh_token");
-  cookieStore.delete("admin_last_active");
+  cookieStore.set("auth_token", "", { maxAge: 0, path: "/" });
+  cookieStore.set("auth_refresh_token", "", { maxAge: 0, path: "/" });
+  cookieStore.set("admin_last_active", "", { maxAge: 0, path: "/admin" });
   redirect("/admin/login");
 }
 
@@ -104,8 +112,8 @@ export async function refreshAdminSession() {
     });
 
     if (!res.ok) {
-      cookieStore.delete("auth_token");
-      cookieStore.delete("auth_refresh_token");
+      cookieStore.set("auth_token", "", { maxAge: 0, path: "/" });
+      cookieStore.set("auth_refresh_token", "", { maxAge: 0, path: "/" });
       return { success: false };
     }
 
@@ -162,8 +170,8 @@ export async function adminChangePassword(formData: FormData) {
 
     // Token was revoked by the server — clear cookies
     const cookieStore = await cookies();
-    cookieStore.delete("auth_token");
-    cookieStore.delete("auth_refresh_token");
+    cookieStore.set("auth_token", "", { maxAge: 0, path: "/" });
+    cookieStore.set("auth_refresh_token", "", { maxAge: 0, path: "/" });
     return { success: true };
   } catch {
     return { error: "Failed to change password" };
