@@ -44,7 +44,7 @@ export default async function AlumniGridPage() {
             <span className="text-yellow-500">Hall of Fame</span>
           </h1>
           <p className="text-muted-foreground text-sm md:text-lg max-w-2xl leading-relaxed uppercase tracking-wider animate-in fade-in slide-in-from-bottom-8 duration-1000">
-            Meet the specialists who completed 12 weeks of intensive infrastructure warfare. These engineers are ready for any production environment.
+            Meet the specialists who completed 16 weeks of intensive infrastructure warfare. These engineers are ready for any production environment.
           </p>
         </div>
       </div>

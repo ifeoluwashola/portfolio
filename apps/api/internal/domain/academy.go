@@ -31,6 +31,13 @@ type PaymentHistory struct {
 	CreatedAt   time.Time `json:"created_at"`
 }
 
+type Cohort struct {
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Status    string    `json:"status"` // onboarding, active, graduated
+	CreatedAt time.Time `json:"created_at"`
+}
+
 type Student struct {
 	ID                     uuid.UUID `json:"id"`
 	FirstName              string    `json:"first_name"`
@@ -42,6 +49,7 @@ type Student struct {
 	DisqualificationReason *string   `json:"disqualification_reason,omitempty"`
 	IsManuallyLocked       bool      `json:"is_manually_locked"`
 	IsFirstLogin           bool      `json:"is_first_login"`
+	CohortID               int       `json:"cohort_id"`
 	AttendanceRate         float64   `json:"attendance_rate"` // Percentage of occurred sessions attended
 	AttendedCount          int       `json:"attended_count"`
 	TotalHeldSessions      int       `json:"total_held_sessions"`
@@ -100,8 +108,13 @@ type AcademyRepository interface {
 	UpdateCapstoneStatusAndFeedback(ctx context.Context, id int, status, feedback string) error
 	DeleteAlumniProfile(ctx context.Context, slug string) error
 
+	// Cohorts & Curriculum
+	CreateCohort(ctx context.Context, name string) (int, error)
+	GetCohortByID(ctx context.Context, id int) (*Cohort, error)
+	CloneCohortCurriculum(ctx context.Context, sourceCohortID int, newCohortID int) error
+
 	// Assignments
-	GetWeeks(ctx context.Context) ([]*CohortWeek, error)
+	GetWeeks(ctx context.Context, cohortID int) ([]*CohortWeek, error)
 	GetWeekByID(ctx context.Context, id int) (*CohortWeek, error)
 	UpdateWeek(ctx context.Context, week *CohortWeek) error
 	CreateAssignment(ctx context.Context, assignment *Assignment) error
@@ -154,9 +167,10 @@ type AcademyService interface {
 	RevokeRefreshTokens(ctx context.Context, refreshToken string) error
 	GrantScholarship(ctx context.Context, applicationID uuid.UUID, amountKobo int) error
 
-	GetCurriculum(ctx context.Context) ([]*CohortWeek, error)
+	GetCurriculum(ctx context.Context, cohortID int) ([]*CohortWeek, error)
 	UpdateCohortWeek(ctx context.Context, req *UpdateWeekRequest) error
 	GetStudentDashboardData(ctx context.Context, studentID uuid.UUID) (*StudentDashboardResponse, error)
+	AdminCloneCohort(ctx context.Context, req *AdminCloneCohortRequest) error
 	SubmitAssignment(ctx context.Context, studentID uuid.UUID, req *SubmitAssignmentRequest) error
 	GetAdminSubmissions(ctx context.Context) ([]*Assignment, error)
 	GradeSubmission(ctx context.Context, req *GradeAssignmentRequest) error
@@ -185,7 +199,9 @@ type AcademyService interface {
 	AdminUpdateAlumni(ctx context.Context, id int, req *GraduateStudentRequest) error
 	GetEligibleStudents(ctx context.Context) ([]*Student, error)
 	SubmitCapstone(ctx context.Context, studentID uuid.UUID, req *CapstoneProjectRequest) error
+	GetStudentCapstone(ctx context.Context, studentID uuid.UUID) (*CapstoneProject, error)
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
+	GetCapstoneByID(ctx context.Context, id int) (*CapstoneProject, error)
 	ApproveCapstone(ctx context.Context, id int, req *ApproveCapstoneRequest) error
 	RejectCapstone(ctx context.Context, id int, feedback string) error
 	RevokeAlumni(ctx context.Context, slug string) error
@@ -388,6 +404,7 @@ type AttendanceRecord struct {
 
 type CohortWeek struct {
 	ID                     int               `json:"id"`
+	CohortID               int               `json:"cohort_id"`
 	WeekNumber             int               `json:"week_number"`
 	Title                  string            `json:"title"`
 	RecordingURL           *string           `json:"recording_url"`
@@ -434,10 +451,12 @@ type GradeAssignmentRequest struct {
 }
 
 type StudentDashboardResponse struct {
-	Weeks        []*CohortWeek `json:"weeks"`
-	Assignments  []*Assignment `json:"assignments"`
+	Weeks             []*CohortWeek `json:"weeks"`
+	Assignments       []*Assignment `json:"assignments"`
 	IsFirstLogin      bool          `json:"is_first_login"`
 	Status            string        `json:"status"`
+	CohortName        string        `json:"cohort_name"`
+	CohortStatus      string        `json:"cohort_status"`
 	AttendedCount     int           `json:"attended_count"`
 	TotalHeldSessions int           `json:"total_held_sessions"`
 	AttendanceRate    float64       `json:"attendance_rate"`
@@ -598,4 +617,9 @@ type ManualPaymentRequest struct {
 type UpdateStudentStatusRequest struct {
 	AcademicStatus   string `json:"academic_status"`     // active, graduated, disqualified, probation
 	IsManuallyLocked bool   `json:"is_manually_locked"`
+}
+
+type AdminCloneCohortRequest struct {
+	SourceCohortID int    `json:"source_cohort_id"`
+	NewCohortName  string `json:"new_cohort_name"`
 }

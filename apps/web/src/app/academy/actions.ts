@@ -289,7 +289,7 @@ export async function getDashboardData() {
 export async function getStudentStatus() {
   const result = await academyFetch("/v1/academy/dashboard");
   if (result.error) return { error: result.error };
-  return { status: result.data.status };
+  return { status: result.data.status, cohort_status: result.data.cohort_status };
 }
 
 export async function submitAssignment(weekId: number, githubUrl: string, submissionFileKey?: string) {
@@ -445,6 +445,14 @@ export async function disqualifyStudent(id: string, reason: string) {
   return { success: true };
 }
 
+export async function getStudentCapstone() {
+  const result = await academyFetch("/v1/academy/capstone", {
+    method: "GET",
+  });
+  if (result.error) return { error: result.error };
+  return result;
+}
+
 export async function submitCapstone(data: Record<string, unknown>) {
   const result = await academyFetch("/v1/academy/capstone", {
     method: "POST",
@@ -459,11 +467,27 @@ export async function getPendingCapstones() {
   if (!token) return { error: "Unauthorized" };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/alumni/pending`, {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/graduations/pending`, {
       headers: { "Authorization": `Bearer ${token}` },
       cache: "no-store",
     });
     if (!res.ok) return { error: "Failed to fetch pending capstones" };
+    return await res.json();
+  } catch {
+    return { error: "Connection failed" };
+  }
+}
+
+export async function getCapstoneById(id: number) {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/graduations/pending/${id}`, {
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return { error: "Failed to fetch capstone" };
     return await res.json();
   } catch {
     return { error: "Connection failed" };

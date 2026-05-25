@@ -401,7 +401,15 @@ func (h *AcademyHandler) HandleGetCurriculum(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	weeks, err := h.svc.GetCurriculum(r.Context())
+	cohortIDStr := r.URL.Query().Get("cohort_id")
+	cohortID := 1 // default master cohort
+	if cohortIDStr != "" {
+		if id, err := strconv.Atoi(cohortIDStr); err == nil {
+			cohortID = id
+		}
+	}
+
+	weeks, err := h.svc.GetCurriculum(r.Context(), cohortID)
 	if err != nil {
 		http.Error(w, "Failed to get curriculum: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -430,6 +438,33 @@ func (h *AcademyHandler) HandleUpdateWeek(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AcademyHandler) HandleAdminCloneCohort(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req domain.AdminCloneCohortRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if req.NewCohortName == "" || req.SourceCohortID == 0 {
+		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		return
+	}
+
+	err := h.svc.AdminCloneCohort(r.Context(), &req)
+	if err != nil {
+		http.Error(w, "Failed to clone cohort: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Cohort cloned successfully"})
 }
 
 func (h *AcademyHandler) HandleGetSubmissions(w http.ResponseWriter, r *http.Request) {
@@ -786,7 +821,16 @@ func (h *AcademyHandler) HandleDisqualifyStudent(w http.ResponseWriter, r *http.
 }
 
 func (h *AcademyHandler) HandleSubmitCapstone(w http.ResponseWriter, r *http.Request) {
-	studentID := r.Context().Value("student_id").(uuid.UUID)
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		http.Error(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
 
 	var req domain.CapstoneProjectRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -801,6 +845,31 @@ func (h *AcademyHandler) HandleSubmitCapstone(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (h *AcademyHandler) HandleGetStudentCapstone(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		http.Error(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	cap, err := h.svc.GetStudentCapstone(r.Context(), studentID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(cap)
+}
+
 func (h *AcademyHandler) HandleListPendingCapstones(w http.ResponseWriter, r *http.Request) {
 	caps, err := h.svc.GetPendingCapstones(r.Context())
 	if err != nil {
@@ -809,6 +878,23 @@ func (h *AcademyHandler) HandleListPendingCapstones(w http.ResponseWriter, r *ht
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(caps)
+}
+
+func (h *AcademyHandler) HandleGetCapstone(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid capstone ID", http.StatusBadRequest)
+		return
+	}
+
+	cap, err := h.svc.GetCapstoneByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(cap)
 }
 
 func (h *AcademyHandler) HandleApproveCapstone(w http.ResponseWriter, r *http.Request) {

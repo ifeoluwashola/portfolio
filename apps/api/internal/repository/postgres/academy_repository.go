@@ -129,14 +129,14 @@ func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*
 
 func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, created_at
 		FROM students WHERE email = $1
 	`
 	student := &domain.Student{}
 	err := r.db.QueryRow(ctx, query, email).Scan(
 		&student.ID, &student.FirstName, &student.LastName, &student.Email,
 		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
-		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt,
+		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID, &student.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -167,14 +167,14 @@ func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string)
 
 func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, created_at
 		FROM students WHERE id = $1
 	`
 	student := &domain.Student{}
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&student.ID, &student.FirstName, &student.LastName, &student.Email,
 		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
-		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt,
+		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID, &student.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -204,10 +204,10 @@ func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*
 
 func (r *AcademyRepository) CreateStudent(ctx context.Context, student *domain.Student) error {
 	query := `
-		INSERT INTO students (id, first_name, last_name, email, password_hash, is_first_login, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO students (id, first_name, last_name, email, password_hash, is_first_login, cohort_id, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
-	_, err := r.db.Exec(ctx, query, student.ID, student.FirstName, student.LastName, student.Email, student.PasswordHash, student.IsFirstLogin, student.CreatedAt)
+	_, err := r.db.Exec(ctx, query, student.ID, student.FirstName, student.LastName, student.Email, student.PasswordHash, student.IsFirstLogin, student.CohortID, student.CreatedAt)
 	return err
 }
 
@@ -304,12 +304,12 @@ func (r *AcademyRepository) WarnStudent(ctx context.Context, id uuid.UUID, reaso
 	return count, err
 }
 
-func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek, error) {
+func (r *AcademyRepository) GetWeeks(ctx context.Context, cohortID int) ([]*domain.CohortWeek, error) {
 	query := `
-		SELECT id, week_number, title, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
-		FROM cohort_weeks ORDER BY week_number ASC
+		SELECT id, cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
+		FROM cohort_weeks WHERE cohort_id = $1 ORDER BY week_number ASC
 	`
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, cohortID)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek,
 	var weeks []*domain.CohortWeek
 	for rows.Next() {
 		w := &domain.CohortWeek{}
-		err := rows.Scan(&w.ID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
+		err := rows.Scan(&w.ID, &w.CohortID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -337,11 +337,11 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context) ([]*domain.CohortWeek,
 
 func (r *AcademyRepository) GetWeekByID(ctx context.Context, id int) (*domain.CohortWeek, error) {
 	query := `
-		SELECT id, week_number, title, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
+		SELECT id, cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
 		FROM cohort_weeks WHERE id = $1
 	`
 	w := &domain.CohortWeek{}
-	err := r.db.QueryRow(ctx, query, id).Scan(&w.ID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&w.ID, &w.CohortID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -794,21 +794,46 @@ func (r *AcademyRepository) UpdateAlumniProfile(ctx context.Context, profile *do
 }
 
 func (r *AcademyRepository) CreateCapstoneProject(ctx context.Context, project *domain.CapstoneProject) (int, error) {
+	// Check if exists
+	var existingID int
+	err := r.db.QueryRow(ctx, "SELECT id FROM capstone_projects WHERE student_id = $1", project.StudentID).Scan(&existingID)
+	
+	if err != nil {
+		// Assume not found, insert
+		query := `
+			INSERT INTO capstone_projects (student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status)
+			VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
+		`
+		var newID int
+		err = r.db.QueryRow(ctx, query, 
+			project.StudentID, 
+			project.ProjectTitle, 
+			project.Description, 
+			project.ArchitectureDiagramURL, 
+			project.LiveDemoURL, 
+			project.RepoURL, 
+			project.Status,
+		).Scan(&newID)
+		return newID, err
+	}
+
+	// Update existing
 	query := `
-		INSERT INTO capstone_projects (student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status)
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id
+		UPDATE capstone_projects 
+		SET project_title = $1, description = $2, architecture_diagram_url = $3, 
+		    live_demo_url = $4, repo_url = $5, status = $6, feedback = NULL
+		WHERE id = $7
 	`
-	var id int
-	err := r.db.QueryRow(ctx, query, 
-		project.StudentID, 
-		project.ProjectTitle, 
-		project.Description, 
-		project.ArchitectureDiagramURL, 
-		project.LiveDemoURL, 
-		project.RepoURL, 
+	_, err = r.db.Exec(ctx, query,
+		project.ProjectTitle,
+		project.Description,
+		project.ArchitectureDiagramURL,
+		project.LiveDemoURL,
+		project.RepoURL,
 		project.Status,
-	).Scan(&id)
-	return id, err
+		existingID,
+	)
+	return existingID, err
 }
 
 func (r *AcademyRepository) GetCapstoneProjectsByAlumni(ctx context.Context, alumniID int) ([]*domain.CapstoneProject, error) {
@@ -893,9 +918,14 @@ func (r *AcademyRepository) GetPendingCapstones(ctx context.Context) ([]*domain.
 }
 
 func (r *AcademyRepository) GetCapstoneByID(ctx context.Context, id int) (*domain.CapstoneProject, error) {
-	query := `SELECT id, student_id, project_title, description, architecture_diagram_url, live_demo_url, repo_url, status, feedback, created_at FROM capstone_projects WHERE id = $1`
+	query := `
+		SELECT cp.id, cp.student_id, s.first_name || ' ' || s.last_name as student_name, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.feedback, cp.created_at 
+		FROM capstone_projects cp
+		JOIN students s ON cp.student_id = s.id
+		WHERE cp.id = $1
+	`
 	p := &domain.CapstoneProject{}
-	err := r.db.QueryRow(ctx, query, id).Scan(&p.ID, &p.StudentID, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.Feedback, &p.CreatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&p.ID, &p.StudentID, &p.StudentName, &p.ProjectTitle, &p.Description, &p.ArchitectureDiagramURL, &p.LiveDemoURL, &p.RepoURL, &p.Status, &p.Feedback, &p.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -1205,4 +1235,105 @@ func (r *AcademyRepository) SetManualLock(ctx context.Context, id uuid.UUID, loc
 	query := `UPDATE students SET is_manually_locked = $2 WHERE id = $1`
 	_, err := r.db.Exec(ctx, query, id, locked)
 	return err
+}
+
+// ─── Cohorts & Curriculum ───────────────────────────────────────────────────
+
+func (r *AcademyRepository) CreateCohort(ctx context.Context, name string) (int, error) {
+	query := `INSERT INTO cohorts (name) VALUES ($1) RETURNING id`
+	var id int
+	err := r.db.QueryRow(ctx, query, name).Scan(&id)
+	return id, err
+}
+
+func (r *AcademyRepository) GetCohortByID(ctx context.Context, id int) (*domain.Cohort, error) {
+	query := `SELECT id, name, status, created_at FROM cohorts WHERE id = $1`
+	c := &domain.Cohort{}
+	err := r.db.QueryRow(ctx, query, id).Scan(&c.ID, &c.Name, &c.Status, &c.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
+func (r *AcademyRepository) CloneCohortCurriculum(ctx context.Context, sourceCohortID int, newCohortID int) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Fetch master weeks
+	weeksQuery := `SELECT id, week_number, title, recording_url, materials, transcript, assignment_instructions FROM cohort_weeks WHERE cohort_id = $1`
+	rows, err := tx.Query(ctx, weeksQuery, sourceCohortID)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	type weekData struct {
+		ID                     int
+		WeekNumber             int
+		Title                  string
+		RecordingURL           *string
+		Materials              []domain.CourseMaterial
+		Transcript             *string
+		AssignmentInstructions *string
+	}
+	var weeksToClone []weekData
+	for rows.Next() {
+		var w weekData
+		if err := rows.Scan(&w.ID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions); err != nil {
+			return err
+		}
+		weeksToClone = append(weeksToClone, w)
+	}
+	rows.Close() // Explicitly close before next queries
+
+	for _, w := range weeksToClone {
+		var newWeekID int
+		insertWeekQuery := `
+			INSERT INTO cohort_weeks (cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, status)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, 'locked') RETURNING id
+		`
+		if err := tx.QueryRow(ctx, insertWeekQuery, newCohortID, w.WeekNumber, w.Title, w.RecordingURL, w.Materials, w.Transcript, w.AssignmentInstructions).Scan(&newWeekID); err != nil {
+			return err
+		}
+
+		// Clone sessions for this week
+		sessionsQuery := `SELECT title, visibility_status, meeting_url, recording_url FROM class_sessions WHERE cohort_week_id = $1`
+		sessRows, err := tx.Query(ctx, sessionsQuery, w.ID)
+		if err != nil {
+			return err
+		}
+
+		type sessData struct {
+			Title            string
+			VisibilityStatus string
+			MeetingURL       string
+			RecordingURL     string
+		}
+		var sessionsToClone []sessData
+		for sessRows.Next() {
+			var s sessData
+			if err := sessRows.Scan(&s.Title, &s.VisibilityStatus, &s.MeetingURL, &s.RecordingURL); err != nil {
+				sessRows.Close()
+				return err
+			}
+			sessionsToClone = append(sessionsToClone, s)
+		}
+		sessRows.Close()
+
+		for _, s := range sessionsToClone {
+			insertSessQuery := `
+				INSERT INTO class_sessions (cohort_week_id, title, status, visibility_status, meeting_url, scheduled_at, recording_url)
+				VALUES ($1, $2, 'scheduled', $3, $4, NOW(), $5)
+			`
+			if _, err := tx.Exec(ctx, insertSessQuery, newWeekID, s.Title, s.VisibilityStatus, s.MeetingURL, s.RecordingURL); err != nil {
+				return err
+			}
+		}
+	}
+
+	return tx.Commit(ctx)
 }

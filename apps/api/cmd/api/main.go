@@ -184,12 +184,12 @@ func main() {
 	// === STUDENT PROTECTED ROUTES ===
 	mux.HandleFunc("POST /api/v1/academy/change-password", authMW.RequireStudentAuth(academyHandler.HandleAcademyChangePassword))
 	mux.HandleFunc("GET /api/v1/academy/dashboard", authMW.RequireStudentAuth(academyHandler.HandleGetStudentDashboard))
-	mux.HandleFunc("POST /api/v1/academy/assignments", authMW.RequireStudentAuth(academyHandler.HandleSubmitAssignment))
+	mux.HandleFunc("POST /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleSubmitCapstone))
+	mux.HandleFunc("GET /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleGetStudentCapstone))
 	mux.HandleFunc("GET /api/v1/media/upload-url", authMW.RequireStudentAuth(academyHandler.HandleGetUploadURL))
 	mux.HandleFunc("GET /api/v1/media/download-url", authMW.RequireStudentAuth(academyHandler.HandleGetDownloadURL))
 	mux.HandleFunc("POST /api/v1/labs/{id}/submit", authMW.RequireStudentAuth(academyHandler.HandleSubmitLabFix))
 	mux.HandleFunc("POST /api/v1/labs/submissions/{id}/comments", authMW.RequireStudentAuth(academyHandler.HandleAddSubmissionComment))
-	mux.HandleFunc("POST /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleSubmitCapstone))
 	// Billing & Installments
 	mux.HandleFunc("GET /api/v1/academy/billing", authMW.RequireStudentAuth(academyHandler.HandleGetBillingStatus))
 	mux.HandleFunc("GET /api/v1/academy/billing/hub", authMW.RequireStudentAuth(academyHandler.HandleGetBillingHub))
@@ -216,6 +216,7 @@ func main() {
 	mux.HandleFunc("DELETE /api/v1/projects/{id}", authMW.RequireAuth(projectDataHandler.HandleDeleteProject))
 
 	// Academy Management (admin)
+	mux.HandleFunc("POST /api/v1/admin/cohorts/clone", authMW.RequireAuth(academyHandler.HandleAdminCloneCohort))
 	mux.HandleFunc("GET /api/v1/admin/academy/weeks", authMW.RequireAuth(academyHandler.HandleGetCurriculum))
 	mux.HandleFunc("PUT /api/v1/admin/academy/weeks", authMW.RequireAuth(academyHandler.HandleUpdateWeek))
 	mux.HandleFunc("GET /api/v1/admin/academy/submissions", authMW.RequireAuth(academyHandler.HandleGetSubmissions))
@@ -241,6 +242,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/admin/billing/manual-payment", authMW.RequireAuth(academyHandler.HandleManualPayment))
 	mux.HandleFunc("GET /api/v1/admin/alumni/eligible", authMW.RequireAuth(academyHandler.HandleGetEligibleStudents))
 	mux.HandleFunc("GET /api/v1/admin/graduations/pending", authMW.RequireAuth(academyHandler.HandleListPendingCapstones))
+	mux.HandleFunc("GET /api/v1/admin/graduations/pending/{id}", authMW.RequireAuth(academyHandler.HandleGetCapstone))
 	mux.HandleFunc("POST /api/v1/admin/alumni/approve/{id}", authMW.RequireAuth(academyHandler.HandleApproveCapstone))
 	mux.HandleFunc("POST /api/v1/admin/graduations/{id}/reject", authMW.RequireAuth(academyHandler.HandleRejectCapstone))
 	mux.HandleFunc("POST /api/v1/admin/alumni/manual", authMW.RequireAuth(academyHandler.HandleManualCreateAlumni))

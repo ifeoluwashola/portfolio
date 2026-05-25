@@ -229,7 +229,7 @@ export default async function StudentDashboard() {
               })}
               <div className="pt-4 border-t border-border mt-4">
                 <p className="text-[10px] text-muted-foreground/60 leading-relaxed uppercase font-bold tracking-widest">
-                  The roadmap is live. Modules unlock as we progress through the 12-week deployment cycle.
+                  The roadmap is live. Modules unlock as we progress through the 16-week deployment cycle.
                 </p>
               </div>
             </div>

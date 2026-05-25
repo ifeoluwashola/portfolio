@@ -1,18 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { getPendingCapstones, approveCapstone, rejectCapstone } from "@/app/academy/actions";
+import { getPendingCapstones } from "@/app/academy/actions";
 import { 
   GraduationCap, 
   Github, 
   Globe, 
   Layers, 
   FileText,
-  CheckCircle2,
-  XCircle,
   Loader2,
-  AlertCircle
+  ChevronRight
 } from "lucide-react";
+import Link from "next/link";
 
 interface Capstone {
   id: number;
@@ -30,18 +29,6 @@ interface Capstone {
 export default function AdminGraduationsPage() {
   const [capstones, setCapstones] = useState<Capstone[]>([]);
   const [loading, setLoading] = useState(true);
-  const [approvingId, setApprovingId] = useState<number | null>(null);
-  
-  // Approval Form State
-  const [selectedCapstone, setSelectedCapstone] = useState<Capstone | null>(null);
-  const [cohortName, setCohortName] = useState("Cloud Native Mastery - [Batch 1]");
-  const [linkedinUrl, setLinkedinUrl] = useState("");
-  const [githubUrl, setGitHubUrl] = useState("");
-
-  // Reject Form State
-  const [rejectingCapstone, setRejectingCapstone] = useState<Capstone | null>(null);
-  const [feedback, setFeedback] = useState("");
-  const [isRejecting, setIsRejecting] = useState(false);
 
   useEffect(() => {
     fetchCapstones();
@@ -54,40 +41,6 @@ export default function AdminGraduationsPage() {
       setCapstones(data);
     }
     setLoading(false);
-  };
-
-  const handleApprove = async () => {
-    if (!selectedCapstone) return;
-    setApprovingId(selectedCapstone.id);
-    
-    const res = await approveCapstone(selectedCapstone.id, {
-      cohort_name: cohortName,
-      linkedin_url: linkedinUrl,
-      github_url: githubUrl
-    });
-
-    if (res.success) {
-      setSelectedCapstone(null);
-      fetchCapstones();
-    } else {
-      alert(res.error || "Approval failed");
-    }
-    setApprovingId(null);
-  };
-
-  const handleReject = async () => {
-    if (!rejectingCapstone || !feedback) return;
-    setIsRejecting(true);
-
-    const res = await rejectCapstone(rejectingCapstone.id, feedback);
-    if (res.success) {
-      setRejectingCapstone(null);
-      setFeedback("");
-      fetchCapstones();
-    } else {
-      alert(res.error || "Reject failed");
-    }
-    setIsRejecting(false);
   };
 
   return (
@@ -118,8 +71,12 @@ export default function AdminGraduationsPage() {
       ) : (
         <div className="grid gap-6">
           {capstones.map((cap) => (
-            <div key={cap.id} className="bg-background border border-border rounded-2xl overflow-hidden hover:border-[#eab308]/30 transition-all group">
-              <div className="p-6 flex flex-col md:flex-row gap-6">
+            <Link 
+              key={cap.id}
+              href={`/admin/academy/graduations/${cap.id}`}
+              className="block bg-background border border-border rounded-2xl overflow-hidden hover:border-[#eab308]/50 transition-all group hover:shadow-[0_0_20px_rgba(234,179,8,0.05)]"
+            >
+              <div className="p-6 flex flex-col md:flex-row gap-6 items-center">
                 {/* Project Meta */}
                 <div className="flex-1 space-y-4">
                   <div className="flex items-center justify-between">
@@ -128,7 +85,7 @@ export default function AdminGraduationsPage() {
                         {cap.student_name.charAt(0)}
                       </div>
                       <div>
-                        <h3 className="text-white font-bold text-lg">{cap.project_title}</h3>
+                        <h3 className="text-white font-bold text-lg group-hover:text-[#eab308] transition-colors">{cap.project_title}</h3>
                         <p className="text-muted-foreground text-xs uppercase tracking-widest font-semibold flex items-center gap-1">
                           BY {cap.student_name} <span className="w-1 h-1 rounded-full bg-slate-700 mx-1"></span> {new Date(cap.created_at).toLocaleDateString()}
                         </p>
@@ -136,172 +93,32 @@ export default function AdminGraduationsPage() {
                     </div>
                   </div>
 
-                  <p className="text-foreground text-sm leading-relaxed line-clamp-3">
+                  <p className="text-foreground text-sm leading-relaxed line-clamp-2">
                     {cap.description}
                   </p>
 
                   <div className="flex flex-wrap gap-4 pt-2">
-                    <a href={cap.repo_url} target="_blank" className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
                       <Github size={14} /> Repository
-                    </a>
-                    <a href={cap.live_demo_url} target="_blank" className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
                       <Globe size={14} /> Live Demo
-                    </a>
-                    <a href={cap.architecture_diagram_url} target="_blank" className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-white transition-colors">
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-400">
                       <Layers size={14} /> Architecture
-                    </a>
+                    </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="md:w-48 flex flex-col justify-center border-t md:border-t-0 md:border-l border-border p-6 md:p-0 md:pl-6 bg-card/30 md:bg-transparent">
-                  <button 
-                    onClick={() => {
-                      setSelectedCapstone(cap);
-                      setGitHubUrl(cap.repo_url);
-                    }}
-                    className="w-full bg-[#eab308] text-[#020617] font-bold py-2.5 rounded-lg hover:bg-[#ca8a04] transition-all shadow-[0_0_15px_rgba(234,179,8,0.1)] flex items-center justify-center gap-2 mb-3"
-                  >
-                    <CheckCircle2 size={18} /> Approve PR
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setRejectingCapstone(cap);
-                      setFeedback("");
-                    }}
-                    className="w-full bg-slate-800 text-slate-400 font-bold py-2.5 rounded-lg hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2"
-                  >
-                    <XCircle size={18} /> Request Changes
-                  </button>
+                {/* Arrow */}
+                <div className="hidden md:flex pr-4">
+                   <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-400 group-hover:bg-[#eab308]/10 group-hover:text-[#eab308] transition-all">
+                     <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                   </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
-        </div>
-      )}
-
-      {/* Approval Details Modal */}
-      {selectedCapstone && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-background border border-border max-w-xl w-full rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
-            <div className="flex items-center gap-3 text-[#eab308] mb-8">
-              <GraduationCap size={32} />
-              <h2 className="text-2xl font-bold">Finalize Graduation</h2>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Cohort Name</label>
-                <input 
-                  className="w-full bg-[#020617] border border-border rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
-                  value={cohortName}
-                  onChange={(e) => setCohortName(e.target.value)}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                 <div className="space-y-2">
-                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">LinkedIn URL</label>
-                   <input 
-                     className="w-full bg-[#020617] border border-border rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
-                     placeholder="https://linkedin.com/in/..."
-                     value={linkedinUrl}
-                     onChange={(e) => setLinkedinUrl(e.target.value)}
-                   />
-                 </div>
-                 <div className="space-y-2">
-                   <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">GitHub URL</label>
-                   <input 
-                     className="w-full bg-[#020617] border border-border rounded-xl p-3 text-white focus:ring-1 focus:ring-[#eab308] outline-none transition-all"
-                     placeholder="https://github.com/..."
-                     value={githubUrl}
-                     onChange={(e) => setGitHubUrl(e.target.value)}
-                   />
-                 </div>
-              </div>
-
-              <div className="bg-yellow-950/20 border border-yellow-800/30 p-4 rounded-xl flex items-start gap-3">
-                 <AlertCircle className="text-[#eab308] shrink-0" size={20} />
-                 <p className="text-xs text-yellow-500/80 leading-relaxed">
-                   By approving this project, the student&apos;s status will be changed to <span className="font-bold">Graduated</span> and 
-                   this project will be published to the public Alumni Hall of Fame.
-                 </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4 mt-10">
-              <button 
-                onClick={() => setSelectedCapstone(null)}
-                className="flex-1 px-4 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-colors"
-                disabled={approvingId !== null}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleApprove}
-                disabled={approvingId !== null || !linkedinUrl}
-                className="flex-1 px-4 py-3 bg-[#eab308] text-[#020617] font-bold rounded-xl hover:bg-[#ca8a04] transition-colors disabled:opacity-50"
-              >
-                {approvingId ? (
-                   <div className="flex items-center justify-center gap-2">
-                     <Loader2 className="animate-spin" size={18} /> Processing...
-                   </div>
-                ) : "Approve & Publish"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Request Changes Modal */}
-      {rejectingCapstone && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-          <div className="bg-background border border-border max-w-xl w-full rounded-2xl p-8 shadow-2xl animate-in fade-in zoom-in duration-300">
-            <div className="flex items-center gap-3 text-red-500 mb-8">
-              <XCircle size={32} />
-              <h2 className="text-2xl font-bold">Request Changes</h2>
-            </div>
-
-            <div className="space-y-6">
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Feedback for Student</label>
-                <textarea 
-                  className="w-full bg-[#020617] border border-border rounded-xl p-3 text-white focus:ring-1 focus:ring-red-500 outline-none transition-all h-32 resize-none"
-                  placeholder="Explain what needs to be fixed..."
-                  value={feedback}
-                  onChange={(e) => setFeedback(e.target.value)}
-                />
-              </div>
-
-              <div className="bg-red-950/20 border border-red-800/30 p-4 rounded-xl flex items-start gap-3">
-                 <AlertCircle className="text-red-500 shrink-0" size={20} />
-                 <p className="text-xs text-red-400/80 leading-relaxed">
-                   The student will be notified and the capstone status will be changed to <span className="font-bold">needs_revision</span>. It will be removed from this queue.
-                 </p>
-              </div>
-            </div>
-
-            <div className="flex gap-4 mt-10">
-              <button 
-                onClick={() => setRejectingCapstone(null)}
-                className="flex-1 px-4 py-3 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-700 transition-colors"
-                disabled={isRejecting}
-              >
-                Cancel
-              </button>
-              <button 
-                onClick={handleReject}
-                disabled={isRejecting || !feedback}
-                className="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-500 transition-colors disabled:opacity-50"
-              >
-                {isRejecting ? (
-                   <div className="flex items-center justify-center gap-2">
-                     <Loader2 className="animate-spin" size={18} /> Processing...
-                   </div>
-                ) : "Send Feedback"}
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>
