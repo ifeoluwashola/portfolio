@@ -492,10 +492,12 @@ type LabSubmission struct {
 	ID          int                 `json:"id"`
 	LabID       int                 `json:"lab_id"`
 	StudentID   uuid.UUID           `json:"student_id"`
-	StudentName string              `json:"student_name,omitempty"`
-	ProposedFix string              `json:"proposed_fix"`
-	IsWinner    bool                `json:"is_winner"`
-	Comments    []*SubmissionComment `json:"comments,omitempty"`
+	StudentName      string              `json:"student_name,omitempty"`
+	AvatarS3Key      *string             `json:"-"`
+	StudentAvatarUrl string              `json:"student_avatar_url,omitempty"`
+	ProposedFix      string              `json:"proposed_fix"`
+	IsWinner         bool                `json:"is_winner"`
+	Comments         []*SubmissionComment `json:"comments,omitempty"`
 	CreatedAt   time.Time           `json:"created_at"`
 }
 
@@ -516,9 +518,11 @@ type SubmissionCommentRequest struct {
 type SubmissionComment struct {
 	ID           int       `json:"id"`
 	SubmissionID int       `json:"submission_id"`
-	StudentID    uuid.UUID `json:"student_id"`
-	StudentName  string    `json:"student_name,omitempty"`
-	Body         string    `json:"body"`
+	StudentID        uuid.UUID `json:"student_id"`
+	StudentName      string    `json:"student_name,omitempty"`
+	AvatarS3Key      *string   `json:"-"`
+	StudentAvatarUrl string    `json:"student_avatar_url,omitempty"`
+	Body             string    `json:"body"`
 	CreatedAt    time.Time `json:"created_at"`
 }
 

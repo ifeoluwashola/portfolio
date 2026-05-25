@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Image from "next/image";
 import {
   User,
   Github,
@@ -111,14 +112,16 @@ function AvatarUploader({
         title="Click to upload avatar"
       >
         {/* Avatar circle */}
-        <div className="w-28 h-28 rounded-full border-2 border-yellow-500/30 overflow-hidden bg-yellow-500/10 flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.1)] transition-all group-hover:border-yellow-500/70 group-hover:shadow-[0_0_40px_rgba(234,179,8,0.2)]">
+        <div className="relative w-28 h-28 rounded-full border-2 border-yellow-500/30 overflow-hidden bg-yellow-500/10 flex items-center justify-center shadow-[0_0_30px_rgba(234,179,8,0.1)] transition-all group-hover:border-yellow-500/70 group-hover:shadow-[0_0_40px_rgba(234,179,8,0.2)]">
           {uploading ? (
             <Loader2 className="w-8 h-8 text-yellow-500 animate-spin" />
           ) : avatarUrl ? (
-            <img
+            <Image
               src={avatarUrl}
               alt={name}
-              className="w-full h-full object-cover"
+              fill
+              className="object-cover"
+              sizes="112px"
             />
           ) : (
             <span className="text-2xl font-bold text-yellow-500/70">

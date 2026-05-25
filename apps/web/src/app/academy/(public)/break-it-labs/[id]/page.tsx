@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, use, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   Terminal, 
   ChevronLeft, 
@@ -23,6 +24,7 @@ import { AlertModal } from "../../../../../components/AlertModal";
 interface SubmissionComment {
   id: number;
   student_name: string;
+  student_avatar_url?: string;
   body: string;
   created_at: string;
 }
@@ -31,6 +33,7 @@ interface LabSubmission {
   id: number;
   student_id: string;
   student_name: string;
+  student_avatar_url?: string;
   proposed_fix: string;
   is_winner: boolean;
   comments: SubmissionComment[];
@@ -312,8 +315,12 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
                   {/* PR Header */}
                   <div className="p-6 border-b border-border flex items-center justify-between bg-card/20">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border border-border">
-                        <User className="w-5 h-5 text-muted-foreground" />
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center border border-border overflow-hidden relative shrink-0">
+                        {sub.student_avatar_url ? (
+                          <Image src={sub.student_avatar_url} alt={sub.student_name} fill className="object-cover" sizes="40px" />
+                        ) : (
+                          <User className="w-5 h-5 text-muted-foreground" />
+                        )}
                       </div>
                       <div>
                         <p className="text-sm font-bold text-foreground">
@@ -340,8 +347,12 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
                       <div className="space-y-6">
                         {sub.comments.map((comment) => (
                           <div key={comment.id} className="flex gap-4">
-                            <div className="w-6 h-6 rounded bg-muted flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-foreground">
-                              {comment.student_name[0]}
+                            <div className="w-6 h-6 rounded-full bg-muted flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-foreground overflow-hidden relative border border-border">
+                              {comment.student_avatar_url ? (
+                                <Image src={comment.student_avatar_url} alt={comment.student_name} fill className="object-cover" sizes="24px" />
+                              ) : (
+                                comment.student_name[0]
+                              )}
                             </div>
                             <div className="flex-1 space-y-1">
                               <div className="flex items-center justify-between">

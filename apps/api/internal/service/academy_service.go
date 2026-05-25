@@ -753,7 +753,22 @@ func (s *academyService) GetLab(ctx context.Context, id int) (*domain.BreakItLab
 	subs, err := s.repo.GetLabSubmissions(ctx, id)
 	if err == nil {
 		for _, sub := range subs {
+			if sub.AvatarS3Key != nil {
+				url, err := s.GeneratePresignedDownloadURL(ctx, *sub.AvatarS3Key)
+				if err == nil {
+					sub.StudentAvatarUrl = url
+				}
+			}
+
 			comments, _ := s.repo.GetSubmissionComments(ctx, sub.ID)
+			for _, c := range comments {
+				if c.AvatarS3Key != nil {
+					url, err := s.GeneratePresignedDownloadURL(ctx, *c.AvatarS3Key)
+					if err == nil {
+						c.StudentAvatarUrl = url
+					}
+				}
+			}
 			sub.Comments = comments
 		}
 		lab.Submissions = subs
