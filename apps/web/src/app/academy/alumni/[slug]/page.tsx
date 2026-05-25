@@ -13,9 +13,10 @@ import {
    CheckCircle2,
    Trophy,
    Activity,
-   History
+   History,
+   User
 } from "lucide-react";
-import { getAlumniProfile } from "@/app/academy/actions";
+import { getAlumniProfile, getPublicAvatarUrl } from "@/app/academy/actions";
 import { AcademyNavbar } from "@/components/academy/AcademyNavbar";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
@@ -27,6 +28,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: `${profile.student_name} | Cloud Native Portfolio`,
       description: `Capstone project and technical expertise of ${profile.student_name}, Kybern Academy Graduate.`,
    };
+}
+
+async function AvatarImage({ s3Key, name }: { s3Key: string; name: string }) {
+   const url = await getPublicAvatarUrl(s3Key);
+   if (url) {
+      return (
+         <img
+            src={url}
+            alt={name}
+            className="w-32 h-32 md:w-40 md:h-40 shrink-0 rounded-full object-cover border-4 border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.15)]"
+         />
+      );
+   }
+   return (
+      <div className="w-32 h-32 md:w-40 md:h-40 shrink-0 bg-background border border-border rounded-full flex items-center justify-center text-yellow-500 text-5xl font-bold shadow-inner">
+         {name[0]}
+      </div>
+   );
 }
 
 export default async function AlumniPortfolioPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -54,9 +73,18 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
                         <ShieldCheck className="w-4 h-4" />
                         <span className="text-[10px] font-bold uppercase tracking-[0.5em]">Kybern Elite Certified</span>
                      </div>
-                     <h1 className="text-6xl md:text-8xl font-bold tracking-tighter leading-tight animate-in fade-in slide-in-from-left-6 duration-1000">
-                        {profile.student_name}
-                     </h1>
+                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8 animate-in fade-in slide-in-from-left-6 duration-1000">
+                        {profile.avatar_s3_key ? (
+                           <AvatarImage s3Key={profile.avatar_s3_key} name={profile.student_name} />
+                        ) : (
+                           <div className="w-32 h-32 md:w-40 md:h-40 shrink-0 bg-background border border-border rounded-full flex items-center justify-center text-yellow-500 text-5xl font-bold shadow-inner">
+                              {profile.student_name[0]}
+                           </div>
+                        )}
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter leading-tight">
+                           {profile.student_name}
+                        </h1>
+                     </div>
                      <div className="flex flex-wrap items-center gap-6 text-muted-foreground animate-in fade-in slide-in-from-left-8 duration-1000">
                         <div className="flex items-center gap-2">
                            <Cpu className="w-4 h-4 text-yellow-500/50" />
@@ -159,8 +187,14 @@ export default async function AlumniPortfolioPage({ params }: { params: Promise<
 
                         <div className="lg:col-span-1">
                            <div className="sticky top-12 p-8 bg-card/40 border border-border rounded-3xl backdrop-blur-sm">
-                              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-6">Candidate Stats</h4>
+                              <h4 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/60 mb-6">Candidate Profile</h4>
                               <div className="space-y-6">
+                                 {profile.bio && (
+                                    <div className="mb-6 pb-6 border-b border-border">
+                                       <p className="text-[10px] text-muted-foreground/60 uppercase font-bold mb-2 tracking-widest">About</p>
+                                       <p className="text-sm text-muted-foreground leading-relaxed italic">"{profile.bio}"</p>
+                                    </div>
+                                 )}
                                  <div>
                                     <p className="text-[10px] text-muted-foreground/60 uppercase font-bold mb-1 tracking-widest">Graduation Date</p>
                                     <p className="text-sm font-bold">{new Date(profile.created_at).toLocaleDateString()}</p>

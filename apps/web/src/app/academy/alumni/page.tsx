@@ -8,7 +8,7 @@ import {
   Code
 } from "lucide-react";
 import Link from "next/link";
-import { getAlumniList } from "@/app/academy/actions";
+import { getAlumniList, getPublicAvatarUrl } from "@/app/academy/actions";
 import { AcademyNavbar } from "@/components/academy/AcademyNavbar";
 
 interface AlumniMember {
@@ -18,6 +18,25 @@ interface AlumniMember {
   cohort_name: string;
   linkedin_url?: string;
   github_url?: string;
+  avatar_s3_key?: string;
+}
+
+async function AlumniAvatar({ s3Key, name }: { s3Key?: string; name: string }) {
+  const url = s3Key ? await getPublicAvatarUrl(s3Key) : null;
+  if (url) {
+    return (
+      <img 
+        src={url} 
+        alt={name} 
+        className="w-16 h-16 rounded-2xl object-cover border border-border group-hover:border-yellow-500/20 transition-all shadow-inner" 
+      />
+    );
+  }
+  return (
+    <div className="w-16 h-16 bg-background border border-border rounded-2xl flex items-center justify-center text-yellow-500 text-2xl font-bold group-hover:border-yellow-500/20 transition-all shadow-inner">
+      {name[0]}
+    </div>
+  );
 }
 
 export const metadata = {
@@ -66,9 +85,7 @@ export default async function AlumniGridPage() {
                 <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-yellow-500/5 blur-[50px] rounded-full group-hover:bg-yellow-500/10 transition-all" />
                 
                 <div className="flex items-start justify-between mb-8">
-                  <div className="w-16 h-16 bg-background border border-border rounded-2xl flex items-center justify-center text-yellow-500 text-2xl font-bold group-hover:border-yellow-500/20 transition-all shadow-inner">
-                    {member.student_name[0]}
-                  </div>
+                  <AlumniAvatar s3Key={member.avatar_s3_key} name={member.student_name} />
                   <div className="flex gap-3">
                     {member.linkedin_url && <Linkedin className="w-4 h-4 text-muted-foreground/50 hover:text-yellow-500 transition-colors" />}
                     {member.github_url && <Github className="w-4 h-4 text-muted-foreground/50 hover:text-yellow-500 transition-colors" />}

@@ -628,6 +628,32 @@ func (h *AcademyHandler) HandleGetDownloadURL(w http.ResponseWriter, r *http.Req
 	})
 }
 
+// HandleGetAvatarURL is a public endpoint that resolves a presigned download URL
+// for avatar images only (keys must start with "avatars/"). No auth required.
+func (h *AcademyHandler) HandleGetAvatarURL(w http.ResponseWriter, r *http.Request) {
+	fileKey := r.URL.Query().Get("key")
+	if fileKey == "" {
+		http.Error(w, "Missing key parameter", http.StatusBadRequest)
+		return
+	}
+	if len(fileKey) < 8 || fileKey[:8] != "avatars/" {
+		http.Error(w, "Invalid key: must be an avatar key", http.StatusForbidden)
+		return
+	}
+
+	url, err := h.svc.GeneratePresignedDownloadURL(r.Context(), fileKey)
+	if err != nil {
+		http.Error(w, "Failed to generate avatar URL: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=300") // presigned URLs last 5min, cache for same
+	json.NewEncoder(w).Encode(map[string]string{
+		"download_url": url,
+	})
+}
+
 // Phase 5: Break-It Labs Handlers
 
 func (h *AcademyHandler) HandleListLabs(w http.ResponseWriter, r *http.Request) {

@@ -411,6 +411,21 @@ export async function getAlumniProfile(slug: string) {
     return null;
   }
 }
+
+export async function getPublicAvatarUrl(key: string) {
+  if (!key) return null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/public/avatar-url?key=${encodeURIComponent(key)}`, {
+      cache: "force-cache",
+      next: { revalidate: 300 }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.download_url;
+  } catch {
+    return null;
+  }
+}
 export async function getAllStudents() {
   const token = (await cookies()).get("auth_token")?.value;
   if (!token) return { error: "Unauthorized" };

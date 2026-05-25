@@ -152,6 +152,7 @@ func main() {
 	// Alumni Hall of Fame (public)
 	mux.HandleFunc("GET /api/v1/alumni", academyHandler.HandleListAlumni)
 	mux.HandleFunc("GET /api/v1/alumni/{slug}", academyHandler.HandleGetAlumniPortfolio)
+	mux.HandleFunc("GET /api/v1/public/avatar-url", academyHandler.HandleGetAvatarURL)
 
 	// Labs (public listing)
 	mux.HandleFunc("GET /api/v1/labs", academyHandler.HandleListLabs)

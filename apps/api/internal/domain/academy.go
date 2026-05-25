@@ -530,6 +530,8 @@ type AlumniProfile struct {
 	CohortName  string             `json:"cohort_name"`
 	LinkedInURL string             `json:"linkedin_url"`
 	GitHubURL   string             `json:"github_url"`
+	AvatarS3Key *string            `json:"avatar_s3_key,omitempty"`
+	Bio         *string            `json:"bio,omitempty"`
 	Projects    []*CapstoneProject `json:"projects,omitempty"`
 	CreatedAt   time.Time          `json:"created_at"`
 }

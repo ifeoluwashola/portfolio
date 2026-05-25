@@ -743,7 +743,7 @@ func (r *AcademyRepository) CreateAlumniProfile(ctx context.Context, profile *do
 
 func (r *AcademyRepository) GetAlumniProfiles(ctx context.Context) ([]*domain.AlumniProfile, error) {
 	query := `
-		SELECT ap.id, ap.student_id, s.first_name || ' ' || s.last_name as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, ap.created_at
+		SELECT ap.id, ap.student_id, s.first_name || ' ' || s.last_name as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, s.avatar_s3_key, s.bio, ap.created_at
 		FROM alumni_profiles ap
 		JOIN students s ON ap.student_id = s.id
 		ORDER BY ap.created_at DESC
@@ -757,7 +757,7 @@ func (r *AcademyRepository) GetAlumniProfiles(ctx context.Context) ([]*domain.Al
 	var profiles []*domain.AlumniProfile
 	for rows.Next() {
 		p := &domain.AlumniProfile{}
-		err := rows.Scan(&p.ID, &p.StudentID, &p.StudentName, &p.Slug, &p.CohortName, &p.LinkedInURL, &p.GitHubURL, &p.CreatedAt)
+		err := rows.Scan(&p.ID, &p.StudentID, &p.StudentName, &p.Slug, &p.CohortName, &p.LinkedInURL, &p.GitHubURL, &p.AvatarS3Key, &p.Bio, &p.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -772,13 +772,13 @@ func (r *AcademyRepository) GetAlumniProfiles(ctx context.Context) ([]*domain.Al
 
 func (r *AcademyRepository) GetAlumniBySlug(ctx context.Context, slug string) (*domain.AlumniProfile, error) {
 	query := `
-		SELECT ap.id, ap.student_id, s.first_name || ' ' || s.last_name as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, ap.created_at
+		SELECT ap.id, ap.student_id, s.first_name || ' ' || s.last_name as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, s.avatar_s3_key, s.bio, ap.created_at
 		FROM alumni_profiles ap
 		JOIN students s ON ap.student_id = s.id
 		WHERE ap.slug = $1
 	`
 	p := &domain.AlumniProfile{}
-	err := r.db.QueryRow(ctx, query, slug).Scan(&p.ID, &p.StudentID, &p.StudentName, &p.Slug, &p.CohortName, &p.LinkedInURL, &p.GitHubURL, &p.CreatedAt)
+	err := r.db.QueryRow(ctx, query, slug).Scan(&p.ID, &p.StudentID, &p.StudentName, &p.Slug, &p.CohortName, &p.LinkedInURL, &p.GitHubURL, &p.AvatarS3Key, &p.Bio, &p.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
