@@ -384,7 +384,7 @@ export async function updateAlumni(id: number, data: AlumniData) {
 
 export async function getAlumniList() {
   const token = (await cookies()).get("auth_token")?.value;
-  const url = token ? `${API_BASE_URL}/v1/admin/alumni` : `${API_BASE_URL}/v1/alumni`;
+  const url = `${API_BASE_URL}/v1/alumni`;
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
