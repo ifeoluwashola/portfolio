@@ -224,7 +224,7 @@ CREATE TABLE alumni_profiles (
 
 CREATE TABLE capstone_projects (
     id SERIAL PRIMARY KEY,
-    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL UNIQUE REFERENCES students(id) ON DELETE CASCADE,
     project_title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     architecture_diagram_url VARCHAR(255),
