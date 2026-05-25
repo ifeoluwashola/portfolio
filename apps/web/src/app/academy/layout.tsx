@@ -2,7 +2,7 @@ import { AcademyNavbar } from "@/components/academy/AcademyNavbar";
 
 export const metadata = {
   title: "Kybern Academy | Premium Cloud Native Mentorship",
-  description: "A rigorous 12-week live mentorship program to break into Cloud Engineering.",
+  description: "A rigorous 16-week live mentorship program to break into Cloud Engineering.",
   icons: {
     icon: "/academy/icon.svg",
   },

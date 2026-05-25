@@ -14,7 +14,8 @@ import {
   X,
   ChevronDown,
   Layout,
-  CreditCard
+  CreditCard,
+  Settings
 } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { logout, getDashboardData } from "../actions";
@@ -40,6 +41,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isModulesExpanded, setIsModulesExpanded] = useState(true);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [isReadOnly, setIsReadOnly] = useState(false);
+  const [cohortName, setCohortName] = useState("");
 
   const fetchCurriculum = useCallback(async () => {
     try {
@@ -47,6 +50,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (data && !data.error) {
         setWeeks(data.weeks || []);
         setIsFirstLogin(!!data.is_first_login);
+        setCohortName(data.cohort_name || "your cohort");
+        setIsReadOnly(data.status === 'graduated' || data.cohort_status === 'graduated');
       }
     } catch (err) {
       console.error("Failed to fetch curriculum:", err);
@@ -179,6 +184,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               icon={<CreditCard className="w-5 h-5" />}
               isCollapsed={!isSidebarOpen}
             />
+            <NavItem
+              href="/academy/dashboard/settings"
+              label="Profile Settings"
+              icon={<Settings className="w-5 h-5" />}
+              isCollapsed={!isSidebarOpen}
+            />
           </div>
 
           <div className="space-y-2">
@@ -262,6 +273,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area */}
       <main className={`flex-1 min-h-screen transition-all duration-300 pt-24 lg:pt-0 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}>
+        {isReadOnly && (
+          <div className="w-full bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-500 px-6 py-3 text-sm font-semibold flex items-center justify-center sticky top-0 z-10 backdrop-blur-md">
+            <Lock className="w-4 h-4 mr-2" />
+            You are viewing the archived workspace for {cohortName}.
+          </div>
+        )}
         <div className="p-4 sm:p-10 max-w-6xl mx-auto">
           {children}
         </div>

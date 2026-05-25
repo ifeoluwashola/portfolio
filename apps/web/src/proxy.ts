@@ -110,9 +110,9 @@ export async function proxy(request: NextRequest) {
         token = newTokens.token;
       } else {
         const response = NextResponse.redirect(new URL('/admin/login', request.url));
-        response.cookies.delete('auth_token');
-        response.cookies.delete('auth_refresh_token');
-        response.cookies.delete('admin_last_active');
+        response.cookies.set('auth_token', '', { maxAge: 0, path: '/' });
+        response.cookies.set('auth_refresh_token', '', { maxAge: 0, path: '/' });
+        response.cookies.set('admin_last_active', '', { maxAge: 0, path: '/admin' });
         return response;
       }
     }
@@ -127,18 +127,18 @@ export async function proxy(request: NextRequest) {
 
     if (lastActive && (now - parseInt(lastActive, 10)) > INACTIVITY_TIMEOUT) {
       const response = NextResponse.redirect(new URL('/admin/login', request.url));
-      response.cookies.delete('auth_token');
-      response.cookies.delete('auth_refresh_token');
-      response.cookies.delete('admin_last_active');
+      response.cookies.set('auth_token', '', { maxAge: 0, path: '/' });
+      response.cookies.set('auth_refresh_token', '', { maxAge: 0, path: '/' });
+      response.cookies.set('admin_last_active', '', { maxAge: 0, path: '/admin' });
       return response;
     }
 
     const session = await fetchBackendSession(token, 'admin');
     if (!session) {
       const response = NextResponse.redirect(new URL('/admin/login', request.url));
-      response.cookies.delete('auth_token');
-      response.cookies.delete('auth_refresh_token');
-      response.cookies.delete('admin_last_active');
+      response.cookies.set('auth_token', '', { maxAge: 0, path: '/' });
+      response.cookies.set('auth_refresh_token', '', { maxAge: 0, path: '/' });
+      response.cookies.set('admin_last_active', '', { maxAge: 0, path: '/admin' });
       return response;
     }
 
@@ -198,8 +198,8 @@ export async function proxy(request: NextRequest) {
         studentToken = newTokens.token;
       } else {
         const response = NextResponse.redirect(new URL('/academy/login', request.url));
-        response.cookies.delete('academy_token');
-        response.cookies.delete('academy_refresh_token');
+        response.cookies.set('academy_token', '', { maxAge: 0, path: '/' });
+        response.cookies.set('academy_refresh_token', '', { maxAge: 0, path: '/' });
         return response;
       }
     }
@@ -211,8 +211,8 @@ export async function proxy(request: NextRequest) {
     const session = await fetchBackendSession(studentToken, 'student');
     if (!session) {
       const response = NextResponse.redirect(new URL('/academy/login', request.url));
-      response.cookies.delete('academy_token');
-      response.cookies.delete('academy_refresh_token');
+      response.cookies.set('academy_token', '', { maxAge: 0, path: '/' });
+      response.cookies.set('academy_refresh_token', '', { maxAge: 0, path: '/' });
       return response;
     }
 

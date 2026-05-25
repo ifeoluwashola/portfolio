@@ -53,6 +53,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [studentStatus, setStudentStatus] = useState<string>("active");
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const [newFix, setNewFix] = useState("");
   const [commentingOn, setCommentingOn] = useState<number | null>(null);
   const [newComment, setNewComment] = useState("");
@@ -86,6 +87,9 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
     getAcademySession().then(setIsAuthenticated);
     getStudentStatus().then(res => {
       if (res.status) setStudentStatus(res.status);
+      if (res.status === 'graduated' || res.cohort_status === 'graduated') {
+        setIsReadOnly(true);
+      }
     });
     fetchLab();
   }, [id, fetchLab]);
@@ -223,6 +227,15 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
           {/* Submission Area */}
           <section className="pt-12 border-t border-border">
             {isAuthenticated ? (
+              isReadOnly ? (
+                <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-3xl p-10 text-center space-y-6 relative overflow-hidden">
+                  <Lock className="w-10 h-10 text-yellow-500 mx-auto mb-2 opacity-50" />
+                  <h3 className="text-2xl font-bold tracking-tight">Archived Workspace</h3>
+                  <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                    You are viewing an archived workspace. Submissions are locked for graduated cohorts.
+                  </p>
+                </div>
+              ) : (
               <div className="space-y-6">
                 <h2 className="text-sm font-bold uppercase tracking-[0.3em] text-muted-foreground/60 flex items-center gap-3">
                   <Terminal className="w-4 h-4 text-yellow-500" /> Proposed Fix_
@@ -256,6 +269,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
                   </div>
                 )}
               </div>
+              )
             ) : (
               <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-3xl p-10 text-center space-y-6 relative overflow-hidden">
                 <Lock className="w-10 h-10 text-yellow-500 mx-auto mb-2 opacity-50" />

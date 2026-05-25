@@ -86,6 +86,10 @@ CREATE TABLE IF NOT EXISTS students (
     is_first_login BOOLEAN DEFAULT TRUE,
     reset_token VARCHAR(255),
     reset_token_expires_at TIMESTAMP WITH TIME ZONE,
+    avatar_s3_key VARCHAR(255),
+    linkedin_url VARCHAR(255),
+    github_url VARCHAR(255),
+    bio TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -224,7 +228,7 @@ CREATE TABLE alumni_profiles (
 
 CREATE TABLE capstone_projects (
     id SERIAL PRIMARY KEY,
-    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL UNIQUE REFERENCES students(id) ON DELETE CASCADE,
     project_title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
     architecture_diagram_url VARCHAR(255),

@@ -623,8 +623,8 @@ func (s *academyService) GetAdminApplications(ctx context.Context) (*domain.Admi
 	}, nil
 }
 
-func (s *academyService) GetCurriculum(ctx context.Context) ([]*domain.CohortWeek, error) {
-	return s.repo.GetWeeks(ctx)
+func (s *academyService) GetCurriculum(ctx context.Context, cohortID int) ([]*domain.CohortWeek, error) {
+	return s.repo.GetWeeks(ctx, cohortID)
 }
 
 func (s *academyService) UpdateCohortWeek(ctx context.Context, req *domain.UpdateWeekRequest) error {
@@ -677,12 +677,17 @@ func (s *academyService) SubmitAssignment(ctx context.Context, studentID uuid.UU
 }
 
 func (s *academyService) GetStudentDashboardData(ctx context.Context, studentID uuid.UUID) (*domain.StudentDashboardResponse, error) {
-	weeks, err := s.repo.GetWeeks(ctx)
+	student, err := s.repo.GetStudentByID(ctx, studentID)
 	if err != nil {
 		return nil, err
 	}
 
-	student, err := s.repo.GetStudentByID(ctx, studentID)
+	weeks, err := s.repo.GetWeeks(ctx, student.CohortID)
+	if err != nil {
+		return nil, err
+	}
+
+	cohort, err := s.repo.GetCohortByID(ctx, student.CohortID)
 	if err != nil {
 		return nil, err
 	}
@@ -708,10 +713,20 @@ func (s *academyService) GetStudentDashboardData(ctx context.Context, studentID 
 		Assignments:       asses,
 		IsFirstLogin:      student.IsFirstLogin,
 		Status:            student.Status,
+		CohortName:        cohort.Name,
+		CohortStatus:      cohort.Status,
 		AttendedCount:     student.AttendedCount,
 		TotalHeldSessions: student.TotalHeldSessions,
 		AttendanceRate:    student.AttendanceRate,
 	}, nil
+}
+
+func (s *academyService) AdminCloneCohort(ctx context.Context, req *domain.AdminCloneCohortRequest) error {
+	newCohortID, err := s.repo.CreateCohort(ctx, req.NewCohortName)
+	if err != nil {
+		return fmt.Errorf("failed to create cohort: %w", err)
+	}
+	return s.repo.CloneCohortCurriculum(ctx, req.SourceCohortID, newCohortID)
 }
 
 func (s *academyService) GetAdminSubmissions(ctx context.Context) ([]*domain.Assignment, error) {
@@ -839,8 +854,16 @@ func (s *academyService) SubmitCapstone(ctx context.Context, studentID uuid.UUID
 	return err
 }
 
+func (s *academyService) GetStudentCapstone(ctx context.Context, studentID uuid.UUID) (*domain.CapstoneProject, error) {
+	return s.repo.GetCapstoneByStudentID(ctx, studentID)
+}
+
 func (s *academyService) GetPendingCapstones(ctx context.Context) ([]*domain.CapstoneProject, error) {
 	return s.repo.GetPendingCapstones(ctx)
+}
+
+func (s *academyService) GetCapstoneByID(ctx context.Context, id int) (*domain.CapstoneProject, error) {
+	return s.repo.GetCapstoneByID(ctx, id)
 }
 
 func (s *academyService) ApproveCapstone(ctx context.Context, capstoneID int, req *domain.ApproveCapstoneRequest) error {
@@ -879,11 +902,28 @@ func (s *academyService) ApproveCapstone(ctx context.Context, capstoneID int, re
 	}
 
 	_, err = s.repo.CreateAlumniProfile(ctx, profile)
+	if err == nil && s.notification != nil {
+		_ = s.notification.SendCapstoneApprovedEmail(student.FirstName, student.Email, slug)
+	}
 	return err
 }
 
 func (s *academyService) RejectCapstone(ctx context.Context, capstoneID int, feedback string) error {
-	return s.repo.UpdateCapstoneStatusAndFeedback(ctx, capstoneID, "needs_revision", feedback)
+	err := s.repo.UpdateCapstoneStatusAndFeedback(ctx, capstoneID, "needs_revision", feedback)
+	if err != nil {
+		return err
+	}
+
+	// Fetch capstone to get student ID
+	capstone, err := s.repo.GetCapstoneByID(ctx, capstoneID)
+	if err == nil && capstone != nil {
+		student, err := s.repo.GetStudentByID(ctx, capstone.StudentID)
+		if err == nil && student != nil && s.notification != nil {
+			_ = s.notification.SendCapstoneFeedbackEmail(student.FirstName, student.Email, feedback)
+		}
+	}
+
+	return nil
 }
 
 func (s *academyService) RevokeAlumni(ctx context.Context, slug string) error {
@@ -1413,8 +1453,13 @@ func (s *academyService) JoinSession(ctx context.Context, studentID uuid.UUID, s
 }
 
 func (s *academyService) GetStudentAttendanceHistory(ctx context.Context, studentID uuid.UUID) ([]*domain.AttendanceRecord, error) {
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+
 	// 1. Get all weeks and sessions
-	weeks, err := s.repo.GetWeeks(ctx)
+	weeks, err := s.repo.GetWeeks(ctx, student.CohortID)
 	if err != nil {
 		return nil, err
 	}
@@ -1453,7 +1498,7 @@ func (s *academyService) GetSessionAttendance(ctx context.Context, sessionID int
 	return s.repo.GetSessionAttendance(ctx, sessionID)
 }
 
-func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string) (string, string, error) {
+func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string, uploadType string) (string, string, error) {
 	if s.config.S3BucketName == "" {
 		return "", "", errors.New("S3 bucket not configured")
 	}
@@ -1466,7 +1511,12 @@ func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, student
 	client := s3.NewFromConfig(cfg)
 	presignClient := s3.NewPresignClient(client)
 
-	fileKey := fmt.Sprintf("assignments/%s/%s-%s", studentID.String(), uuid.New().String(), filename)
+	var fileKey string
+	if uploadType == "avatar" {
+		fileKey = fmt.Sprintf("avatars/%s/%s", studentID.String(), filename)
+	} else {
+		fileKey = fmt.Sprintf("assignments/%s/%s-%s", studentID.String(), uuid.New().String(), filename)
+	}
 
 	req, err := presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.config.S3BucketName),
@@ -1507,4 +1557,12 @@ func (s *academyService) GeneratePresignedDownloadURL(ctx context.Context, fileK
 	}
 
 	return req.URL, nil
+}
+
+func (s *academyService) GetStudentProfile(ctx context.Context, id uuid.UUID) (*domain.Student, error) {
+	return s.repo.GetStudentByID(ctx, id)
+}
+
+func (s *academyService) UpdateStudentProfile(ctx context.Context, id uuid.UUID, req *domain.StudentProfileRequest) error {
+	return s.repo.UpdateStudentProfile(ctx, id, req.AvatarS3Key, req.LinkedInURL, req.GitHubURL, req.Bio)
 }

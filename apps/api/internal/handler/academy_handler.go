@@ -401,7 +401,15 @@ func (h *AcademyHandler) HandleGetCurriculum(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	weeks, err := h.svc.GetCurriculum(r.Context())
+	cohortIDStr := r.URL.Query().Get("cohort_id")
+	cohortID := 1 // default master cohort
+	if cohortIDStr != "" {
+		if id, err := strconv.Atoi(cohortIDStr); err == nil {
+			cohortID = id
+		}
+	}
+
+	weeks, err := h.svc.GetCurriculum(r.Context(), cohortID)
 	if err != nil {
 		http.Error(w, "Failed to get curriculum: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -430,6 +438,33 @@ func (h *AcademyHandler) HandleUpdateWeek(w http.ResponseWriter, r *http.Request
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+func (h *AcademyHandler) HandleAdminCloneCohort(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req domain.AdminCloneCohortRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if req.NewCohortName == "" || req.SourceCohortID == 0 {
+		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		return
+	}
+
+	err := h.svc.AdminCloneCohort(r.Context(), &req)
+	if err != nil {
+		http.Error(w, "Failed to clone cohort: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(map[string]string{"message": "Cohort cloned successfully"})
 }
 
 func (h *AcademyHandler) HandleGetSubmissions(w http.ResponseWriter, r *http.Request) {
@@ -554,7 +589,9 @@ func (h *AcademyHandler) HandleGetUploadURL(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	url, key, err := h.svc.GeneratePresignedUploadURL(r.Context(), stID, filename)
+	uploadType := r.URL.Query().Get("type") // e.g. "avatar" or blank for assignments
+
+	url, key, err := h.svc.GeneratePresignedUploadURL(r.Context(), stID, filename, uploadType)
 	if err != nil {
 		http.Error(w, "Failed to generate upload URL: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -586,6 +623,32 @@ func (h *AcademyHandler) HandleGetDownloadURL(w http.ResponseWriter, r *http.Req
 	}
 
 	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"download_url": url,
+	})
+}
+
+// HandleGetAvatarURL is a public endpoint that resolves a presigned download URL
+// for avatar images only (keys must start with "avatars/"). No auth required.
+func (h *AcademyHandler) HandleGetAvatarURL(w http.ResponseWriter, r *http.Request) {
+	fileKey := r.URL.Query().Get("key")
+	if fileKey == "" {
+		http.Error(w, "Missing key parameter", http.StatusBadRequest)
+		return
+	}
+	if len(fileKey) < 8 || fileKey[:8] != "avatars/" {
+		http.Error(w, "Invalid key: must be an avatar key", http.StatusForbidden)
+		return
+	}
+
+	url, err := h.svc.GeneratePresignedDownloadURL(r.Context(), fileKey)
+	if err != nil {
+		http.Error(w, "Failed to generate avatar URL: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "public, max-age=300") // presigned URLs last 5min, cache for same
 	json.NewEncoder(w).Encode(map[string]string{
 		"download_url": url,
 	})
@@ -786,7 +849,16 @@ func (h *AcademyHandler) HandleDisqualifyStudent(w http.ResponseWriter, r *http.
 }
 
 func (h *AcademyHandler) HandleSubmitCapstone(w http.ResponseWriter, r *http.Request) {
-	studentID := r.Context().Value("student_id").(uuid.UUID)
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		http.Error(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
 
 	var req domain.CapstoneProjectRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -801,6 +873,31 @@ func (h *AcademyHandler) HandleSubmitCapstone(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (h *AcademyHandler) HandleGetStudentCapstone(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		http.Error(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	cap, err := h.svc.GetStudentCapstone(r.Context(), studentID)
+	if err != nil {
+		if strings.Contains(err.Error(), "no rows in result set") {
+			http.Error(w, "Not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(cap)
+}
+
 func (h *AcademyHandler) HandleListPendingCapstones(w http.ResponseWriter, r *http.Request) {
 	caps, err := h.svc.GetPendingCapstones(r.Context())
 	if err != nil {
@@ -809,6 +906,23 @@ func (h *AcademyHandler) HandleListPendingCapstones(w http.ResponseWriter, r *ht
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(caps)
+}
+
+func (h *AcademyHandler) HandleGetCapstone(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid capstone ID", http.StatusBadRequest)
+		return
+	}
+
+	cap, err := h.svc.GetCapstoneByID(r.Context(), id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(cap)
 }
 
 func (h *AcademyHandler) HandleApproveCapstone(w http.ResponseWriter, r *http.Request) {
@@ -1279,3 +1393,55 @@ func (h *AcademyHandler) HandleBroadcastReschedule(w http.ResponseWriter, r *htt
 }
 
 
+// ─── Student Profile ─────────────────────────────────────────────────────────
+
+func (h *AcademyHandler) HandleGetStudentProfile(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	profile, err := h.svc.GetStudentProfile(r.Context(), studentID)
+	if err != nil {
+		writeJSONError(w, "Failed to retrieve profile: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(profile)
+}
+
+func (h *AcademyHandler) HandleUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.StudentProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.UpdateStudentProfile(r.Context(), studentID, &req); err != nil {
+		writeJSONError(w, "Failed to update profile: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}

@@ -1,11 +1,35 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { ModeToggle } from "../ModeToggle";
-import { Terminal } from "lucide-react";
+import { User } from "lucide-react";
+import { API_BASE_URL } from "@/lib/api-config";
+
+async function fetchAvatarUrl(token: string): Promise<string | null> {
+  try {
+    const profileRes = await fetch(`${API_BASE_URL}/v1/profile`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!profileRes.ok) return null;
+    const profile = await profileRes.json() as { avatar_s3_key?: string };
+    if (!profile.avatar_s3_key) return null;
+
+    const dlRes = await fetch(
+      `${API_BASE_URL}/v1/media/download-url?key=${encodeURIComponent(profile.avatar_s3_key)}`,
+      { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
+    );
+    if (!dlRes.ok) return null;
+    const dlData = await dlRes.json() as { download_url: string };
+    return dlData.download_url ?? null;
+  } catch {
+    return null;
+  }
+}
 
 export async function AcademyNavbar() {
   const cookieStore = await cookies();
   const token = cookieStore.get("academy_token")?.value;
+  const avatarUrl = token ? await fetchAvatarUrl(token) : null;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
@@ -41,8 +65,17 @@ export async function AcademyNavbar() {
           {token ? (
             <Link
               href="/academy/dashboard"
-              className="px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-500/20 transition-all font-bold"
+              className="flex items-center gap-2.5 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-500/20 transition-all"
             >
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt="Your avatar"
+                  className="w-5 h-5 rounded-full object-cover border border-yellow-500/40"
+                />
+              ) : (
+                <User className="w-4 h-4" />
+              )}
               Dashboard →
             </Link>
           ) : (

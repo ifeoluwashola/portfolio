@@ -821,3 +821,147 @@ func (n *ResendNotifier) SendCohortRescheduleEmail(firstName, email, oldDate, ne
 	_, err := n.client.Emails.Send(params)
 	return err
 }
+
+// Sends an email notifying the student of feedback on their capstone project.
+func (n *ResendNotifier) SendCapstoneFeedbackEmail(firstName, email, feedback string) error {
+	subject := "Action Required: Feedback on your Capstone PR"
+	sender := "Kybern Academy Admin <academy@kyberncloud.com>"
+
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Inter", -apple-system, sans-serif; line-height: 1.6; color: #cbd5e1; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+				.header { background-color: #020617; padding: 32px; text-align: center; border-bottom: 1px solid #1e293b; }
+				.status-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; background-color: rgba(234, 179, 8, 0.1); color: #eab308; border: 1px solid #eab308; }
+				.content { padding: 48px 32px; }
+				.reason-box { background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 24px; margin: 40px 0; }
+				.reason-label { color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: block; }
+				.reason-text { color: #cbd5e1; font-size: 15px; line-height: 1.7; margin: 0; }
+				.footer { background-color: #020617; padding: 40px 32px; text-align: center; font-size: 11px; color: #475569; border-top: 1px solid #1e293b; }
+				.button { display: inline-block; background-color: #eab308; color: #020617 !important; font-weight: 900; padding: 16px 32px; border-radius: 8px; text-decoration: none; margin: 24px 0; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
+				.intro-text { color: #94a3b8; font-size: 15px; text-align: center; line-height: 1.6; margin-bottom: 32px; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<div class="status-badge">Revisions Needed</div>
+				</div>
+				<div class="content">
+					<p class="intro-text">Hello %s, your graduation Capstone PR has been reviewed by the Kybern Academy administration. Changes are required before we can approve it.</p>
+
+					<div class="reason-box">
+						<span class="reason-label">Admin Feedback</span>
+						<p class="reason-text">%s</p>
+					</div>
+
+					<p class="intro-text" style="font-size: 14px;">Please review the feedback, update your architecture or code, and resubmit your PR via the student dashboard.</p>
+
+					<div style="text-align: center;">
+						<a href="%s/academy/dashboard/week/16" class="button">Review Admin Feedback</a>
+					</div>
+				</div>
+				<div class="footer">
+					KYBERN ACADEMY · CLOUD NATIVE MENTORSHIP<br/>
+					BUILDING THE INFRASTRUCTURE OF THE FUTURE
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+
+	htmlBody := fmt.Sprintf(htmlTemplate, firstName, feedback, n.frontendURL)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}
+
+// Sends an email congratulating the student on capstone approval and public portfolio creation.
+func (n *ResendNotifier) SendCapstoneApprovedEmail(firstName, email, slug string) error {
+	subject := "Congratulations! Your Capstone PR has been Approved & Certified"
+	sender := "Kybern Academy Admin <academy@kyberncloud.com>"
+	alumniURL := fmt.Sprintf("%s/academy/alumni/%s", n.frontendURL, slug)
+
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Inter", -apple-system, sans-serif; line-height: 1.6; color: #cbd5e1; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+				.header { background-color: #020617; padding: 40px; text-align: center; border-bottom: 1px solid #1e293b; }
+				.status-badge { display: inline-block; padding: 6px 12px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid #10b981; }
+				.content { padding: 48px 40px; }
+				.features-box { background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 24px; margin: 32px 0; }
+				.features-title { color: #eab308; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; display: block; }
+				.features-list { padding-left: 20px; margin: 0; color: #cbd5e1; font-size: 14px; }
+				.features-list li { margin-bottom: 10px; }
+				.footer { background-color: #020617; padding: 40px 32px; text-align: center; font-size: 11px; color: #475569; border-top: 1px solid #1e293b; }
+				.button { display: inline-block; background-color: #eab308; color: #020617 !important; font-weight: 900; padding: 16px 32px; border-radius: 8px; text-decoration: none; margin: 24px 0; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
+				.intro-text { color: #94a3b8; font-size: 15px; text-align: center; line-height: 1.6; margin-bottom: 24px; }
+				.section-title { font-size: 20px; font-weight: 800; color: #ffffff; text-align: center; margin-bottom: 8px; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<div class="status-badge" style="margin-bottom: 16px;">PR Approved & Certified</div>
+					<div class="section-title">MISSION ACCOMPLISHED</div>
+				</div>
+				<div class="content">
+					<p class="intro-text">Hello %s, congratulations! Your graduation Capstone PR has been reviewed and officially approved by the Kybern Academy administration. You have met all high-stakes criteria and successfully graduated!</p>
+					
+					<p class="intro-text" style="font-size: 14px;">As an elite graduate, we have created your permanent public Alumni Portfolio page. This page serves as a verified technical catalog of your academy achievements.</p>
+
+					<div class="features-box">
+						<span class="features-title">What Your Portfolio Contains</span>
+						<ul class="features-list">
+							<li><strong>Capstone Architecture Case Study:</strong> Highlights your custom design diagram, live deployment URL, and verified source repository.</li>
+							<li><strong>Verified Academy Milestones:</strong> Displays your graded weekly assignment solution repositories as proof of 160+ hours of intense engineering.</li>
+							<li><strong>Break-It Lab Achievements:</strong> Prominently displays instances where you solved complex production incident responses.</li>
+						</ul>
+					</div>
+
+					<div class="features-box" style="margin-top: 24px;">
+						<span class="features-title">How To Utilize Your Alumni Page</span>
+						<ul class="features-list">
+							<li><strong>Resume & Profiles:</strong> Add the link to your resume, GitHub, and LinkedIn profile to immediately prove your skills to recruiters.</li>
+							<li><strong>Recruiter Showcases:</strong> Send it directly to hiring managers as verified third-party proof of your hands-on cloud-native engineering capabilities.</li>
+							<li><strong>Social Share:</strong> Share your achievement with the community and tag <strong>#KybernAcademy</strong>!</li>
+						</ul>
+					</div>
+
+					<div style="text-align: center;">
+						<a href="%s" class="button">View Your Public Portfolio</a>
+					</div>
+				</div>
+				<div class="footer">
+					KYBERN ACADEMY · CLOUD NATIVE MENTORSHIP<br/>
+					BUILDING THE INFRASTRUCTURE OF THE FUTURE
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+
+	htmlBody := fmt.Sprintf(htmlTemplate, firstName, alumniURL)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}
+

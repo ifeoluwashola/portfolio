@@ -68,6 +68,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   const [showTranscript, setShowTranscript] = useState(false);
   const [activeSession, setActiveSession] = useState<ClassSession | null>(null);
   const [attendance, setAttendance] = useState<{ rate: number; attended: number; total: number } | null>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
   
   // Derived states for module status (replacing removed week.status)
   const publishedSessions = week?.sessions || [];
@@ -88,6 +89,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
         setWeek(foundWeek || null);
         setAssignment(foundAss || null);
         if (foundAss) setGithubUrl(foundAss.github_url);
+        setIsReadOnly(data.status === 'graduated' || data.cohort_status === 'graduated');
 
         if (data.total_held_sessions !== undefined) {
           setAttendance({
@@ -336,7 +338,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                   </p>
                 </div>
 
-                {activeSession.status === 'live' && (
+                {activeSession.status === 'live' && !isReadOnly && (
                   <a 
                     href={`/api/academy/proxy/v1/academy/sessions/${activeSession.id}/join`} 
                     className="inline-flex items-center gap-4 px-10 py-5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 rounded-2xl font-bold text-lg uppercase transition-all shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:shadow-[0_0_60px_rgba(234,179,8,0.4)] group tracking-tighter"

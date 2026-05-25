@@ -289,7 +289,7 @@ export async function getDashboardData() {
 export async function getStudentStatus() {
   const result = await academyFetch("/v1/academy/dashboard");
   if (result.error) return { error: result.error };
-  return { status: result.data.status };
+  return { status: result.data.status, cohort_status: result.data.cohort_status };
 }
 
 export async function submitAssignment(weekId: number, githubUrl: string, submissionFileKey?: string) {
@@ -384,7 +384,7 @@ export async function updateAlumni(id: number, data: AlumniData) {
 
 export async function getAlumniList() {
   const token = (await cookies()).get("auth_token")?.value;
-  const url = token ? `${API_BASE_URL}/v1/admin/alumni` : `${API_BASE_URL}/v1/alumni`;
+  const url = `${API_BASE_URL}/v1/alumni`;
   const headers: Record<string, string> = {};
   if (token) headers["Authorization"] = `Bearer ${token}`;
 
@@ -407,6 +407,21 @@ export async function getAlumniProfile(slug: string) {
     });
     if (!res.ok) return null;
     return await res.json();
+  } catch {
+    return null;
+  }
+}
+
+export async function getPublicAvatarUrl(key: string) {
+  if (!key) return null;
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/public/avatar-url?key=${encodeURIComponent(key)}`, {
+      cache: "force-cache",
+      next: { revalidate: 300 }
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.download_url;
   } catch {
     return null;
   }
@@ -445,6 +460,14 @@ export async function disqualifyStudent(id: string, reason: string) {
   return { success: true };
 }
 
+export async function getStudentCapstone() {
+  const result = await academyFetch("/v1/academy/capstone", {
+    method: "GET",
+  });
+  if (result.error) return { error: result.error };
+  return result;
+}
+
 export async function submitCapstone(data: Record<string, unknown>) {
   const result = await academyFetch("/v1/academy/capstone", {
     method: "POST",
@@ -459,11 +482,27 @@ export async function getPendingCapstones() {
   if (!token) return { error: "Unauthorized" };
 
   try {
-    const res = await fetch(`${API_BASE_URL}/v1/admin/alumni/pending`, {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/graduations/pending`, {
       headers: { "Authorization": `Bearer ${token}` },
       cache: "no-store",
     });
     if (!res.ok) return { error: "Failed to fetch pending capstones" };
+    return await res.json();
+  } catch {
+    return { error: "Connection failed" };
+  }
+}
+
+export async function getCapstoneById(id: number) {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/graduations/pending/${id}`, {
+      headers: { "Authorization": `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return { error: "Failed to fetch capstone" };
     return await res.json();
   } catch {
     return { error: "Connection failed" };
@@ -625,8 +664,39 @@ export async function checkMaterialAccess() {
   return { granted: true };
 }
 
-export async function getS3UploadUrl(filename: string) {
-  const result = await academyFetch(`/v1/media/upload-url?filename=${encodeURIComponent(filename)}`);
+export async function getS3UploadUrl(filename: string, type?: string) {
+  let url = `/v1/media/upload-url?filename=${encodeURIComponent(filename)}`;
+  if (type) url += `&type=${encodeURIComponent(type)}`;
+  const result = await academyFetch(url);
   if (result.error) return { error: result.error };
   return result.data as { upload_url: string; file_key: string };
+}
+
+export async function getStudentProfile() {
+  const result = await academyFetch("/v1/profile");
+  if (result.error) return { error: result.error };
+  return result.data as {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar_s3_key?: string;
+    linkedin_url?: string;
+    github_url?: string;
+    bio?: string;
+  };
+}
+
+export async function updateStudentProfile(data: {
+  avatar_s3_key?: string | null;
+  linkedin_url?: string | null;
+  github_url?: string | null;
+  bio?: string | null;
+}) {
+  const result = await academyFetch("/v1/profile", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
 }
