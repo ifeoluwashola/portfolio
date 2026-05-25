@@ -14,7 +14,8 @@ import {
   X,
   ChevronDown,
   Layout,
-  CreditCard
+  CreditCard,
+  Settings
 } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { logout, getDashboardData } from "../actions";
@@ -181,6 +182,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href="/academy/dashboard/billing"
               label="Billing & Invoices"
               icon={<CreditCard className="w-5 h-5" />}
+              isCollapsed={!isSidebarOpen}
+            />
+            <NavItem
+              href="/academy/dashboard/settings"
+              label="Profile Settings"
+              icon={<Settings className="w-5 h-5" />}
               isCollapsed={!isSidebarOpen}
             />
           </div>

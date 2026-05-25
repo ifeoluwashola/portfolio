@@ -589,7 +589,9 @@ func (h *AcademyHandler) HandleGetUploadURL(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	url, key, err := h.svc.GeneratePresignedUploadURL(r.Context(), stID, filename)
+	uploadType := r.URL.Query().Get("type") // e.g. "avatar" or blank for assignments
+
+	url, key, err := h.svc.GeneratePresignedUploadURL(r.Context(), stID, filename, uploadType)
 	if err != nil {
 		http.Error(w, "Failed to generate upload URL: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -1365,3 +1367,55 @@ func (h *AcademyHandler) HandleBroadcastReschedule(w http.ResponseWriter, r *htt
 }
 
 
+// ─── Student Profile ─────────────────────────────────────────────────────────
+
+func (h *AcademyHandler) HandleGetStudentProfile(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	profile, err := h.svc.GetStudentProfile(r.Context(), studentID)
+	if err != nil {
+		writeJSONError(w, "Failed to retrieve profile: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(profile)
+}
+
+func (h *AcademyHandler) HandleUpdateStudentProfile(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.StudentProfileRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.UpdateStudentProfile(r.Context(), studentID, &req); err != nil {
+		writeJSONError(w, "Failed to update profile: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}

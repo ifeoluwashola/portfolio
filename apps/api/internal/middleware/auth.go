@@ -190,3 +190,12 @@ func hashTokenMW(rawToken string) string {
 	h := sha256.Sum256([]byte(rawToken))
 	return hex.EncodeToString(h[:])
 }
+
+func (m *AuthMiddleware) IsStudentRequest(r *http.Request) bool {
+	_, claims, _, err := m.parseAndValidateJWT(r)
+	if err != nil {
+		return false
+	}
+	tokenType, _ := claims["type"].(string)
+	return tokenType == "student"
+}

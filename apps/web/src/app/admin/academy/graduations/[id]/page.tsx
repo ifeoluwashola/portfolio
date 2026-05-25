@@ -21,6 +21,8 @@ interface Capstone {
   id: number;
   student_id: string;
   student_name: string;
+  student_linkedin?: string;
+  student_github?: string;
   project_title: string;
   description: string;
   architecture_diagram_url: string;
@@ -57,7 +59,9 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
     const data = await getCapstoneById(parseInt(id));
     if (data && !data.error) {
       setCapstone(data);
-      setGitHubUrl(data.repo_url || "");
+      // Pre-fill from student's saved profile; allow admin to override
+      setLinkedinUrl(data.student_linkedin || "");
+      setGitHubUrl(data.student_github || data.repo_url || "");
     }
     setLoading(false);
   };

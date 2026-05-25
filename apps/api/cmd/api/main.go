@@ -157,8 +157,20 @@ func main() {
 	mux.HandleFunc("GET /api/v1/labs", academyHandler.HandleListLabs)
 	mux.HandleFunc("GET /api/v1/labs/{id}", academyHandler.HandleGetLab)
 
-	// Profile API (GET is public, PUT is admin-protected)
+	// Profile API — student token routes to academy profile; admin/public routes to portfolio profile
 	mux.HandleFunc("/api/v1/profile", func(w http.ResponseWriter, r *http.Request) {
+		if authMW.IsStudentRequest(r) {
+			switch r.Method {
+			case http.MethodGet:
+				authMW.RequireStudentAuth(academyHandler.HandleGetStudentProfile)(w, r)
+			case http.MethodPut:
+				authMW.RequireStudentAuth(academyHandler.HandleUpdateStudentProfile)(w, r)
+			default:
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+			return
+		}
+		// Non-student: public GET → owner bio; admin PUT → update owner bio
 		switch r.Method {
 		case http.MethodGet:
 			profileHandler.HandleGetProfile(w, r)

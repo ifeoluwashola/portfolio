@@ -1,0 +1,4 @@
+ALTER TABLE students DROP COLUMN IF EXISTS avatar_s3_key;
+ALTER TABLE students DROP COLUMN IF EXISTS linkedin_url;
+ALTER TABLE students DROP COLUMN IF EXISTS github_url;
+ALTER TABLE students DROP COLUMN IF EXISTS bio;

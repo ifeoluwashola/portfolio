@@ -39,23 +39,34 @@ type Cohort struct {
 }
 
 type Student struct {
-	ID                     uuid.UUID `json:"id"`
-	FirstName              string    `json:"first_name"`
-	LastName               string    `json:"last_name"`
-	Email                  string    `json:"email"`
-	PasswordHash           string    `json:"-"`
-	Status                 string    `json:"status"` // active, graduated, disqualified, probation
-	WarningCount           int       `json:"warning_count"`
-	DisqualificationReason *string   `json:"disqualification_reason,omitempty"`
-	IsManuallyLocked       bool      `json:"is_manually_locked"`
-	IsFirstLogin           bool      `json:"is_first_login"`
-	CohortID               int       `json:"cohort_id"`
-	AttendanceRate         float64   `json:"attendance_rate"` // Percentage of occurred sessions attended
-	AttendedCount          int       `json:"attended_count"`
-	TotalHeldSessions      int       `json:"total_held_sessions"`
-	ResetToken             *string   `json:"-"`
+	ID                     uuid.UUID  `json:"id"`
+	FirstName              string     `json:"first_name"`
+	LastName               string     `json:"last_name"`
+	Email                  string     `json:"email"`
+	PasswordHash           string     `json:"-"`
+	Status                 string     `json:"status"` // active, graduated, disqualified, probation
+	WarningCount           int        `json:"warning_count"`
+	DisqualificationReason *string    `json:"disqualification_reason,omitempty"`
+	IsManuallyLocked       bool       `json:"is_manually_locked"`
+	IsFirstLogin           bool       `json:"is_first_login"`
+	CohortID               int        `json:"cohort_id"`
+	AttendanceRate         float64    `json:"attendance_rate"` // Percentage of occurred sessions attended
+	AttendedCount          int        `json:"attended_count"`
+	TotalHeldSessions      int        `json:"total_held_sessions"`
+	ResetToken             *string    `json:"-"`
 	ResetTokenExpiresAt    *time.Time `json:"-"`
-	CreatedAt              time.Time `json:"created_at"`
+	AvatarS3Key            *string    `json:"avatar_s3_key,omitempty"`
+	LinkedInURL            *string    `json:"linkedin_url,omitempty"`
+	GitHubURL              *string    `json:"github_url,omitempty"`
+	Bio                    *string    `json:"bio,omitempty"`
+	CreatedAt              time.Time  `json:"created_at"`
+}
+
+type StudentProfileRequest struct {
+	AvatarS3Key *string `json:"avatar_s3_key"`
+	LinkedInURL *string `json:"linkedin_url"`
+	GitHubURL   *string `json:"github_url"`
+	Bio         *string `json:"bio"`
 }
 
 type AcademyRepository interface {
@@ -69,6 +80,7 @@ type AcademyRepository interface {
 	UpdateStudentPassword(ctx context.Context, id uuid.UUID, hashedPassword string) error
 	SetStudentResetToken(ctx context.Context, email, token string, expiresAt time.Time) error
 	GetStudentByResetToken(ctx context.Context, token string) (*Student, error)
+	UpdateStudentProfile(ctx context.Context, id uuid.UUID, avatarKey, linkedin, github, bio *string) error
 
 	// Cohort Applications
 	CreateApplication(ctx context.Context, app *CohortApplication) error
@@ -174,8 +186,10 @@ type AcademyService interface {
 	SubmitAssignment(ctx context.Context, studentID uuid.UUID, req *SubmitAssignmentRequest) error
 	GetAdminSubmissions(ctx context.Context) ([]*Assignment, error)
 	GradeSubmission(ctx context.Context, req *GradeAssignmentRequest) error
-	GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string) (string, string, error)
+	GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string, uploadType string) (string, string, error)
 	GeneratePresignedDownloadURL(ctx context.Context, fileKey string) (string, error)
+	GetStudentProfile(ctx context.Context, id uuid.UUID) (*Student, error)
+	UpdateStudentProfile(ctx context.Context, id uuid.UUID, req *StudentProfileRequest) error
 
 	// Break-It Labs
 	ListLabs(ctx context.Context) ([]*BreakItLab, error)
@@ -524,6 +538,8 @@ type CapstoneProject struct {
 	ID                     int       `json:"id"`
 	StudentID              uuid.UUID `json:"student_id"`
 	StudentName            string    `json:"student_name,omitempty"`
+	StudentLinkedIn        *string   `json:"student_linkedin,omitempty"`
+	StudentGitHub          *string   `json:"student_github,omitempty"`
 	ProjectTitle           string    `json:"project_title"`
 	Description            string    `json:"description"`
 	ArchitectureDiagramURL string    `json:"architecture_diagram_url"`

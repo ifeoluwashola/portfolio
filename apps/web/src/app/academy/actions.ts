@@ -649,8 +649,39 @@ export async function checkMaterialAccess() {
   return { granted: true };
 }
 
-export async function getS3UploadUrl(filename: string) {
-  const result = await academyFetch(`/v1/media/upload-url?filename=${encodeURIComponent(filename)}`);
+export async function getS3UploadUrl(filename: string, type?: string) {
+  let url = `/v1/media/upload-url?filename=${encodeURIComponent(filename)}`;
+  if (type) url += `&type=${encodeURIComponent(type)}`;
+  const result = await academyFetch(url);
   if (result.error) return { error: result.error };
   return result.data as { upload_url: string; file_key: string };
+}
+
+export async function getStudentProfile() {
+  const result = await academyFetch("/v1/profile");
+  if (result.error) return { error: result.error };
+  return result.data as {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    avatar_s3_key?: string;
+    linkedin_url?: string;
+    github_url?: string;
+    bio?: string;
+  };
+}
+
+export async function updateStudentProfile(data: {
+  avatar_s3_key?: string | null;
+  linkedin_url?: string | null;
+  github_url?: string | null;
+  bio?: string | null;
+}) {
+  const result = await academyFetch("/v1/profile", {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
 }

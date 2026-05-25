@@ -902,6 +902,9 @@ func (s *academyService) ApproveCapstone(ctx context.Context, capstoneID int, re
 	}
 
 	_, err = s.repo.CreateAlumniProfile(ctx, profile)
+	if err == nil && s.notification != nil {
+		_ = s.notification.SendCapstoneApprovedEmail(student.FirstName, student.Email, slug)
+	}
 	return err
 }
 
@@ -1495,7 +1498,7 @@ func (s *academyService) GetSessionAttendance(ctx context.Context, sessionID int
 	return s.repo.GetSessionAttendance(ctx, sessionID)
 }
 
-func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string) (string, string, error) {
+func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, studentID uuid.UUID, filename string, uploadType string) (string, string, error) {
 	if s.config.S3BucketName == "" {
 		return "", "", errors.New("S3 bucket not configured")
 	}
@@ -1508,7 +1511,12 @@ func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, student
 	client := s3.NewFromConfig(cfg)
 	presignClient := s3.NewPresignClient(client)
 
-	fileKey := fmt.Sprintf("assignments/%s/%s-%s", studentID.String(), uuid.New().String(), filename)
+	var fileKey string
+	if uploadType == "avatar" {
+		fileKey = fmt.Sprintf("avatars/%s/%s", studentID.String(), filename)
+	} else {
+		fileKey = fmt.Sprintf("assignments/%s/%s-%s", studentID.String(), uuid.New().String(), filename)
+	}
 
 	req, err := presignClient.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s.config.S3BucketName),
@@ -1549,4 +1557,12 @@ func (s *academyService) GeneratePresignedDownloadURL(ctx context.Context, fileK
 	}
 
 	return req.URL, nil
+}
+
+func (s *academyService) GetStudentProfile(ctx context.Context, id uuid.UUID) (*domain.Student, error) {
+	return s.repo.GetStudentByID(ctx, id)
+}
+
+func (s *academyService) UpdateStudentProfile(ctx context.Context, id uuid.UUID, req *domain.StudentProfileRequest) error {
+	return s.repo.UpdateStudentProfile(ctx, id, req.AvatarS3Key, req.LinkedInURL, req.GitHubURL, req.Bio)
 }
