@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { getAlumniProfile, getPublicAvatarUrl } from "@/app/academy/actions";
 import { AcademyNavbar } from "@/components/academy/AcademyNavbar";
+import Image from "next/image";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
    const { slug } = await params;
@@ -34,11 +35,15 @@ async function AvatarImage({ s3Key, name }: { s3Key: string; name: string }) {
    const url = await getPublicAvatarUrl(s3Key);
    if (url) {
       return (
-         <img
-            src={url}
-            alt={name}
-            className="w-32 h-32 md:w-40 md:h-40 shrink-0 rounded-full object-cover border-4 border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.15)]"
-         />
+         <div className="relative w-32 h-32 md:w-40 md:h-40 shrink-0 rounded-full border-4 border-yellow-500/30 shadow-[0_0_30px_rgba(234,179,8,0.15)] overflow-hidden">
+            <Image
+               src={url}
+               alt={name}
+               fill
+               className="object-cover"
+               sizes="(max-width: 768px) 128px, 160px"
+            />
+         </div>
       );
    }
    return (

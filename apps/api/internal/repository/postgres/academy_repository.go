@@ -526,7 +526,7 @@ func (r *AcademyRepository) UpsertLabSubmission(ctx context.Context, sub *domain
 
 func (r *AcademyRepository) GetLabSubmissions(ctx context.Context, labID int) ([]*domain.LabSubmission, error) {
 	query := `
-		SELECT ls.id, ls.lab_id, ls.student_id, s.first_name || ' ' || s.last_name as student_name, ls.proposed_fix, ls.is_winner, ls.created_at
+		SELECT ls.id, ls.lab_id, ls.student_id, s.first_name || ' ' || s.last_name as student_name, s.avatar_s3_key, ls.proposed_fix, ls.is_winner, ls.created_at
 		FROM lab_submissions ls
 		JOIN students s ON ls.student_id = s.id
 		WHERE ls.lab_id = $1
@@ -541,7 +541,7 @@ func (r *AcademyRepository) GetLabSubmissions(ctx context.Context, labID int) ([
 	var subs = []*domain.LabSubmission{}
 	for rows.Next() {
 		s := &domain.LabSubmission{}
-		err := rows.Scan(&s.ID, &s.LabID, &s.StudentID, &s.StudentName, &s.ProposedFix, &s.IsWinner, &s.CreatedAt)
+		err := rows.Scan(&s.ID, &s.LabID, &s.StudentID, &s.StudentName, &s.AvatarS3Key, &s.ProposedFix, &s.IsWinner, &s.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -567,7 +567,7 @@ func (r *AcademyRepository) CreateSubmissionComment(ctx context.Context, comm *d
 
 func (r *AcademyRepository) GetSubmissionComments(ctx context.Context, subID int) ([]*domain.SubmissionComment, error) {
 	query := `
-		SELECT sc.id, sc.submission_id, sc.student_id, s.first_name || ' ' || s.last_name as student_name, sc.body, sc.created_at
+		SELECT sc.id, sc.submission_id, sc.student_id, s.first_name || ' ' || s.last_name as student_name, s.avatar_s3_key, sc.body, sc.created_at
 		FROM submission_comments sc
 		JOIN students s ON sc.student_id = s.id
 		WHERE sc.submission_id = $1
@@ -582,7 +582,7 @@ func (r *AcademyRepository) GetSubmissionComments(ctx context.Context, subID int
 	var comms = []*domain.SubmissionComment{}
 	for rows.Next() {
 		c := &domain.SubmissionComment{}
-		err := rows.Scan(&c.ID, &c.SubmissionID, &c.StudentID, &c.StudentName, &c.Body, &c.CreatedAt)
+		err := rows.Scan(&c.ID, &c.SubmissionID, &c.StudentID, &c.StudentName, &c.AvatarS3Key, &c.Body, &c.CreatedAt)
 		if err != nil {
 			return nil, err
 		}

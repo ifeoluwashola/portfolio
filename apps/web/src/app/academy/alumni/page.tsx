@@ -8,6 +8,7 @@ import {
   Code
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { getAlumniList, getPublicAvatarUrl } from "@/app/academy/actions";
 import { AcademyNavbar } from "@/components/academy/AcademyNavbar";
 
@@ -25,11 +26,15 @@ async function AlumniAvatar({ s3Key, name }: { s3Key?: string; name: string }) {
   const url = s3Key ? await getPublicAvatarUrl(s3Key) : null;
   if (url) {
     return (
-      <img 
-        src={url} 
-        alt={name} 
-        className="w-16 h-16 rounded-2xl object-cover border border-border group-hover:border-yellow-500/20 transition-all shadow-inner" 
-      />
+      <div className="relative w-16 h-16 rounded-2xl border border-border group-hover:border-yellow-500/20 transition-all shadow-inner overflow-hidden">
+        <Image 
+          src={url} 
+          alt={name} 
+          fill
+          className="object-cover" 
+          sizes="64px"
+        />
+      </div>
     );
   }
   return (
