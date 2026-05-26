@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { ModeToggle } from "../ModeToggle";
 import { User } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api-config";
+import { NotificationBell } from "./NotificationBell";
 
 async function fetchAvatarUrl(token: string): Promise<string | null> {
   try {
@@ -63,21 +64,24 @@ export async function AcademyNavbar() {
           <ModeToggle variant="academy" />
 
           {token ? (
-            <Link
-              href="/academy/dashboard"
-              className="flex items-center gap-2.5 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-500/20 transition-all"
-            >
-              {avatarUrl ? (
-                <img
-                  src={avatarUrl}
-                  alt="Your avatar"
-                  className="w-5 h-5 rounded-full object-cover border border-yellow-500/40"
-                />
-              ) : (
-                <User className="w-4 h-4" />
-              )}
-              Dashboard →
-            </Link>
+            <>
+              <NotificationBell />
+              <Link
+                href="/academy/dashboard"
+                className="flex items-center gap-2.5 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-500/20 transition-all"
+              >
+                {avatarUrl ? (
+                  <img
+                    src={avatarUrl}
+                    alt="Your avatar"
+                    className="w-5 h-5 rounded-full object-cover border border-yellow-500/40"
+                  />
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
+                Dashboard →
+              </Link>
+            </>
           ) : (
             <>
               <Link

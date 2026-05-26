@@ -741,3 +741,25 @@ export async function confirmEmailChange(token: string) {
     return { error: "Failed to confirm email change" };
   }
 }
+
+// ─── Notifications ─────────────────────────────────────────────────────────────
+
+export async function getUnreadNotifications() {
+  const result = await academyFetch("/v1/notifications/unread");
+  if (result.error) return [];
+  return result.data || [];
+}
+
+export async function markNotificationRead(id: string) {
+  return await academyFetch(`/v1/notifications/${id}/read`, { method: "PUT" });
+}
+
+export async function markAllNotificationsRead() {
+  return await academyFetch("/v1/notifications/read-all", { method: "PUT" });
+}
+
+export async function searchStudents(query: string) {
+  const result = await academyFetch(`/v1/academy/students/search?q=${encodeURIComponent(query)}`);
+  if (result.error) return [];
+  return result.data || [];
+}

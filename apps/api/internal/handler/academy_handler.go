@@ -808,6 +808,17 @@ func (h *AcademyHandler) HandleListAllStudents(w http.ResponseWriter, r *http.Re
 	json.NewEncoder(w).Encode(students)
 }
 
+func (h *AcademyHandler) HandleSearchStudents(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query().Get("q")
+	students, err := h.svc.SearchStudents(r.Context(), q)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(students)
+}
+
 func (h *AcademyHandler) HandleWarnStudent(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
@@ -1511,6 +1522,80 @@ func (h *AcademyHandler) HandleConfirmEmailChange(w http.ResponseWriter, r *http
 
 	if err := h.svc.ConfirmEmailChange(r.Context(), &req); err != nil {
 		writeJSONError(w, "Failed to confirm email change: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+// ─── Notifications ─────────────────────────────────────────────────────────────
+
+func (h *AcademyHandler) HandleGetUnreadNotifications(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	notifs, err := h.svc.GetUnreadNotifications(r.Context(), studentID.String())
+	if err != nil {
+		writeJSONError(w, "Failed to fetch notifications", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(notifs)
+}
+
+func (h *AcademyHandler) HandleMarkNotificationRead(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	// Extract notification ID from URL path value
+	notifIDStr := r.PathValue("id")
+	notifID, err := uuid.Parse(notifIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid notification ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.MarkNotificationRead(r.Context(), notifID, studentID.String()); err != nil {
+		writeJSONError(w, "Failed to mark notification as read", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func (h *AcademyHandler) HandleMarkAllNotificationsRead(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.MarkAllNotificationsRead(r.Context(), studentID.String()); err != nil {
+		writeJSONError(w, "Failed to mark all notifications as read", http.StatusInternalServerError)
 		return
 	}
 

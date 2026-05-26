@@ -2,6 +2,8 @@ package postgres
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
@@ -1404,4 +1406,122 @@ func (r *AcademyRepository) GetStudentByEmailVerifyToken(ctx context.Context, to
 		&student.CreatedAt,
 	)
 	return student, err
+}
+
+// ─── Notifications ─────────────────────────────────────────────────────────────
+
+func (r *AcademyRepository) CreateNotification(ctx context.Context, notif *domain.Notification) error {
+	query := `
+		INSERT INTO notifications (id, user_id, actor_id, type, message, reference_url, is_read, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+	`
+	_, err := r.db.Exec(ctx, query, notif.ID, notif.UserID, notif.ActorID, notif.Type, notif.Message, notif.ReferenceURL, notif.IsRead, notif.CreatedAt)
+	return err
+}
+
+func (r *AcademyRepository) BulkCreateNotifications(ctx context.Context, notifications []*domain.Notification) error {
+	if len(notifications) == 0 {
+		return nil
+	}
+
+	// Build bulk insert query
+	query := `INSERT INTO notifications (id, user_id, actor_id, type, message, reference_url, is_read, created_at) VALUES `
+	values := []interface{}{}
+	placeholders := []string{}
+
+	for i, notif := range notifications {
+		base := i * 8
+		placeholders = append(placeholders, fmt.Sprintf("($%d, $%d, $%d, $%d, $%d, $%d, $%d, $%d)", base+1, base+2, base+3, base+4, base+5, base+6, base+7, base+8))
+		values = append(values, notif.ID, notif.UserID, notif.ActorID, notif.Type, notif.Message, notif.ReferenceURL, notif.IsRead, notif.CreatedAt)
+	}
+
+	query += strings.Join(placeholders, ", ")
+	
+	_, err := r.db.Exec(ctx, query, values...)
+	return err
+}
+
+func (r *AcademyRepository) GetUnreadNotifications(ctx context.Context, userID string) ([]*domain.Notification, error) {
+	query := `
+		SELECT n.id, n.user_id, n.actor_id, n.type, n.message, n.reference_url, n.is_read, n.created_at,
+		       COALESCE(s.first_name || ' ' || s.last_name, s.display_name) as actor_name,
+		       s.avatar_s3_key as actor_avatar
+		FROM notifications n
+		LEFT JOIN students s ON n.actor_id = s.id::text OR n.actor_id = 'student_' || s.id::text
+		WHERE n.user_id = $1 AND n.is_read = FALSE
+		ORDER BY n.created_at DESC
+		LIMIT 50
+	`
+	rows, err := r.db.Query(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notifs []*domain.Notification
+	for rows.Next() {
+		n := &domain.Notification{}
+		err := rows.Scan(&n.ID, &n.UserID, &n.ActorID, &n.Type, &n.Message, &n.ReferenceURL, &n.IsRead, &n.CreatedAt, &n.ActorName, &n.ActorAvatar)
+		if err != nil {
+			return nil, err
+		}
+		notifs = append(notifs, n)
+	}
+
+	if notifs == nil {
+		notifs = []*domain.Notification{}
+	}
+	return notifs, nil
+}
+
+func (r *AcademyRepository) MarkNotificationRead(ctx context.Context, id uuid.UUID, userID string) error {
+	query := `UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2`
+	_, err := r.db.Exec(ctx, query, id, userID)
+	return err
+}
+
+func (r *AcademyRepository) MarkAllNotificationsRead(ctx context.Context, userID string) error {
+	query := `UPDATE notifications SET is_read = TRUE WHERE user_id = $1 AND is_read = FALSE`
+	_, err := r.db.Exec(ctx, query, userID)
+	return err
+}
+
+func (r *AcademyRepository) SearchStudents(ctx context.Context, q string) ([]*domain.Student, error) {
+	query := `
+		SELECT id, first_name, last_name, email, status, cohort_id, avatar_s3_key, username, display_name, created_at
+		FROM students
+		WHERE username ILIKE $1 OR first_name ILIKE $1 OR last_name ILIKE $1 OR display_name ILIKE $1
+		ORDER BY username ASC
+		LIMIT 15
+	`
+	searchTerm := "%" + q + "%"
+	rows, err := r.db.Query(ctx, query, searchTerm)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []*domain.Student
+	for rows.Next() {
+		s := &domain.Student{}
+		err := rows.Scan(
+			&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.Status, &s.CohortID,
+			&s.AvatarS3Key, &s.Username, &s.DisplayName, &s.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		students = append(students, s)
+	}
+	if students == nil {
+		students = []*domain.Student{}
+	}
+	return students, nil
+}
+
+func (r *AcademyRepository) GetLabIDBySubmissionID(ctx context.Context, subID int) (int, error) {
+	var labID int
+	query := `SELECT lab_id FROM lab_submissions WHERE id = $1`
+	err := r.db.QueryRow(ctx, query, subID).Scan(&labID)
+	return labID, err
 }

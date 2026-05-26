@@ -88,6 +88,23 @@ type ConfirmEmailChangeRequest struct {
 	Token string `json:"token"`
 }
 
+// ─── Notifications ─────────────────────────────────────────────────────────────
+
+type Notification struct {
+	ID           uuid.UUID `json:"id"`
+	UserID       string    `json:"user_id"`
+	ActorID      *string   `json:"actor_id,omitempty"`
+	Type         string    `json:"type"`
+	Message      string    `json:"message"`
+	ReferenceURL *string   `json:"reference_url,omitempty"`
+	IsRead       bool      `json:"is_read"`
+	CreatedAt    time.Time `json:"created_at"`
+	
+	// JOIN fields
+	ActorName    *string   `json:"actor_name,omitempty"`
+	ActorAvatar  *string   `json:"actor_avatar,omitempty"`
+}
+
 type AcademyRepository interface {
 	GetGraduationEligibleStudents(ctx context.Context) ([]*Student, error)
 	GetAllStudents(ctx context.Context) ([]*Student, error)
@@ -126,6 +143,8 @@ type AcademyRepository interface {
 	GetStudentPaymentHistory(ctx context.Context, studentID uuid.UUID) ([]*PaymentHistory, error)
 	GetBillingsDueIn(ctx context.Context, days int) ([]*StudentBilling, error)
 	GetStudentsByIDs(ctx context.Context, ids []uuid.UUID) ([]*Student, error)
+	SearchStudents(ctx context.Context, query string) ([]*Student, error)
+	GetLabIDBySubmissionID(ctx context.Context, subID int) (int, error)
 
 	// Alumni & Capstone
 	CreateAlumniProfile(ctx context.Context, profile *AlumniProfile) (int, error)
@@ -188,6 +207,12 @@ type AcademyRepository interface {
 	GetBillingOverview(ctx context.Context) (*BillingOverview, error)
 	GetAllStudentBillings(ctx context.Context) ([]*AdminStudentBilling, error)
 	SetManualLock(ctx context.Context, id uuid.UUID, locked bool) error
+	// Notifications
+	CreateNotification(ctx context.Context, notif *Notification) error
+	BulkCreateNotifications(ctx context.Context, notifications []*Notification) error
+	GetUnreadNotifications(ctx context.Context, userID string) ([]*Notification, error)
+	MarkNotificationRead(ctx context.Context, id uuid.UUID, userID string) error
+	MarkAllNotificationsRead(ctx context.Context, userID string) error
 }
 
 type AcademyService interface {
@@ -233,6 +258,7 @@ type AcademyService interface {
 
 	// Phase 6
 	ListAllStudents(ctx context.Context) ([]*Student, error)
+	SearchStudents(ctx context.Context, query string) ([]*Student, error)
 	AdminWarnStudent(ctx context.Context, id uuid.UUID, reason string) error
 	AdminDisqualifyStudent(ctx context.Context, id uuid.UUID, reason string) error
 	ListAlumni(ctx context.Context) ([]*AlumniProfile, error)
@@ -272,6 +298,11 @@ type AcademyService interface {
 	JoinSession(ctx context.Context, studentID uuid.UUID, sessionID int) (string, error)
 	GetStudentAttendanceHistory(ctx context.Context, studentID uuid.UUID) ([]*AttendanceRecord, error)
 	GetSessionAttendance(ctx context.Context, sessionID int) ([]*Student, error)
+
+	// Notifications
+	GetUnreadNotifications(ctx context.Context, userID string) ([]*Notification, error)
+	MarkNotificationRead(ctx context.Context, id uuid.UUID, userID string) error
+	MarkAllNotificationsRead(ctx context.Context, userID string) error
 }
 
 // BillingHubResponse is the aggregate returned by the billing hub endpoint.
