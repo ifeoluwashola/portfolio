@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { getAcademySession, submitLabFix, addLabComment, getStudentStatus, logout } from "../../../actions";
 import { AlertModal } from "../../../../../components/AlertModal";
+import { MentionTextArea } from "@/components/academy/MentionTextArea";
 
 interface SubmissionComment {
   id: number;
@@ -364,7 +365,13 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
                                 </span>
                               </div>
                               <div className="p-3 bg-card/50 rounded-xl border border-border/50 text-xs text-foreground/70 dark:text-muted-foreground leading-relaxed">
-                                {comment.body}
+                                {comment.body.split(/(@[a-zA-Z0-9_-]+)/g).map((part, idx) =>
+                                  /^@[a-zA-Z0-9_-]+$/.test(part) ? (
+                                    <span key={idx} className="text-yellow-500 font-bold hover:underline cursor-pointer">{part}</span>
+                                  ) : (
+                                    <span key={idx}>{part}</span>
+                                  )
+                                )}
                               </div>
                             </div>
                           </div>
@@ -381,9 +388,9 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
                       <div className="pt-6 border-t border-border/50">
                         {commentingOn === sub.id ? (
                           <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
-                            <textarea
+                            <MentionTextArea
                               value={newComment}
-                              onChange={(e) => setNewComment(e.target.value)}
+                              onChange={setNewComment}
                               rows={3}
                               disabled={studentStatus === "disqualified"}
                               className="w-full bg-background border border-border rounded-xl p-4 text-[11px] text-foreground focus:ring-1 focus:ring-yellow-500/50 outline-none transition-all placeholder:text-muted-foreground/30 disabled:opacity-50"

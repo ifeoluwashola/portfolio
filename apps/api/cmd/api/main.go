@@ -200,6 +200,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/academy/request-email-change", authMW.RequireStudentAuth(academyHandler.HandleRequestEmailChange))
 	mux.HandleFunc("POST /api/v1/academy/confirm-email-change", academyHandler.HandleConfirmEmailChange)
 	mux.HandleFunc("GET /api/v1/academy/dashboard", authMW.RequireStudentAuth(academyHandler.HandleGetStudentDashboard))
+	mux.HandleFunc("GET /api/v1/academy/students/search", authMW.RequireStudentAuth(academyHandler.HandleSearchStudents))
 	mux.HandleFunc("POST /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleSubmitCapstone))
 	mux.HandleFunc("GET /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleGetStudentCapstone))
 	mux.HandleFunc("GET /api/v1/media/upload-url", authMW.RequireStudentAuth(academyHandler.HandleGetUploadURL))
@@ -213,6 +214,11 @@ func main() {
 	
 	// Attendance Gateway
 	mux.HandleFunc("GET /api/v1/academy/sessions/{id}/join", authMW.RequireStudentAuth(academyHandler.HandleJoinSession))
+
+	// Notifications
+	mux.HandleFunc("GET /api/v1/notifications/unread", authMW.RequireStudentAuth(academyHandler.HandleGetUnreadNotifications))
+	mux.HandleFunc("PUT /api/v1/notifications/{id}/read", authMW.RequireStudentAuth(academyHandler.HandleMarkNotificationRead))
+	mux.HandleFunc("PUT /api/v1/notifications/read-all", authMW.RequireStudentAuth(academyHandler.HandleMarkAllNotificationsRead))
 
 	// === ADMIN PROTECTED ROUTES ===
 	// Admin management

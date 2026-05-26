@@ -4,6 +4,7 @@ import { Terminal, CheckCircle2, Clock, Calendar, ArrowRight, ExternalLink, Aler
 import Link from "next/link";
 import { getDashboardData, getBillingStatus } from "../actions";
 import { AutoRefresher } from "@/components/academy/auto-refresher";
+import { DashboardNotifications } from "@/components/academy/DashboardNotifications";
 
 interface CohortWeek {
   id: number;
@@ -208,6 +209,7 @@ export default async function StudentDashboard() {
 
         {/* Right Column: Mini Info Cards */}
         <div className="space-y-8">
+          <DashboardNotifications />
           <div className="bg-yellow-500/5 border border-yellow-500/10 rounded-3xl p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4 opacity-10 text-yellow-500">
               <Calendar className="w-16 h-16" />

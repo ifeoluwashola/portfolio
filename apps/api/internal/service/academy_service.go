@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -33,6 +34,7 @@ type academyService struct {
 	config       *config.Config
 	tokenCache   cache.TokenCache
 	notification *notifications.ResendNotifier
+	notifSystem  NotificationSystem
 }
 
 func NewAcademyService(repo domain.AcademyRepository, refreshRepo domain.RefreshTokenRepository, cfg *config.Config, tokenCache cache.TokenCache, notification *notifications.ResendNotifier) domain.AcademyService {
@@ -42,6 +44,7 @@ func NewAcademyService(repo domain.AcademyRepository, refreshRepo domain.Refresh
 		config:       cfg,
 		tokenCache:   tokenCache,
 		notification: notification,
+		notifSystem:  NewNotificationSystem(repo),
 	}
 }
 
@@ -817,7 +820,28 @@ func (s *academyService) SubmitLabFix(ctx context.Context, studentID uuid.UUID, 
 		StudentID:   studentID,
 		ProposedFix: req.ProposedFix,
 	}
-	return s.repo.UpsertLabSubmission(ctx, sub)
+	err := s.repo.UpsertLabSubmission(ctx, sub)
+	if err != nil {
+		return err
+	}
+
+	// Trigger: Notify admin about new lab submission
+	go func() {
+		student, sErr := s.repo.GetStudentByID(context.Background(), studentID)
+		if sErr != nil {
+			return
+		}
+		lab, lErr := s.repo.GetLabByID(context.Background(), req.LabID)
+		if lErr != nil {
+			return
+		}
+		actorID := studentID.String()
+		refURL := fmt.Sprintf("/academy/break-it-labs/%d", req.LabID)
+		msg := fmt.Sprintf("%s %s submitted a fix for \"%s\"", student.FirstName, student.LastName, lab.Title)
+		_ = s.notifSystem.NotifyUser(context.Background(), &actorID, "admin_system", "submission", msg, &refURL)
+	}()
+
+	return nil
 }
 
 func (s *academyService) ListLabSubmissions(ctx context.Context, labID int) ([]*domain.LabSubmission, error) {
@@ -834,13 +858,60 @@ func (s *academyService) AddSubmissionComment(ctx context.Context, studentID uui
 		StudentID:    studentID,
 		Body:         body,
 	}
-	return s.repo.CreateSubmissionComment(ctx, comm)
+	err := s.repo.CreateSubmissionComment(ctx, comm)
+	if err != nil {
+		return err
+	}
+
+	// Trigger: Parse @mentions and notify tagged users
+	go func() {
+		labID, err := s.repo.GetLabIDBySubmissionID(context.Background(), subID)
+		if err != nil {
+			return
+		}
+
+		mentionRe := regexp.MustCompile(`(?:\s|^)@([a-zA-Z0-9_-]+)`)
+		matches := mentionRe.FindAllStringSubmatch(body, -1)
+		if len(matches) == 0 {
+			return
+		}
+
+		actor, aErr := s.repo.GetStudentByID(context.Background(), studentID)
+		if aErr != nil {
+			return
+		}
+		actorID := studentID.String()
+		refURL := fmt.Sprintf("/academy/break-it-labs/%d", labID)
+
+		seen := make(map[string]bool)
+		for _, m := range matches {
+			username := m[1]
+			if seen[username] {
+				continue
+			}
+			seen[username] = true
+
+			target, tErr := s.repo.GetStudentByUsername(context.Background(), username)
+			if tErr != nil || target.ID == studentID {
+				continue // skip invalid or self-mention
+			}
+
+			msg := fmt.Sprintf("%s %s mentioned you in a comment", actor.FirstName, actor.LastName)
+			_ = s.notifSystem.NotifyUser(context.Background(), &actorID, target.ID.String(), "mention", msg, &refURL)
+		}
+	}()
+
+	return nil
 }
 
 // Phase 6: Alumni Hall of Fame & Disciplinary
 
 func (s *academyService) ListAllStudents(ctx context.Context) ([]*domain.Student, error) {
 	return s.repo.GetAllStudents(ctx)
+}
+
+func (s *academyService) SearchStudents(ctx context.Context, query string) ([]*domain.Student, error) {
+	return s.repo.SearchStudents(ctx, strings.TrimSpace(query))
 }
 
 func (s *academyService) AdminWarnStudent(ctx context.Context, id uuid.UUID, reason string) error {
@@ -942,6 +1013,16 @@ func (s *academyService) ApproveCapstone(ctx context.Context, capstoneID int, re
 	if err == nil && s.notification != nil {
 		_ = s.notification.SendCapstoneApprovedEmail(student.FirstName, student.Email, slug)
 	}
+
+	// Trigger: In-app notification for capstone approval
+	if err == nil {
+		go func() {
+			refURL := fmt.Sprintf("/academy/alumni/%s", slug)
+			msg := fmt.Sprintf("Congratulations! Your capstone project has been approved. Welcome to the Alumni Hall of Fame!")
+			_ = s.notifSystem.NotifyUser(context.Background(), nil, student.ID.String(), "feedback", msg, &refURL)
+		}()
+	}
+
 	return err
 }
 
@@ -957,6 +1038,15 @@ func (s *academyService) RejectCapstone(ctx context.Context, capstoneID int, fee
 		student, err := s.repo.GetStudentByID(ctx, capstone.StudentID)
 		if err == nil && student != nil && s.notification != nil {
 			_ = s.notification.SendCapstoneFeedbackEmail(student.FirstName, student.Email, feedback)
+		}
+
+		// Trigger: In-app notification for capstone rejection
+		if student != nil {
+			go func() {
+				refURL := "/academy/dashboard"
+				msg := fmt.Sprintf("Your capstone project needs revision. Feedback: %s", feedback)
+				_ = s.notifSystem.NotifyUser(context.Background(), nil, student.ID.String(), "feedback", msg, &refURL)
+			}()
 		}
 	}
 
@@ -1142,11 +1232,52 @@ func (s *academyService) GetStudentSession(ctx context.Context, studentID uuid.U
 // Class Sessions
 
 func (s *academyService) AdminCreateClassSession(ctx context.Context, sess *domain.ClassSession) error {
-	return s.repo.CreateClassSession(ctx, sess)
+	err := s.repo.CreateClassSession(ctx, sess)
+	if err != nil {
+		return err
+	}
+
+	// Trigger: Notify cohort when session is published
+	if sess.VisibilityStatus == "published" {
+		go func() {
+			week, wErr := s.repo.GetWeekByID(context.Background(), sess.CohortWeekID)
+			if wErr != nil {
+				return
+			}
+			refURL := fmt.Sprintf("/academy/dashboard/week/%d", sess.CohortWeekID)
+			msg := fmt.Sprintf("New class session \"%s\" has been published for %s", sess.Title, week.Title)
+			_ = s.notifSystem.NotifyCohort(context.Background(), nil, week.CohortID, "system", msg, &refURL)
+		}()
+	}
+
+	return nil
 }
 
 func (s *academyService) AdminUpdateClassSession(ctx context.Context, sess *domain.ClassSession) error {
-	return s.repo.UpdateClassSession(ctx, sess)
+	err := s.repo.UpdateClassSession(ctx, sess)
+	if err != nil {
+		return err
+	}
+
+	// Trigger: Notify cohort when a recording or session is published/updated
+	if sess.VisibilityStatus == "published" {
+		go func() {
+			week, wErr := s.repo.GetWeekByID(context.Background(), sess.CohortWeekID)
+			if wErr != nil {
+				return
+			}
+			refURL := fmt.Sprintf("/academy/dashboard/week/%d", sess.CohortWeekID)
+			var msg string
+			if sess.RecordingURL != "" {
+				msg = fmt.Sprintf("A recording has been added for \"%s\" in %s", sess.Title, week.Title)
+			} else {
+				msg = fmt.Sprintf("Class session \"%s\" has been updated for %s", sess.Title, week.Title)
+			}
+			_ = s.notifSystem.NotifyCohort(context.Background(), nil, week.CohortID, "system", msg, &refURL)
+		}()
+	}
+
+	return nil
 }
 
 func (s *academyService) AdminDeleteClassSession(ctx context.Context, id int) error {
@@ -1649,4 +1780,18 @@ func (s *academyService) ConfirmEmailChange(ctx context.Context, req *domain.Con
 	}
 
 	return s.repo.ConfirmPendingEmail(ctx, student.ID, *student.PendingEmail)
+}
+
+// ─── Notifications ─────────────────────────────────────────────────────────────
+
+func (s *academyService) GetUnreadNotifications(ctx context.Context, userID string) ([]*domain.Notification, error) {
+	return s.repo.GetUnreadNotifications(ctx, userID)
+}
+
+func (s *academyService) MarkNotificationRead(ctx context.Context, id uuid.UUID, userID string) error {
+	return s.repo.MarkNotificationRead(ctx, id, userID)
+}
+
+func (s *academyService) MarkAllNotificationsRead(ctx context.Context, userID string) error {
+	return s.repo.MarkAllNotificationsRead(ctx, userID)
 }
