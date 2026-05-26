@@ -129,7 +129,7 @@ func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*
 
 func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at
 		FROM students WHERE email = $1
 	`
 	student := &domain.Student{}
@@ -137,7 +137,9 @@ func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string)
 		&student.ID, &student.FirstName, &student.LastName, &student.Email,
 		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
 		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID,
-		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio, &student.CreatedAt,
+		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio, 
+		&student.Username, &student.DisplayName, &student.Preferences, &student.PendingEmail, &student.EmailVerifyToken,
+		&student.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -168,7 +170,7 @@ func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string)
 
 func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at
 		FROM students WHERE id = $1
 	`
 	student := &domain.Student{}
@@ -176,7 +178,9 @@ func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*
 		&student.ID, &student.FirstName, &student.LastName, &student.Email,
 		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
 		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID,
-		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio, &student.CreatedAt,
+		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio,
+		&student.Username, &student.DisplayName, &student.Preferences, &student.PendingEmail, &student.EmailVerifyToken,
+		&student.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
@@ -409,7 +413,7 @@ func (r *AcademyRepository) GetStudentAssignments(ctx context.Context, studentID
 
 func (r *AcademyRepository) GetAllAssignments(ctx context.Context) ([]*domain.Assignment, error) {
 	query := `
-		SELECT a.id, a.student_id, s.first_name || ' ' || s.last_name as student_name, a.week_id, w.week_number, a.github_url, a.submission_file_key, a.status, a.admin_feedback, a.created_at
+		SELECT a.id, a.student_id, COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as student_name, a.week_id, w.week_number, a.github_url, a.submission_file_key, a.status, a.admin_feedback, a.created_at
 		FROM assignments a
 		JOIN students s ON a.student_id = s.id
 		JOIN cohort_weeks w ON a.week_id = w.id
@@ -526,7 +530,7 @@ func (r *AcademyRepository) UpsertLabSubmission(ctx context.Context, sub *domain
 
 func (r *AcademyRepository) GetLabSubmissions(ctx context.Context, labID int) ([]*domain.LabSubmission, error) {
 	query := `
-		SELECT ls.id, ls.lab_id, ls.student_id, s.first_name || ' ' || s.last_name as student_name, s.avatar_s3_key, ls.proposed_fix, ls.is_winner, ls.created_at
+		SELECT ls.id, ls.lab_id, ls.student_id, COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as student_name, s.avatar_s3_key, ls.proposed_fix, ls.is_winner, ls.created_at
 		FROM lab_submissions ls
 		JOIN students s ON ls.student_id = s.id
 		WHERE ls.lab_id = $1
@@ -567,7 +571,7 @@ func (r *AcademyRepository) CreateSubmissionComment(ctx context.Context, comm *d
 
 func (r *AcademyRepository) GetSubmissionComments(ctx context.Context, subID int) ([]*domain.SubmissionComment, error) {
 	query := `
-		SELECT sc.id, sc.submission_id, sc.student_id, s.first_name || ' ' || s.last_name as student_name, s.avatar_s3_key, sc.body, sc.created_at
+		SELECT sc.id, sc.submission_id, sc.student_id, COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as student_name, s.avatar_s3_key, sc.body, sc.created_at
 		FROM submission_comments sc
 		JOIN students s ON sc.student_id = s.id
 		WHERE sc.submission_id = $1
@@ -743,7 +747,7 @@ func (r *AcademyRepository) CreateAlumniProfile(ctx context.Context, profile *do
 
 func (r *AcademyRepository) GetAlumniProfiles(ctx context.Context) ([]*domain.AlumniProfile, error) {
 	query := `
-		SELECT ap.id, ap.student_id, s.first_name || ' ' || s.last_name as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, s.avatar_s3_key, s.bio, ap.created_at
+		SELECT ap.id, ap.student_id, (s.first_name || ' ' || s.last_name) as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, s.avatar_s3_key, s.bio, ap.created_at
 		FROM alumni_profiles ap
 		JOIN students s ON ap.student_id = s.id
 		ORDER BY ap.created_at DESC
@@ -772,7 +776,7 @@ func (r *AcademyRepository) GetAlumniProfiles(ctx context.Context) ([]*domain.Al
 
 func (r *AcademyRepository) GetAlumniBySlug(ctx context.Context, slug string) (*domain.AlumniProfile, error) {
 	query := `
-		SELECT ap.id, ap.student_id, s.first_name || ' ' || s.last_name as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, s.avatar_s3_key, s.bio, ap.created_at
+		SELECT ap.id, ap.student_id, (s.first_name || ' ' || s.last_name) as student_name, ap.slug, ap.cohort_name, ap.linkedin_url, ap.github_url, s.avatar_s3_key, s.bio, ap.created_at
 		FROM alumni_profiles ap
 		JOIN students s ON ap.student_id = s.id
 		WHERE ap.slug = $1
@@ -895,7 +899,7 @@ func (r *AcademyRepository) GetCapstoneProjectsByStudent(ctx context.Context, st
 
 func (r *AcademyRepository) GetPendingCapstones(ctx context.Context) ([]*domain.CapstoneProject, error) {
 	query := `
-		SELECT cp.id, cp.student_id, s.first_name || ' ' || s.last_name as student_name, s.linkedin_url, s.github_url, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.feedback, cp.created_at
+		SELECT cp.id, cp.student_id, COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as student_name, s.linkedin_url, s.github_url, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.feedback, cp.created_at
 		FROM capstone_projects cp
 		JOIN students s ON cp.student_id = s.id
 		WHERE cp.status = 'pending'
@@ -921,7 +925,7 @@ func (r *AcademyRepository) GetPendingCapstones(ctx context.Context) ([]*domain.
 
 func (r *AcademyRepository) GetCapstoneByID(ctx context.Context, id int) (*domain.CapstoneProject, error) {
 	query := `
-		SELECT cp.id, cp.student_id, s.first_name || ' ' || s.last_name as student_name, s.linkedin_url, s.github_url, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.feedback, cp.created_at 
+		SELECT cp.id, cp.student_id, COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as student_name, s.linkedin_url, s.github_url, cp.project_title, cp.description, cp.architecture_diagram_url, cp.live_demo_url, cp.repo_url, cp.status, cp.feedback, cp.created_at 
 		FROM capstone_projects cp
 		JOIN students s ON cp.student_id = s.id
 		WHERE cp.id = $1
@@ -1340,12 +1344,64 @@ func (r *AcademyRepository) CloneCohortCurriculum(ctx context.Context, sourceCoh
 	return tx.Commit(ctx)
 }
 
-func (r *AcademyRepository) UpdateStudentProfile(ctx context.Context, id uuid.UUID, avatarKey, linkedin, github, bio *string) error {
+func (r *AcademyRepository) UpdateStudentProfile(ctx context.Context, id uuid.UUID, avatarKey, linkedin, github, bio, username, displayName *string) error {
 	query := `
 		UPDATE students 
-		SET avatar_s3_key = $1, linkedin_url = $2, github_url = $3, bio = $4
-		WHERE id = $5
+		SET avatar_s3_key = $1, linkedin_url = $2, github_url = $3, bio = $4, username = $5, display_name = $6
+		WHERE id = $7
 	`
-	_, err := r.db.Exec(ctx, query, avatarKey, linkedin, github, bio, id)
+	_, err := r.db.Exec(ctx, query, avatarKey, linkedin, github, bio, username, displayName, id)
 	return err
+}
+
+func (r *AcademyRepository) UpdateStudentPreferences(ctx context.Context, id uuid.UUID, preferences string) error {
+	query := `UPDATE students SET preferences = $1 WHERE id = $2`
+	_, err := r.db.Exec(ctx, query, preferences, id)
+	return err
+}
+
+func (r *AcademyRepository) SetPendingEmailToken(ctx context.Context, id uuid.UUID, email, token string) error {
+	query := `UPDATE students SET pending_email = $1, email_verify_token = $2 WHERE id = $3`
+	_, err := r.db.Exec(ctx, query, email, token, id)
+	return err
+}
+
+func (r *AcademyRepository) ConfirmPendingEmail(ctx context.Context, id uuid.UUID, newEmail string) error {
+	query := `UPDATE students SET email = $1, pending_email = NULL, email_verify_token = NULL WHERE id = $2`
+	_, err := r.db.Exec(ctx, query, newEmail, id)
+	return err
+}
+
+func (r *AcademyRepository) GetStudentByUsername(ctx context.Context, username string) (*domain.Student, error) {
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at
+		FROM students WHERE username = $1
+	`
+	student := &domain.Student{}
+	err := r.db.QueryRow(ctx, query, username).Scan(
+		&student.ID, &student.FirstName, &student.LastName, &student.Email,
+		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
+		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID,
+		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio, 
+		&student.Username, &student.DisplayName, &student.Preferences, &student.PendingEmail, &student.EmailVerifyToken, 
+		&student.CreatedAt,
+	)
+	return student, err
+}
+
+func (r *AcademyRepository) GetStudentByEmailVerifyToken(ctx context.Context, token string) (*domain.Student, error) {
+	query := `
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at
+		FROM students WHERE email_verify_token = $1
+	`
+	student := &domain.Student{}
+	err := r.db.QueryRow(ctx, query, token).Scan(
+		&student.ID, &student.FirstName, &student.LastName, &student.Email,
+		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
+		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID,
+		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio, 
+		&student.Username, &student.DisplayName, &student.Preferences, &student.PendingEmail, &student.EmailVerifyToken, 
+		&student.CreatedAt,
+	)
+	return student, err
 }

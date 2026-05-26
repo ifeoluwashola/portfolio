@@ -217,10 +217,12 @@ export async function academyFetch(path: string, options: RequestInit = {}) {
 }
 
 export async function changePassword(formData: FormData) {
+  const currentPassword = formData.get("current_password") as string;
   const newPassword = formData.get("new_password") as string;
   const token = (await cookies()).get("academy_token")?.value;
 
   if (!token) return { error: "Unauthorized" };
+  if (!currentPassword) return { error: "Current password is required" };
   if (!newPassword || newPassword.length < 8) {
     return { error: "Password must be at least 8 characters long" };
   }
@@ -232,7 +234,7 @@ export async function changePassword(formData: FormData) {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
       },
-      body: JSON.stringify({ new_password: newPassword }),
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
     });
 
     if (!res.ok) {
@@ -684,6 +686,10 @@ export async function getStudentProfile() {
     linkedin_url?: string;
     github_url?: string;
     bio?: string;
+    username?: string;
+    display_name?: string;
+    preferences?: any;
+    pending_email?: string;
   };
 }
 
@@ -692,6 +698,8 @@ export async function updateStudentProfile(data: {
   linkedin_url?: string | null;
   github_url?: string | null;
   bio?: string | null;
+  username?: string | null;
+  display_name?: string | null;
 }) {
   const result = await academyFetch("/v1/profile", {
     method: "PUT",
@@ -699,4 +707,37 @@ export async function updateStudentProfile(data: {
   });
   if (result.error) return { error: result.error };
   return { success: true };
+}
+
+export async function updateStudentPreferences(preferences: Record<string, any>) {
+  const result = await academyFetch("/v1/academy/preferences", {
+    method: "PUT",
+    body: JSON.stringify({ preferences }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
+export async function requestEmailChange(new_email: string) {
+  const result = await academyFetch("/v1/academy/request-email-change", {
+    method: "POST",
+    body: JSON.stringify({ new_email }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true, message: (result.data as any)?.message };
+}
+
+export async function confirmEmailChange(token: string) {
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/academy/confirm-email-change`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+    });
+
+    if (!res.ok) return { error: await res.text() };
+    return { success: true };
+  } catch {
+    return { error: "Failed to confirm email change" };
+  }
 }

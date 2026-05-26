@@ -196,6 +196,9 @@ func main() {
 
 	// === STUDENT PROTECTED ROUTES ===
 	mux.HandleFunc("POST /api/v1/academy/change-password", authMW.RequireStudentAuth(academyHandler.HandleAcademyChangePassword))
+	mux.HandleFunc("PUT /api/v1/academy/preferences", authMW.RequireStudentAuth(academyHandler.HandleUpdateStudentPreferences))
+	mux.HandleFunc("POST /api/v1/academy/request-email-change", authMW.RequireStudentAuth(academyHandler.HandleRequestEmailChange))
+	mux.HandleFunc("POST /api/v1/academy/confirm-email-change", academyHandler.HandleConfirmEmailChange)
 	mux.HandleFunc("GET /api/v1/academy/dashboard", authMW.RequireStudentAuth(academyHandler.HandleGetStudentDashboard))
 	mux.HandleFunc("POST /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleSubmitCapstone))
 	mux.HandleFunc("GET /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleGetStudentCapstone))

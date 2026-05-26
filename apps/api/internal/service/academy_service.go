@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"regexp"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -480,12 +481,33 @@ func (s *academyService) RefreshStudentToken(ctx context.Context, refreshToken s
 }
 
 func (s *academyService) ChangePassword(ctx context.Context, studentID uuid.UUID, req *domain.AcademyChangePasswordRequest) error {
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return err
+	}
+	if err := bcrypt.CompareHashAndPassword([]byte(student.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+		return errors.New("invalid current password")
+	}
+
+	if req.CurrentPassword == req.NewPassword {
+		return errors.New("new password cannot be the same as current password")
+	}
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)
 	if err != nil {
 		return fmt.Errorf("failed to hash password: %w", err)
 	}
 
-	return s.repo.UpdateStudentPassword(ctx, studentID, string(hashedPassword))
+	err = s.repo.UpdateStudentPassword(ctx, studentID, string(hashedPassword))
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		_ = s.notification.SendPasswordChangedEmail(student.FirstName, student.Email)
+	}()
+
+	return nil
 }
 
 func (s *academyService) RevokeToken(ctx context.Context, rawToken string) error {
@@ -1579,5 +1601,52 @@ func (s *academyService) GetStudentProfile(ctx context.Context, id uuid.UUID) (*
 }
 
 func (s *academyService) UpdateStudentProfile(ctx context.Context, id uuid.UUID, req *domain.StudentProfileRequest) error {
-	return s.repo.UpdateStudentProfile(ctx, id, req.AvatarS3Key, req.LinkedInURL, req.GitHubURL, req.Bio)
+	if req.Username != nil {
+		if matched, _ := regexp.MatchString(`^[a-zA-Z0-9_.-]+$`, *req.Username); !matched {
+			return errors.New("username can only contain letters, numbers, underscores, dots, and hyphens")
+		}
+		existing, err := s.repo.GetStudentByUsername(ctx, *req.Username)
+		if err == nil && existing.ID != id {
+			return errors.New("username is already taken")
+		}
+	}
+	return s.repo.UpdateStudentProfile(ctx, id, req.AvatarS3Key, req.LinkedInURL, req.GitHubURL, req.Bio, req.Username, req.DisplayName)
+}
+
+func (s *academyService) UpdateStudentPreferences(ctx context.Context, id uuid.UUID, req *domain.UpdatePreferencesRequest) error {
+	prefBytes, err := json.Marshal(req.Preferences)
+	if err != nil {
+		return err
+	}
+	return s.repo.UpdateStudentPreferences(ctx, id, string(prefBytes))
+}
+
+func (s *academyService) RequestEmailChange(ctx context.Context, studentID uuid.UUID, req *domain.RequestEmailChangeRequest) error {
+	existing, err := s.repo.GetStudentByEmail(ctx, req.NewEmail)
+	if err == nil && existing != nil {
+		return errors.New("email is already in use")
+	}
+
+	token := uuid.New().String()
+	err = s.repo.SetPendingEmailToken(ctx, studentID, req.NewEmail, token)
+	if err != nil {
+		return err
+	}
+
+	// Simulate sending email
+	fmt.Printf("[Email Simulation] Send to %s: Click here to confirm email change: /academy/dashboard/settings/confirm-email?token=%s\n", req.NewEmail, token)
+
+	return nil
+}
+
+func (s *academyService) ConfirmEmailChange(ctx context.Context, req *domain.ConfirmEmailChangeRequest) error {
+	student, err := s.repo.GetStudentByEmailVerifyToken(ctx, req.Token)
+	if err != nil {
+		return errors.New("invalid or expired token")
+	}
+	if student.PendingEmail == nil {
+		return errors.New("no pending email change")
+	}
+
+	return s.repo.ConfirmPendingEmail(ctx, student.ID, *student.PendingEmail)
 }
