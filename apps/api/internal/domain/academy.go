@@ -59,6 +59,11 @@ type Student struct {
 	LinkedInURL            *string    `json:"linkedin_url,omitempty"`
 	GitHubURL              *string    `json:"github_url,omitempty"`
 	Bio                    *string    `json:"bio,omitempty"`
+	Username               string     `json:"username"`
+	DisplayName            *string    `json:"display_name,omitempty"`
+	Preferences            string     `json:"preferences"` // JSON encoded string
+	PendingEmail           *string    `json:"pending_email,omitempty"`
+	EmailVerifyToken       *string    `json:"-"`
 	CreatedAt              time.Time  `json:"created_at"`
 }
 
@@ -67,6 +72,20 @@ type StudentProfileRequest struct {
 	LinkedInURL *string `json:"linkedin_url"`
 	GitHubURL   *string `json:"github_url"`
 	Bio         *string `json:"bio"`
+	Username    *string `json:"username"`
+	DisplayName *string `json:"display_name"`
+}
+
+type UpdatePreferencesRequest struct {
+	Preferences map[string]interface{} `json:"preferences"`
+}
+
+type RequestEmailChangeRequest struct {
+	NewEmail string `json:"new_email"`
+}
+
+type ConfirmEmailChangeRequest struct {
+	Token string `json:"token"`
 }
 
 type AcademyRepository interface {
@@ -80,7 +99,12 @@ type AcademyRepository interface {
 	UpdateStudentPassword(ctx context.Context, id uuid.UUID, hashedPassword string) error
 	SetStudentResetToken(ctx context.Context, email, token string, expiresAt time.Time) error
 	GetStudentByResetToken(ctx context.Context, token string) (*Student, error)
-	UpdateStudentProfile(ctx context.Context, id uuid.UUID, avatarKey, linkedin, github, bio *string) error
+	GetStudentByUsername(ctx context.Context, username string) (*Student, error)
+	GetStudentByEmailVerifyToken(ctx context.Context, token string) (*Student, error)
+	UpdateStudentProfile(ctx context.Context, id uuid.UUID, avatarKey, linkedin, github, bio, username, displayName *string) error
+	UpdateStudentPreferences(ctx context.Context, id uuid.UUID, preferences string) error
+	SetPendingEmailToken(ctx context.Context, id uuid.UUID, email, token string) error
+	ConfirmPendingEmail(ctx context.Context, id uuid.UUID, newEmail string) error
 
 	// Cohort Applications
 	CreateApplication(ctx context.Context, app *CohortApplication) error
@@ -190,6 +214,9 @@ type AcademyService interface {
 	GeneratePresignedDownloadURL(ctx context.Context, fileKey string) (string, error)
 	GetStudentProfile(ctx context.Context, id uuid.UUID) (*Student, error)
 	UpdateStudentProfile(ctx context.Context, id uuid.UUID, req *StudentProfileRequest) error
+	UpdateStudentPreferences(ctx context.Context, id uuid.UUID, req *UpdatePreferencesRequest) error
+	RequestEmailChange(ctx context.Context, studentID uuid.UUID, req *RequestEmailChangeRequest) error
+	ConfirmEmailChange(ctx context.Context, req *ConfirmEmailChangeRequest) error
 
 	// Break-It Labs
 	ListLabs(ctx context.Context) ([]*BreakItLab, error)
@@ -264,6 +291,7 @@ type StudentSessionResponse struct {
 type NotificationService interface {
 	SendStudentWelcomeEmail(firstName, email, tempPassword string) error
 	SendPasswordResetEmail(email, token string) error
+	SendPasswordChangedEmail(firstName, email string) error
 	SendStudentWarningEmail(firstName, email, reason string, warningCount int) error
 	SendStudentDisqualificationEmail(firstName, email, reason string) error
 	SendAdminInviteEmail(firstName, email, tempPassword string) error
@@ -360,7 +388,8 @@ type AcademyAuthResponse struct {
 }
 
 type AcademyChangePasswordRequest struct {
-	NewPassword string `json:"new_password"`
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password"`
 }
 
 type AcademyForgotPasswordRequest struct {

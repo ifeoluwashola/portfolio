@@ -27,6 +27,7 @@ interface BillingLedgerEntry {
   id: string;
   first_name: string;
   last_name: string;
+  display_name?: string;
   email: string;
   total_paid: number;
   remaining_balance: number;
@@ -190,7 +191,7 @@ export default function AdminBillingPage() {
               {filteredLedger.map((student) => (
                 <tr key={student.id} className="hover:bg-slate-800/30 transition-colors group">
                   <td className="px-6 py-4">
-                    <p className="font-bold text-foreground group-hover:text-primary transition-colors">{student.first_name} {student.last_name}</p>
+                    <p className="font-bold text-foreground group-hover:text-primary transition-colors">{student.display_name || `${student.first_name} ${student.last_name}`}</p>
                     <p className="text-[11px] text-muted-foreground font-mono">{student.email}</p>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -239,7 +240,7 @@ export default function AdminBillingPage() {
               <div className="space-y-4">
                 <div className="p-4 bg-background border border-border rounded-xl">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase">Student</p>
-                  <p className="font-bold text-foreground mt-1">{selectedStudent?.first_name} {selectedStudent?.last_name}</p>
+                  <p className="font-bold text-foreground mt-1">{selectedStudent?.display_name || `${selectedStudent?.first_name} ${selectedStudent?.last_name}`}</p>
                   <p className="text-xs text-slate-400">{selectedStudent?.email}</p>
                 </div>
 

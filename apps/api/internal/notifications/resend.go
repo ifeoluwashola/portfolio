@@ -229,6 +229,61 @@ func (n *ResendNotifier) SendPasswordResetEmail(email, token string) error {
 	return err
 }
 
+// Sends password changed email to the student.
+func (n *ResendNotifier) SendPasswordChangedEmail(firstName, email string) error {
+	subject := "Security Alert: Password Changed"
+	sender := "Kybern Academy Security <security@kyberncloud.com>"
+	
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Inter", -apple-system, sans-serif; line-height: 1.6; color: #cbd5e1; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+				.header { background-color: #1e293b; padding: 24px; border-bottom: 2px solid #eab308; }
+				.header-text { color: #eab308; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin: 0; font-family: monospace; }
+				.content { padding: 40px 24px; text-align: center; }
+				.content h2 { color: #f8fafc; font-size: 20px; font-weight: 800; margin-bottom: 16px; }
+				.content p { color: #94a3b8; font-size: 15px; margin-bottom: 32px; }
+				.alert-box { background-color: rgba(234, 179, 8, 0.05); border-left: 4px solid #eab308; padding: 16px; margin: 32px 0; border-radius: 0 8px 8px 0; }
+				.alert-text { color: #eab308; font-size: 13px; font-weight: 600; line-height: 1.5; }
+				.footer { background-color: #020617; padding: 24px; text-align: center; font-size: 11px; color: #475569; border-top: 1px solid #1e293b; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<p class="header-text">> PASSWORD_UPDATED.SH</p>
+				</div>
+				<div class="content">
+					<h2>Security Credential Updated</h2>
+					<p>Hello %s, your Kybern Academy password was recently changed. If you performed this action, no further action is required.</p>
+					
+					<div class="alert-box">
+						<div class="alert-text">If you did not initiate this change, please immediately contact support or reset your password using the "Forgot Password" flow to secure your account.</div>
+					</div>
+				</div>
+				<div class="footer">
+					KYBERN SECURITY SYSTEM · AUTOMATED PROTOCOL
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+	
+	htmlBody := fmt.Sprintf(htmlTemplate, firstName)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}
+
 // Sends warning email to the student.
 func (n *ResendNotifier) SendStudentWarningEmail(firstName, email, reason string, warningCount int) error {
     subject := fmt.Sprintf("Action Required: Disciplinary Warning [%d]", warningCount)

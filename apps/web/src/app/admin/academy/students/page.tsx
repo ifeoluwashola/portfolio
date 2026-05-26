@@ -26,6 +26,7 @@ interface Student {
   id: string;
   first_name: string;
   last_name: string;
+  display_name?: string;
   email: string;
   status: 'active' | 'graduated' | 'disqualified' | 'probation';
   warning_count: number;
@@ -230,7 +231,7 @@ export default function AdminStudentsPage() {
               <tr key={student.id} className="hover:bg-slate-800/20 transition-all group">
                 <td className="px-6 py-5">
                   <div className="flex flex-col">
-                    <span className="text-foreground font-bold group-hover:text-primary transition-colors">{student.first_name} {student.last_name}</span>
+                    <span className="text-foreground font-bold group-hover:text-primary transition-colors">{student.display_name || `${student.first_name} ${student.last_name}`}</span>
                     <span className="text-muted-foreground text-[11px] font-mono">{student.email}</span>
                   </div>
                 </td>

@@ -1445,3 +1445,75 @@ func (h *AcademyHandler) HandleUpdateStudentProfile(w http.ResponseWriter, r *ht
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
+
+func (h *AcademyHandler) HandleUpdateStudentPreferences(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.UpdatePreferencesRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.UpdateStudentPreferences(r.Context(), studentID, &req); err != nil {
+		writeJSONError(w, "Failed to update preferences: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
+
+func (h *AcademyHandler) HandleRequestEmailChange(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		writeJSONError(w, "Unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid student ID", http.StatusBadRequest)
+		return
+	}
+
+	var req domain.RequestEmailChangeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.RequestEmailChange(r.Context(), studentID, &req); err != nil {
+		writeJSONError(w, "Failed to request email change: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Verification email sent"})
+}
+
+func (h *AcademyHandler) HandleConfirmEmailChange(w http.ResponseWriter, r *http.Request) {
+	var req domain.ConfirmEmailChangeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.svc.ConfirmEmailChange(r.Context(), &req); err != nil {
+		writeJSONError(w, "Failed to confirm email change: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}
