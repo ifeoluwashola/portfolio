@@ -11,6 +11,8 @@ on:
       - 'apps/api/**'
     branches:
       - main
+  workflow_dispatch:
+  
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
