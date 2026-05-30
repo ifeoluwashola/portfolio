@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"runtime"
 	"strings"
@@ -75,7 +76,14 @@ func (h *MonitoringHandler) HandleGetAuditLogs(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	logs, err := h.auditSvc.GetRecentAuditLogs(r.Context(), 100)
+	query := r.URL.Query().Get("query")
+	hoursStr := r.URL.Query().Get("hours")
+	hours := 0
+	if hoursStr != "" {
+		fmt.Sscanf(hoursStr, "%d", &hours)
+	}
+
+	logs, err := h.auditSvc.GetRecentAuditLogs(r.Context(), 100, query, hours)
 	if err != nil {
 		http.Error(w, "Failed to retrieve audit logs: "+err.Error(), http.StatusInternalServerError)
 		return

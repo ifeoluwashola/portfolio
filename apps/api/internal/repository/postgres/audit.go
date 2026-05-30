@@ -44,14 +44,29 @@ func (r *AuditRepository) CreateAuditLog(ctx context.Context, log *domain.AuditL
 	return nil
 }
 
-func (r *AuditRepository) GetRecentAuditLogs(ctx context.Context, limit int) ([]*domain.AuditLog, error) {
-	query := `
+func (r *AuditRepository) GetRecentAuditLogs(ctx context.Context, limit int, queryStr string, hours int) ([]*domain.AuditLog, error) {
+	baseQuery := `
 		SELECT id, actor_id, actor_role, action, resource_type, resource_id, details, ip_address, user_agent, created_at
 		FROM audit_logs
-		ORDER BY created_at DESC
-		LIMIT $1
+		WHERE 1=1
 	`
-	rows, err := r.pool.Query(ctx, query, limit)
+	args := []interface{}{}
+	argIdx := 1
+
+	if hours > 0 {
+		baseQuery += fmt.Sprintf(" AND created_at >= NOW() - INTERVAL '%d hours'", hours)
+	}
+
+	if queryStr != "" {
+		baseQuery += fmt.Sprintf(" AND (action ILIKE $%d OR actor_id ILIKE $%d OR resource_type ILIKE $%d OR resource_id ILIKE $%d)", argIdx, argIdx, argIdx, argIdx)
+		args = append(args, "%"+queryStr+"%")
+		argIdx++
+	}
+
+	baseQuery += fmt.Sprintf(" ORDER BY created_at DESC LIMIT $%d", argIdx)
+	args = append(args, limit)
+
+	rows, err := r.pool.Query(ctx, baseQuery, args...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query audit logs: %w", err)
 	}

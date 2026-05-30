@@ -348,8 +348,17 @@ export async function getMonitoringLogs() {
   return { data: result.data };
 }
 
-export async function getMonitoringAuditLogs() {
-  const result = await adminFetch("/v1/admin/monitoring/audit-logs", { cache: 'no-store' });
-  if (result.error) return { error: result.error };
-  return { data: result.data };
+export async function getMonitoringAuditLogs(queryStr?: string, hours?: string) {
+  let url = "/v1/admin/monitoring/audit-logs";
+  const params = new URLSearchParams();
+  if (queryStr) params.append("query", queryStr);
+  if (hours && hours !== "0") params.append("hours", hours);
+  
+  const query = params.toString();
+  if (query) {
+    url += `?${query}`;
+  }
+  
+  const result = await adminFetch(url);
+  return result;
 }

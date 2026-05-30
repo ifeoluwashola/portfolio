@@ -53,9 +53,6 @@ func (s *auditService) LogAction(ctx context.Context, actorID, actorRole, action
 	return nil
 }
 
-func (s *auditService) GetRecentAuditLogs(ctx context.Context, limit int) ([]*domain.AuditLog, error) {
-	if limit <= 0 {
-		limit = 100
-	}
-	return s.repo.GetRecentAuditLogs(ctx, limit)
+func (s *auditService) GetRecentAuditLogs(ctx context.Context, limit int, query string, hours int) ([]*domain.AuditLog, error) {
+	return s.repo.GetRecentAuditLogs(ctx, limit, query, hours)
 }

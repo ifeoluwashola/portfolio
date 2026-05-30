@@ -3,20 +3,40 @@
 import { useEffect, useState, useRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { getMonitoringMetrics, getMonitoringLogs, getMonitoringAuditLogs } from "../actions";
-import { Activity, Terminal, Shield, RefreshCcw } from "lucide-react";
+import { Activity, Terminal, Shield, RefreshCcw, Search } from "lucide-react";
+import { AreaChart, Area, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function MonitoringDashboard() {
   const [metrics, setMetrics] = useState<any>(null);
+  const [metricsHistory, setMetricsHistory] = useState<any[]>([]);
   const [logs, setLogs] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const logsEndRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
 
+  // App Logs Filters (Client-side)
+  const [appLogQuery, setAppLogQuery] = useState("");
+  const [appLogLevel, setAppLogLevel] = useState("ALL");
+  const [appLogTimeframe, setAppLogTimeframe] = useState("ALL");
+
+  // Audit Logs Filters (Server-side)
+  const [auditQuery, setAuditQuery] = useState("");
+  const [auditHours, setAuditHours] = useState("0");
+
   const fetchMetrics = async () => {
     const res = await getMonitoringMetrics();
-    if (res.data) setMetrics(res.data);
+    if (res.data) {
+      setMetrics(res.data);
+      const now = new Date();
+      const timeLabel = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      setMetricsHistory(prev => {
+        const newData = [...prev, { ...res.data, time: timeLabel }];
+        return newData.length > 30 ? newData.slice(newData.length - 30) : newData;
+      });
+    }
   };
 
   const fetchLogs = async () => {
@@ -25,7 +45,7 @@ export default function MonitoringDashboard() {
   };
 
   const fetchAuditLogs = async () => {
-    const res = await getMonitoringAuditLogs();
+    const res = await getMonitoringAuditLogs(auditQuery, auditHours);
     if (res.data) setAuditLogs(res.data);
   };
 
@@ -51,6 +71,28 @@ export default function MonitoringDashboard() {
       logsEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [logs, autoScroll]);
+
+  const filteredAppLogs = logs.filter(log => {
+    if (appLogLevel !== "ALL") {
+      const isLevelMatch = log.level === appLogLevel || (log.raw && log.raw.includes(`level=${appLogLevel}`));
+      if (!isLevelMatch) return false;
+    }
+    if (appLogTimeframe !== "ALL") {
+      if (log.time) {
+        const logTime = new Date(log.time).getTime();
+        const now = new Date().getTime();
+        const diffMins = (now - logTime) / 60000;
+        if (appLogTimeframe === "5m" && diffMins > 5) return false;
+        if (appLogTimeframe === "15m" && diffMins > 15) return false;
+        if (appLogTimeframe === "60m" && diffMins > 60) return false;
+      }
+    }
+    if (appLogQuery) {
+      const str = JSON.stringify(log).toLowerCase();
+      if (!str.includes(appLogQuery.toLowerCase())) return false;
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6">
@@ -81,47 +123,107 @@ export default function MonitoringDashboard() {
 
         {/* METRICS TAB */}
         <TabsContent value="metrics" className="space-y-4 mt-4">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
+            {/* Goroutines Chart */}
+            <Card className="col-span-1 border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Active Goroutines</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics?.goroutines || 0}</div>
-                <p className="text-xs text-muted-foreground">Current execution threads</p>
+                <div className="text-2xl font-bold mb-4">{metrics?.goroutines || 0}</div>
+                <div className="h-[120px] w-full mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={metricsHistory} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorGoroutines" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '6px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }} />
+                      <Area type="monotone" dataKey="goroutines" stroke="#3b82f6" fillOpacity={1} fill="url(#colorGoroutines)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
-            <Card>
+
+            {/* Allocated Memory Chart */}
+            <Card className="col-span-1 border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Memory Allocated</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics?.alloc_mb || 0} MB</div>
-                <p className="text-xs text-muted-foreground">Current heap usage</p>
+                <div className="text-2xl font-bold mb-4">{metrics?.alloc_mb || 0} MB</div>
+                <div className="h-[120px] w-full mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={metricsHistory} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorAlloc" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '6px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }} />
+                      <Area type="monotone" dataKey="alloc_mb" stroke="#10b981" fillOpacity={1} fill="url(#colorAlloc)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
-            <Card>
+
+            {/* System Memory Chart */}
+            <Card className="col-span-1 border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">System Memory</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics?.sys_mb || 0} MB</div>
-                <p className="text-xs text-muted-foreground">Total OS memory obtained</p>
+                <div className="text-2xl font-bold mb-4">{metrics?.sys_mb || 0} MB</div>
+                <div className="h-[120px] w-full mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={metricsHistory} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorSys" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '6px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }} />
+                      <Area type="monotone" dataKey="sys_mb" stroke="#8b5cf6" fillOpacity={1} fill="url(#colorSys)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
-            <Card>
+
+            {/* GC Cycles Chart */}
+            <Card className="col-span-1 border-border shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">GC Cycles</CardTitle>
                 <Activity className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{metrics?.num_gc || 0}</div>
-                <p className="text-xs text-muted-foreground">Garbage collection runs</p>
+                <div className="text-2xl font-bold mb-4">{metrics?.num_gc || 0}</div>
+                <div className="h-[120px] w-full mt-2">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={metricsHistory} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="colorGC" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                          <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', borderRadius: '6px' }} itemStyle={{ color: 'hsl(var(--foreground))' }} labelStyle={{ color: 'hsl(var(--muted-foreground))', marginBottom: '4px' }} />
+                      <Area type="monotone" dataKey="num_gc" stroke="#f59e0b" fillOpacity={1} fill="url(#colorGC)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
               </CardContent>
             </Card>
+
           </div>
         </TabsContent>
 
@@ -129,7 +231,7 @@ export default function MonitoringDashboard() {
         <TabsContent value="logs" className="mt-4">
           <Card className="border-border shadow-sm">
             <CardHeader className="pb-3 border-b border-border bg-muted/30">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
                     <Terminal className="h-5 w-5" />
@@ -137,23 +239,55 @@ export default function MonitoringDashboard() {
                   </CardTitle>
                   <CardDescription>Streaming structured JSON logs from the Go backend (Last 1000 lines).</CardDescription>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={autoScroll} 
-                    onChange={(e) => setAutoScroll(e.target.checked)} 
-                    className="rounded border-gray-300 text-primary focus:ring-primary"
-                  />
-                  Auto-scroll
-                </label>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Filter logs..."
+                      value={appLogQuery}
+                      onChange={(e) => setAppLogQuery(e.target.value)}
+                      className="h-9 w-[200px] pl-8 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                  </div>
+                  <select 
+                    value={appLogLevel} 
+                    onChange={(e) => setAppLogLevel(e.target.value)}
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="ALL">All Levels</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARN">WARN</option>
+                    <option value="ERROR">ERROR</option>
+                  </select>
+                  <select 
+                    value={appLogTimeframe} 
+                    onChange={(e) => setAppLogTimeframe(e.target.value)}
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="ALL">All Buffer</option>
+                    <option value="5m">Last 5 Mins</option>
+                    <option value="15m">Last 15 Mins</option>
+                    <option value="60m">Last 1 Hour</option>
+                  </select>
+                  <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer ml-2">
+                    <input 
+                      type="checkbox" 
+                      checked={autoScroll} 
+                      onChange={(e) => setAutoScroll(e.target.checked)} 
+                      className="rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    Auto-scroll
+                  </label>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="bg-[#0D1117] text-[#C9D1D9] p-4 h-[600px] overflow-y-auto font-mono text-[13px] leading-relaxed rounded-b-xl border border-t-0 border-[#30363D]">
-                {logs.length === 0 ? (
-                  <div className="text-muted-foreground text-center mt-10">No logs captured yet...</div>
+                {filteredAppLogs.length === 0 ? (
+                  <div className="text-muted-foreground text-center mt-10">No logs match your filters...</div>
                 ) : (
-                  logs.map((log, i) => {
+                  filteredAppLogs.map((log, i) => {
                     if (log.raw) {
                       return <div key={i} className="whitespace-pre-wrap break-all py-1 border-b border-[#21262d] last:border-0">{log.raw}</div>;
                     }
@@ -190,14 +324,44 @@ export default function MonitoringDashboard() {
         {/* AUDIT LOGS TAB */}
         <TabsContent value="audit" className="mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-green-500" />
-                Immutable Audit Trail
-              </CardTitle>
-              <CardDescription>Permanent records of mutative administrative and system actions.</CardDescription>
+            <CardHeader className="pb-3 border-b border-border bg-muted/30">
+              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-green-500" />
+                    Immutable Audit Trail
+                  </CardTitle>
+                  <CardDescription>Permanent records of mutative administrative and system actions.</CardDescription>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2 h-4 w-4 text-muted-foreground" />
+                    <input
+                      type="text"
+                      placeholder="Search DB (action, actor, resource)..."
+                      value={auditQuery}
+                      onChange={(e) => setAuditQuery(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && fetchAuditLogs()}
+                      className="h-9 w-[280px] pl-8 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    />
+                  </div>
+                  <select 
+                    value={auditHours} 
+                    onChange={(e) => setAuditHours(e.target.value)}
+                    className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  >
+                    <option value="0">All Time</option>
+                    <option value="24">Last 24 Hours</option>
+                    <option value="168">Last 7 Days</option>
+                    <option value="720">Last 30 Days</option>
+                  </select>
+                  <Button variant="secondary" size="sm" onClick={fetchAuditLogs} className="h-9">
+                    Fetch
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               <div className="rounded-md border">
                 <table className="w-full text-sm text-left">
                   <thead className="bg-muted text-muted-foreground text-xs uppercase">
