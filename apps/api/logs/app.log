@@ -8,3 +8,7 @@
 {"time":"2026-05-30T15:30:45.698640006+01:00","level":"INFO","msg":"[Automator] Class Session Automator started — running every 60 seconds"}
 {"time":"2026-05-30T15:30:45.70042217+01:00","level":"INFO","msg":"Starting API Server","port":"8080"}
 {"time":"2026-05-30T15:30:45.709819838+01:00","level":"INFO","msg":"Audit log cleanup (startup) completed successfully"}
+{"time":"2026-05-30T15:33:40.473252272+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:47724","user_agent":"node","status":404,"duration":45904}
+{"time":"2026-05-30T15:37:26.199253417+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:42794","user_agent":"node","status":404,"duration":88303}
+{"time":"2026-05-30T15:39:43.474137846+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52048","user_agent":"node","status":404,"duration":74709}
+{"time":"2026-05-30T15:45:06.697024574+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:54274","user_agent":"node","status":404,"duration":642053}
