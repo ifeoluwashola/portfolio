@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { ModeToggle } from "@/components/ModeToggle";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Menu, ChevronDown, GraduationCap, Users, BookOpen, Send, Terminal, Settings, LogOut } from "lucide-react";
+import { Menu, ChevronDown, GraduationCap, Users, BookOpen, Send, Terminal, Settings, LogOut, Activity } from "lucide-react";
 import { adminLogout } from "./actions";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -28,6 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: "/admin/contacts", label: "Consultation Requests", icon: <Send className="h-4 w-4" /> },
     { href: "/admin/projects", label: "Manage Projects", icon: <BookOpen className="h-4 w-4" /> },
     { href: "/admin/blogs", label: "Blog Analytics", icon: <BookOpen className="h-4 w-4" /> },
+    { href: "/admin/monitoring", label: "Monitoring", icon: <Activity className="h-4 w-4" /> },
     { href: "/admin/invite", label: "Invite Admin", icon: <Settings className="h-4 w-4" /> },
   ];
 

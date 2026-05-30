@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -25,12 +26,15 @@ import (
 )
 
 func main() {
-	// 1. Initialize Structured Logger
+	// 1. Initialize Structured Logger and RingBuffer
+	logBuffer := middleware.NewRingBuffer(1000)
+	multiWriter := io.MultiWriter(os.Stdout, logBuffer)
+
 	var logger *slog.Logger
 	if os.Getenv("APP_ENV") == "production" || os.Getenv("LOG_FORMAT") == "json" {
-		logger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
+		logger = slog.New(slog.NewJSONHandler(multiWriter, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	} else {
-		logger = slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}))
+		logger = slog.New(slog.NewJSONHandler(multiWriter, &slog.HandlerOptions{Level: slog.LevelDebug}))
 	}
 	slog.SetDefault(logger)
 
@@ -106,6 +110,7 @@ func main() {
 	profileHandler := handler.NewProfileHandler(profileSvc)
 	blogHandler := handler.NewBlogHandler(blogSvc)
 	academyHandler := handler.NewAcademyHandler(academySvc, auditSvc)
+	monitoringHandler := handler.NewMonitoringHandler(auditSvc, logBuffer)
 
 	// 8. Setup Rate Limiter
 	rl := middleware.NewRateLimiter(tokenCache)
@@ -223,6 +228,11 @@ func main() {
 	mux.HandleFunc("PUT /api/v1/notifications/read-all", authMW.RequireStudentAuth(academyHandler.HandleMarkAllNotificationsRead))
 
 	// === ADMIN PROTECTED ROUTES ===
+	// Monitoring & Audit
+	mux.HandleFunc("GET /api/v1/admin/monitoring/metrics", authMW.RequireAuth(monitoringHandler.HandleGetMetrics))
+	mux.HandleFunc("GET /api/v1/admin/monitoring/logs", authMW.RequireAuth(monitoringHandler.HandleGetLogs))
+	mux.HandleFunc("GET /api/v1/admin/monitoring/audit-logs", authMW.RequireAuth(monitoringHandler.HandleGetAuditLogs))
+
 	// Admin management
 	mux.HandleFunc("POST /api/v1/admin/invite", inviteLimit(authMW.RequireAuth(authHandler.HandleInviteAdmin)))
 	mux.HandleFunc("POST /api/v1/admin/change-password", loginLimit(authMW.RequireAuth(authHandler.HandleChangePassword)))

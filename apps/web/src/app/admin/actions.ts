@@ -333,3 +333,23 @@ export async function grantScholarship(id: string, amountNaira: number) {
   if (result.error) return { error: result.error, status: result.status };
   return { success: true };
 }
+
+// ===== MONITORING ACTIONS =====
+
+export async function getMonitoringMetrics() {
+  const result = await adminFetch("/v1/admin/monitoring/metrics");
+  if (result.error) return { error: result.error };
+  return { data: result.data };
+}
+
+export async function getMonitoringLogs() {
+  const result = await adminFetch("/v1/admin/monitoring/logs", { cache: 'no-store' });
+  if (result.error) return { error: result.error };
+  return { data: result.data };
+}
+
+export async function getMonitoringAuditLogs() {
+  const result = await adminFetch("/v1/admin/monitoring/audit-logs", { cache: 'no-store' });
+  if (result.error) return { error: result.error };
+  return { data: result.data };
+}
