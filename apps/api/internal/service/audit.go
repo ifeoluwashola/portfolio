@@ -56,3 +56,7 @@ func (s *auditService) LogAction(ctx context.Context, actorID, actorRole, action
 func (s *auditService) GetRecentAuditLogs(ctx context.Context, limit int, query string, hours int) ([]*domain.AuditLog, error) {
 	return s.repo.GetRecentAuditLogs(ctx, limit, query, hours)
 }
+
+func (s *auditService) CleanupOldLogs(ctx context.Context, days int) error {
+	return s.repo.CleanupOldLogs(ctx, days)
+}

@@ -1,0 +1,10 @@
+{"time":"2026-05-30T15:30:45.662924608+01:00","level":"INFO","msg":"Initializing database connection..."}
+{"time":"2026-05-30T15:30:45.672084154+01:00","level":"INFO","msg":"Connected to PostgreSQL successfully"}
+{"time":"2026-05-30T15:30:45.672386982+01:00","level":"INFO","msg":"Database connection established."}
+{"time":"2026-05-30T15:30:45.672447387+01:00","level":"INFO","msg":"Starting database migrations..."}
+{"time":"2026-05-30T15:30:45.688950311+01:00","level":"INFO","msg":"Database schema is already up to date"}
+{"time":"2026-05-30T15:30:45.695027172+01:00","level":"INFO","msg":"Token cache initialized (Redis) — persistent session layer active"}
+{"time":"2026-05-30T15:30:45.698309975+01:00","level":"INFO","msg":"[Cron] Payment lock worker started — running every 24 hours"}
+{"time":"2026-05-30T15:30:45.698640006+01:00","level":"INFO","msg":"[Automator] Class Session Automator started — running every 60 seconds"}
+{"time":"2026-05-30T15:30:45.70042217+01:00","level":"INFO","msg":"Starting API Server","port":"8080"}
+{"time":"2026-05-30T15:30:45.709819838+01:00","level":"INFO","msg":"Audit log cleanup (startup) completed successfully"}

@@ -21,9 +21,11 @@ type AuditLog struct {
 type AuditRepository interface {
 	CreateAuditLog(ctx context.Context, log *AuditLog) error
 	GetRecentAuditLogs(ctx context.Context, limit int, query string, hours int) ([]*AuditLog, error)
+	CleanupOldLogs(ctx context.Context, days int) error
 }
 
 type AuditService interface {
 	LogAction(ctx context.Context, actorID, actorRole, action, resourceType string, resourceID *string, details interface{}, ipAddress, userAgent *string) error
 	GetRecentAuditLogs(ctx context.Context, limit int, query string, hours int) ([]*AuditLog, error)
+	CleanupOldLogs(ctx context.Context, days int) error
 }

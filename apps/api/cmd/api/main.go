@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"time"
 
+	"gopkg.in/natefinch/lumberjack.v2"
+
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/cache"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/database"
@@ -28,7 +30,15 @@ import (
 func main() {
 	// 1. Initialize Structured Logger and RingBuffer
 	logBuffer := middleware.NewRingBuffer(1000)
-	multiWriter := io.MultiWriter(os.Stdout, logBuffer)
+	
+	fileLogger := &lumberjack.Logger{
+		Filename:   "logs/app.log",
+		MaxSize:    10, // megabytes
+		MaxBackups: 3,
+		MaxAge:     7, //days
+	}
+	
+	multiWriter := io.MultiWriter(os.Stdout, logBuffer, fileLogger)
 
 	var logger *slog.Logger
 	if os.Getenv("APP_ENV") == "production" || os.Getenv("LOG_FORMAT") == "json" {
@@ -98,6 +108,31 @@ func main() {
 	authSvc := service.NewAuthService(userRepo, userRepo, cfg, tokenCache, resendNotifier)
 	academySvc := service.NewAcademyService(academyRepo, userRepo, cfg, tokenCache, resendNotifier)
 	auditSvc := service.NewAuditService(auditRepo)
+
+	// Background Task: Cleanup old audit logs every 24 hours
+	go func() {
+		ticker := time.NewTicker(24 * time.Hour)
+		defer ticker.Stop()
+
+		// Run once on startup
+		cleanupCtx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
+		if err := auditSvc.CleanupOldLogs(cleanupCtx, 30); err != nil {
+			logger.Error("Failed to clean up old audit logs (startup)", slog.Any("error", err))
+		} else {
+			logger.Info("Audit log cleanup (startup) completed successfully")
+		}
+		cancel()
+
+		for range ticker.C {
+			ctxTick, cancelTick := context.WithTimeout(context.Background(), 2*time.Minute)
+			if err := auditSvc.CleanupOldLogs(ctxTick, 30); err != nil {
+				logger.Error("Failed to clean up old audit logs", slog.Any("error", err))
+			} else {
+				logger.Info("Audit log cleanup completed successfully")
+			}
+			cancelTick()
+		}
+	}()
 
 	// 6. Initialize Auth Middleware (dependency injected)
 	authMW := middleware.NewAuthMiddleware(cfg.JWTSecret, tokenCache)

@@ -99,3 +99,12 @@ func (r *AuditRepository) GetRecentAuditLogs(ctx context.Context, limit int, que
 
 	return logs, nil
 }
+
+func (r *AuditRepository) CleanupOldLogs(ctx context.Context, days int) error {
+	query := fmt.Sprintf("DELETE FROM audit_logs WHERE created_at < NOW() - INTERVAL '%d days'", days)
+	_, err := r.pool.Exec(ctx, query)
+	if err != nil {
+		return fmt.Errorf("failed to clean up old audit logs: %w", err)
+	}
+	return nil
+}
