@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -46,13 +47,27 @@ func RequestLogger(logger *slog.Logger) func(http.Handler) http.Handler {
 				level = slog.LevelWarn
 			}
 
-			logger.LogAttrs(r.Context(), level, "HTTP Request",
+			var actorID string
+			if sID, ok := r.Context().Value(StudentIDKey).(string); ok {
+				actorID = "student:" + sID
+			} else if uID, ok := r.Context().Value(UserIDKey).(int); ok {
+				actorID = fmt.Sprintf("admin:%d", uID)
+			}
+
+			args := []slog.Attr{
 				slog.String("method", r.Method),
 				slog.String("path", r.URL.Path),
 				slog.String("remote_ip", r.RemoteAddr),
+				slog.String("user_agent", r.UserAgent()),
 				slog.Int("status", wrapped.status),
 				slog.Duration("duration", duration),
-			)
+			}
+
+			if actorID != "" {
+				args = append(args, slog.String("actor_id", actorID))
+			}
+
+			logger.LogAttrs(r.Context(), level, "HTTP Request", args...)
 		})
 	}
 }

@@ -13,11 +13,12 @@ import (
 )
 
 type AcademyHandler struct {
-	svc domain.AcademyService
+	svc      domain.AcademyService
+	auditSvc domain.AuditService
 }
 
-func NewAcademyHandler(svc domain.AcademyService) *AcademyHandler {
-	return &AcademyHandler{svc: svc}
+func NewAcademyHandler(svc domain.AcademyService, auditSvc domain.AuditService) *AcademyHandler {
+	return &AcademyHandler{svc: svc, auditSvc: auditSvc}
 }
 
 func (h *AcademyHandler) HandleApply(w http.ResponseWriter, r *http.Request) {
@@ -779,6 +780,13 @@ func (h *AcademyHandler) HandleAdminDeleteLab(w http.ResponseWriter, r *http.Req
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	if adminID, ok := r.Context().Value(middleware.UserIDKey).(int); ok {
+		ip := r.RemoteAddr
+		ua := r.UserAgent()
+		h.auditSvc.LogAction(r.Context(), strconv.Itoa(adminID), "admin", "delete_lab", "break_it_lab", &idStr, nil, &ip, &ua)
+	}
+
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -856,6 +864,15 @@ func (h *AcademyHandler) HandleDisqualifyStudent(w http.ResponseWriter, r *http.
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	if adminID, ok := r.Context().Value(middleware.UserIDKey).(int); ok {
+		ip := r.RemoteAddr
+		ua := r.UserAgent()
+		idStr := id.String()
+		details := map[string]string{"reason": req.Reason}
+		h.auditSvc.LogAction(r.Context(), strconv.Itoa(adminID), "admin", "disqualify_student", "student", &idStr, details, &ip, &ua)
+	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 

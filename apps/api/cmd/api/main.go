@@ -81,6 +81,7 @@ func main() {
 	profileRepo := postgres.NewProfileRepository(dbPool)
 	blogRepo := postgres.NewBlogRepository(dbPool)
 	academyRepo := postgres.NewAcademyRepository(dbPool)
+	auditRepo := postgres.NewAuditRepository(dbPool)
 
 	// 5. Initialize Services
 	contactSvc := service.NewContactService(contactRepo)
@@ -92,6 +93,7 @@ func main() {
 	resendNotifier := notifications.NewResendNotifier(cfg)
 	authSvc := service.NewAuthService(userRepo, userRepo, cfg, tokenCache, resendNotifier)
 	academySvc := service.NewAcademyService(academyRepo, userRepo, cfg, tokenCache, resendNotifier)
+	auditSvc := service.NewAuditService(auditRepo)
 
 	// 6. Initialize Auth Middleware (dependency injected)
 	authMW := middleware.NewAuthMiddleware(cfg.JWTSecret, tokenCache)
@@ -103,7 +105,7 @@ func main() {
 	authHandler := handler.NewAuthHandler(authSvc)
 	profileHandler := handler.NewProfileHandler(profileSvc)
 	blogHandler := handler.NewBlogHandler(blogSvc)
-	academyHandler := handler.NewAcademyHandler(academySvc)
+	academyHandler := handler.NewAcademyHandler(academySvc, auditSvc)
 
 	// 8. Setup Rate Limiter
 	rl := middleware.NewRateLimiter(tokenCache)
@@ -292,7 +294,8 @@ func main() {
 	
 	// Request Logger (apply before CORS)
 	loggingHandler := middleware.RequestLogger(logger)(mux)
-	finalHandler := c.Handler(loggingHandler)
+	recoverHandler := middleware.Recoverer(logger)(loggingHandler)
+	finalHandler := c.Handler(recoverHandler)
 
 	// Launch background workers as goroutines.
 	// Both respect context cancellation for graceful shutdown.
