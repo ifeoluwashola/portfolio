@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -60,9 +61,12 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 	resp, err := h.service.LoginUser(r.Context(), req.Email, req.Password)
 	if err != nil {
+		slog.Warn("Admin login failed", "email", req.Email, "error", err)
 		writeJSONError(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+
+	slog.Info("Admin logged in successfully", "email", req.Email, "role", resp.Role)
 
 	// Set HttpOnly cookie for the admin token
 	http.SetCookie(w, &http.Cookie{

@@ -8,6 +8,7 @@ import (
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/middleware"
 	"github.com/google/uuid"
+	"log/slog"
 	"strconv"
 	"strings"
 )
@@ -179,9 +180,12 @@ func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Reque
 
 	resp, err := h.svc.LoginStudent(r.Context(), &req)
 	if err != nil {
+		slog.Warn("Student login failed", "email", req.Email, "error", err)
 		http.Error(w, err.Error(), http.StatusUnauthorized)
 		return
 	}
+
+	slog.Info("Student logged in successfully", "email", req.Email)
 
 	// Set HttpOnly cookie for the student token
 	http.SetCookie(w, &http.Cookie{
@@ -841,9 +845,13 @@ func (h *AcademyHandler) HandleWarnStudent(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := h.svc.AdminWarnStudent(r.Context(), id, req.Reason); err != nil {
+		slog.Error("Failed to issue warning to student", "student_id", id, "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	
+	adminID, _ := r.Context().Value(middleware.UserIDKey).(int)
+	slog.Info("Admin issued warning to student", "admin_id", adminID, "student_id", id, "reason", req.Reason)
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -861,11 +869,13 @@ func (h *AcademyHandler) HandleDisqualifyStudent(w http.ResponseWriter, r *http.
 	}
 
 	if err := h.svc.AdminDisqualifyStudent(r.Context(), id, req.Reason); err != nil {
+		slog.Error("Failed to disqualify student", "student_id", id, "error", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if adminID, ok := r.Context().Value(middleware.UserIDKey).(int); ok {
+		slog.Info("Admin disqualified student", "admin_id", adminID, "student_id", id, "reason", req.Reason)
 		ip := r.RemoteAddr
 		ua := r.UserAgent()
 		idStr := id.String()
@@ -1326,9 +1336,13 @@ func (h *AcademyHandler) HandleUpdateStudentStatus(w http.ResponseWriter, r *htt
 
 	err = h.svc.UpdateStudentStatus(r.Context(), studentID, &req)
 	if err != nil {
+		slog.Error("Failed to update student status", "student_id", studentID, "error", err)
 		writeJSONError(w, "Failed to update student status: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	adminID, _ := r.Context().Value(middleware.UserIDKey).(int)
+	slog.Info("Admin updated student status", "admin_id", adminID, "student_id", studentID, "academic_status", req.AcademicStatus, "manually_locked", req.IsManuallyLocked)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
@@ -1654,9 +1668,13 @@ func (h *AcademyHandler) HandleBroadcastEmail(w http.ResponseWriter, r *http.Req
 
 	err = h.svc.BroadcastEmailToCohort(r.Context(), cohortID, req.Subject, req.Body)
 	if err != nil {
+		slog.Error("Failed to broadcast email", "cohort_id", cohortID, "error", err)
 		writeJSONError(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
+	adminID, _ := r.Context().Value(middleware.UserIDKey).(int)
+	slog.Info("Admin dispatched broadcast email", "admin_id", adminID, "cohort_id", cohortID, "subject", req.Subject)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})

@@ -755,3 +755,37 @@
 {"time":"2026-05-31T18:56:00.100296437+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/students","remote_ip":"127.0.0.1:47068","user_agent":"node","status":200,"duration":941876}
 {"time":"2026-05-31T18:57:55.07566224+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:47240","user_agent":"node","status":200,"duration":964206}
 {"time":"2026-05-31T18:57:55.099060031+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/students","remote_ip":"127.0.0.1:47240","user_agent":"node","status":200,"duration":1753594}
+{"time":"2026-05-31T18:58:55.082208741+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:37264","user_agent":"node","status":200,"duration":1456970}
+{"time":"2026-05-31T18:58:55.109106078+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/students","remote_ip":"127.0.0.1:37264","user_agent":"node","status":200,"duration":2796326}
+{"time":"2026-05-31T18:59:55.148538329+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:50112","user_agent":"node","status":200,"duration":3554212}
+{"time":"2026-05-31T18:59:55.217202263+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/students","remote_ip":"127.0.0.1:50112","user_agent":"node","status":200,"duration":8326032}
+{"time":"2026-05-31T19:00:35.926896801+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:40778","user_agent":"node","status":404,"duration":30821729}
+{"time":"2026-05-31T19:00:55.092692363+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:39500","user_agent":"node","status":200,"duration":1225827}
+{"time":"2026-05-31T19:00:55.116375622+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/students","remote_ip":"127.0.0.1:39500","user_agent":"node","status":200,"duration":1105914}
+{"time":"2026-05-31T19:01:55.067905554+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:50052","user_agent":"node","status":200,"duration":2007406}
+{"time":"2026-05-31T19:01:55.099478022+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/students","remote_ip":"127.0.0.1:50052","user_agent":"node","status":200,"duration":1165161}
+{"time":"2026-05-31T19:02:55.094119445+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:60408","user_agent":"node","status":200,"duration":1119215}
+{"time":"2026-05-31T19:02:55.121384639+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/students","remote_ip":"127.0.0.1:60408","user_agent":"node","status":200,"duration":1282031}
+{"time":"2026-05-31T19:03:12.800626749+01:00","level":"INFO","msg":"Shutting down server..."}
+{"time":"2026-05-31T19:03:12.801780868+01:00","level":"INFO","msg":"Stopping session reminder cron engine"}
+{"time":"2026-05-31T19:03:12.803646859+01:00","level":"INFO","msg":"[Automator] Class Session Automator shutting down"}
+{"time":"2026-05-31T19:03:12.804703567+01:00","level":"INFO","msg":"[Cron] Payment lock worker shutting down"}
+{"time":"2026-05-31T19:03:12.807530956+01:00","level":"INFO","msg":"Server stopped gracefully"}
+{"time":"2026-05-31T19:04:47.291586776+01:00","level":"INFO","msg":"Initializing database connection..."}
+{"time":"2026-05-31T19:04:47.296324729+01:00","level":"INFO","msg":"Connected to PostgreSQL successfully"}
+{"time":"2026-05-31T19:04:47.296481744+01:00","level":"INFO","msg":"Database connection established."}
+{"time":"2026-05-31T19:04:47.296612957+01:00","level":"INFO","msg":"Starting database migrations..."}
+{"time":"2026-05-31T19:04:47.332382379+01:00","level":"INFO","msg":"Database schema is already up to date"}
+{"time":"2026-05-31T19:04:47.343699362+01:00","level":"INFO","msg":"Token cache initialized (Redis) — persistent session layer active"}
+{"time":"2026-05-31T19:04:47.351693127+01:00","level":"INFO","msg":"[Automator] Class Session Automator started — running every 60 seconds"}
+{"time":"2026-05-31T19:04:47.351892246+01:00","level":"INFO","msg":"[Cron] Payment lock worker started — running every 24 hours"}
+{"time":"2026-05-31T19:04:47.352012857+01:00","level":"INFO","msg":"Started session reminder cron engine"}
+{"time":"2026-05-31T19:04:47.352074163+01:00","level":"INFO","msg":"Starting API Server","port":"8080"}
+{"time":"2026-05-31T19:04:47.358680495+01:00","level":"INFO","msg":"Audit log cleanup (startup) completed successfully"}
+{"time":"2026-05-31T19:05:17.32122938+01:00","level":"INFO","msg":"Admin logged in successfully","email":"ifeoluwashola06@gmail.com","role":"admin"}
+{"time":"2026-05-31T19:05:17.32133509+01:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/v1/admin/login","remote_ip":"127.0.0.1:42786","user_agent":"node","status":200,"duration":105324495}
+{"time":"2026-05-31T19:05:17.406227611+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:42786","user_agent":"node","status":200,"duration":1405143}
+{"time":"2026-05-31T19:05:17.893774518+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"127.0.0.1:42786","user_agent":"node","status":200,"duration":12661485}
+{"time":"2026-05-31T19:05:17.987316617+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"127.0.0.1:42786","user_agent":"node","status":200,"duration":1857989}
+{"time":"2026-05-31T19:05:41.348844361+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/cohort-applications","remote_ip":"127.0.0.1:54944","user_agent":"node","status":200,"duration":33714704}
+{"time":"2026-05-31T19:05:41.5237156+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/cohort-applications","remote_ip":"127.0.0.1:54944","user_agent":"node","status":200,"duration":1257323}
