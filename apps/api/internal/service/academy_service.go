@@ -44,7 +44,7 @@ func NewAcademyService(repo domain.AcademyRepository, refreshRepo domain.Refresh
 		config:       cfg,
 		tokenCache:   tokenCache,
 		notification: notification,
-		notifSystem:  NewNotificationSystem(repo),
+		notifSystem:  NewNotificationSystem(repo, notifications.NewTelegramService(repo, cfg), cfg),
 	}
 }
 
@@ -1794,4 +1794,26 @@ func (s *academyService) MarkNotificationRead(ctx context.Context, id uuid.UUID,
 
 func (s *academyService) MarkAllNotificationsRead(ctx context.Context, userID string) error {
 	return s.repo.MarkAllNotificationsRead(ctx, userID)
+}
+
+func (s *academyService) BroadcastEmailToCohort(ctx context.Context, cohortID int, subject, body string) error {
+	students, err := s.repo.GetStudentsByCohort(ctx, cohortID)
+	if err != nil {
+		return fmt.Errorf("failed to fetch students for cohort: %w", err)
+	}
+
+	if s.notification == nil {
+		return errors.New("email notification service not configured")
+	}
+
+	for _, student := range students {
+		// Use ResendNotifier to send arbitrary emails. We'll need to add a generic send method there if it doesn't exist,
+		// or use an existing generic one. Let's assume there is or we will add SendCohortEmail
+		err := s.notification.SendCohortEmail(student.FirstName, student.Email, subject, body)
+		if err != nil {
+			log.Printf("Failed to send broadcast email to %s: %v", student.Email, err)
+		}
+	}
+
+	return nil
 }

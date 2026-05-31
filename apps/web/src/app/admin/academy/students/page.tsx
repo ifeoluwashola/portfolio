@@ -7,7 +7,8 @@ import {
   disqualifyStudent 
 } from "@/app/academy/actions";
 import { 
-  updateStudentStatus 
+  updateStudentStatus,
+  broadcastEmail
 } from "../../actions";
 import { 
   Users, 
@@ -19,7 +20,9 @@ import {
   Lock,
   Unlock,
   Loader2,
-  Info
+  Info,
+  Mail,
+  X
 } from "lucide-react";
 
 interface Student {
@@ -53,6 +56,11 @@ export default function AdminStudentsPage() {
   const [showAttendanceModal, setShowAttendanceModal] = useState(false);
   const [attendanceHistory, setAttendanceHistory] = useState<any[]>([]);
   const [fetchingAttendance, setFetchingAttendance] = useState(false);
+
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailBody, setEmailBody] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const fetchStudents = useCallback(async () => {
     // We don't set loading(true) here to avoid the full-page spinner during background polls
@@ -158,6 +166,30 @@ export default function AdminStudentsPage() {
     }
   };
 
+  const handleBroadcastEmail = async () => {
+    if (!emailSubject || !emailBody) {
+      setFeedback({ type: 'error', message: "Subject and body are required" });
+      return;
+    }
+    setSendingEmail(true);
+    try {
+      // Assuming cohort ID is 1 for now
+      const res = await broadcastEmail("1", emailSubject, emailBody);
+      if (res.error) {
+        setFeedback({ type: 'error', message: `Failed to send broadcast email: ${res.error}` });
+      } else {
+        setEmailModalOpen(false);
+        setEmailSubject("");
+        setEmailBody("");
+        setFeedback({ type: 'success', message: "Broadcast email sent successfully to all students in the cohort." });
+      }
+    } catch {
+      setFeedback({ type: 'error', message: "An unexpected error occurred." });
+    }
+    setSendingEmail(false);
+    setTimeout(() => setFeedback(null), 3000);
+  };
+
   const filteredStudents = students.filter(s => 
     `${s.first_name} ${s.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
     s.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -196,15 +228,25 @@ export default function AdminStudentsPage() {
           <p className="text-slate-400 text-sm mt-1">Unified academic standing and administrative security dashboard.</p>
         </div>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-          <input
-            type="text"
-            placeholder="Search students..."
-            className="bg-card/50 border border-border rounded-full pl-10 pr-4 py-2 text-white w-full md:w-64 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+        <div className="flex flex-col sm:flex-row items-center gap-4">
+          <button
+            onClick={() => setEmailModalOpen(true)}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary hover:bg-primary/90 text-black text-sm font-bold uppercase tracking-widest rounded-full transition-colors whitespace-nowrap shadow-[0_0_15px_rgba(234,179,8,0.3)]"
+          >
+            <Mail className="w-4 h-4" />
+            Broadcast Email
+          </button>
+          
+          <div className="relative w-full sm:w-auto">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+            <input
+              type="text"
+              placeholder="Search students..."
+              className="bg-card/50 border border-border rounded-full pl-10 pr-4 py-2 text-white w-full sm:w-64 focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
         </div>
       </div>
 
@@ -503,7 +545,71 @@ export default function AdminStudentsPage() {
                  </div>
                  <button onClick={() => setShowAttendanceModal(false)} className="px-6 py-2 bg-slate-800 text-foreground font-bold rounded-lg hover:bg-slate-700 transition-all text-sm">Dismiss</button>
               </div>
-           </div>
+            </div>
+         </div>
+      )}
+
+      {/* Broadcast Email Modal */}
+      {emailModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm animate-in fade-in duration-300">
+          <div className="bg-card border border-primary/30 max-w-lg w-full rounded-2xl p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3 text-primary font-black tracking-tight uppercase">
+                <Mail size={24} />
+                <h2>Broadcast Email</h2>
+              </div>
+              <button
+                onClick={() => setEmailModalOpen(false)}
+                className="p-1 rounded-md hover:bg-white/5 text-muted-foreground hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <p className="text-sm text-slate-400 mb-6 leading-relaxed">
+              Send an email to all students currently active or on probation in this cohort.
+            </p>
+
+            <div className="space-y-4 mb-8">
+              <div>
+                <label className="block text-sm font-bold text-white mb-1.5 uppercase tracking-widest">Subject</label>
+                <input
+                  type="text"
+                  value={emailSubject}
+                  onChange={(e) => setEmailSubject(e.target.value)}
+                  placeholder="e.g. Mandatory Live Session Today"
+                  className="w-full bg-background border border-border rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-white mb-1.5 uppercase tracking-widest">Message Body</label>
+                <textarea
+                  value={emailBody}
+                  onChange={(e) => setEmailBody(e.target.value)}
+                  placeholder="Write your email content here..."
+                  rows={6}
+                  className="w-full bg-background border border-border rounded-xl p-3 text-white text-sm min-h-[120px] focus:ring-2 focus:ring-primary/50 outline-none transition-all"
+                ></textarea>
+              </div>
+            </div>
+
+            <div className="flex gap-4">
+              <button
+                onClick={() => setEmailModalOpen(false)}
+                className="flex-1 py-3 bg-slate-800 text-foreground font-bold rounded-xl hover:bg-slate-700 transition-all text-sm"
+                disabled={sendingEmail}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleBroadcastEmail}
+                className="flex-1 py-3 bg-primary text-black font-black rounded-xl hover:bg-yellow-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all text-sm uppercase"
+                disabled={sendingEmail || !emailSubject || !emailBody}
+              >
+                {sendingEmail ? "Transmitting…" : "Dispatch Comms"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

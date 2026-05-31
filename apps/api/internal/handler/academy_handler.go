@@ -1619,3 +1619,45 @@ func (h *AcademyHandler) HandleMarkAllNotificationsRead(w http.ResponseWriter, r
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
+
+func (h *AcademyHandler) HandleBroadcastEmail(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	cohortIDStr := r.PathValue("id")
+	if cohortIDStr == "" {
+		writeJSONError(w, "Cohort ID is required", http.StatusBadRequest)
+		return
+	}
+
+	cohortID, err := strconv.Atoi(cohortIDStr)
+	if err != nil {
+		writeJSONError(w, "Invalid cohort ID", http.StatusBadRequest)
+		return
+	}
+
+	var req struct {
+		Subject string `json:"subject"`
+		Body    string `json:"body"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.Subject == "" || req.Body == "" {
+		writeJSONError(w, "Subject and body are required", http.StatusBadRequest)
+		return
+	}
+
+	err = h.svc.BroadcastEmailToCohort(r.Context(), cohortID, req.Subject, req.Body)
+	if err != nil {
+		writeJSONError(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
+}

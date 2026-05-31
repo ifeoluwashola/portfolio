@@ -32,10 +32,11 @@ type PaymentHistory struct {
 }
 
 type Cohort struct {
-	ID        int       `json:"id"`
-	Name      string    `json:"name"`
-	Status    string    `json:"status"` // onboarding, active, graduated
-	CreatedAt time.Time `json:"created_at"`
+	ID             int       `json:"id"`
+	Name           string    `json:"name"`
+	Status         string    `json:"status"` // onboarding, active, graduated
+	TelegramChatID *string   `json:"telegram_chat_id,omitempty"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type Student struct {
@@ -167,6 +168,7 @@ type AcademyRepository interface {
 	CreateCohort(ctx context.Context, name string) (int, error)
 	GetCohortByID(ctx context.Context, id int) (*Cohort, error)
 	CloneCohortCurriculum(ctx context.Context, sourceCohortID int, newCohortID int) error
+	GetStudentsByCohort(ctx context.Context, cohortID int) ([]*Student, error)
 
 	// Assignments
 	GetWeeks(ctx context.Context, cohortID int) ([]*CohortWeek, error)
@@ -197,6 +199,8 @@ type AcademyRepository interface {
 	GetClassSessionsByWeek(ctx context.Context, weekID int) ([]*ClassSession, error)
 	GetClassSessionByID(ctx context.Context, id int) (*ClassSession, error)
 	AutoStartScheduledSessions(ctx context.Context) (int64, error)
+	GetUpcomingSessions(ctx context.Context, from, to time.Time) ([]*ClassSession, error)
+	MarkSessionReminderSent(ctx context.Context, id int) error
 
 	// Attendance
 	RecordAttendance(ctx context.Context, sessionID int, studentID uuid.UUID) error
@@ -275,6 +279,7 @@ type AcademyService interface {
 	ManualCreateAlumni(ctx context.Context, req *ManualAlumniRequest) error
 	GetStudentSession(ctx context.Context, studentID uuid.UUID) (*StudentSessionResponse, error)
 	BroadcastReschedule(ctx context.Context, reason string) error
+	BroadcastEmailToCohort(ctx context.Context, cohortID int, subject, body string) error
 
 	// Admin Command Center
 	GetBillingOverview(ctx context.Context) (*BillingOverview, error)
@@ -458,6 +463,7 @@ type ClassSession struct {
 	MeetingURL       string    `json:"meeting_url"`
 	ScheduledAt      time.Time `json:"scheduled_at"`
 	RecordingURL     string    `json:"recording_url"`
+	ReminderSent     bool      `json:"reminder_sent"`
 	CreatedAt        time.Time `json:"created_at"`
 }
 

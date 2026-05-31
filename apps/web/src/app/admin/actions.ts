@@ -362,3 +362,12 @@ export async function getMonitoringAuditLogs(queryStr?: string, hours?: string) 
   const result = await adminFetch(url);
   return result;
 }
+
+export async function broadcastEmail(cohortId: string, subject: string, body: string) {
+  const result = await adminFetch(`/v1/admin/cohorts/${cohortId}/email`, {
+    method: "POST",
+    body: JSON.stringify({ subject, body }),
+  });
+  if (result.error) return { error: result.error, status: result.status };
+  return { success: true };
+}

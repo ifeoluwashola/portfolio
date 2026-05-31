@@ -629,9 +629,8 @@ func (r *AcademyRepository) DeleteClassSession(ctx context.Context, id int) erro
 
 func (r *AcademyRepository) GetClassSessionsByWeek(ctx context.Context, weekID int) ([]*domain.ClassSession, error) {
 	query := `
-		SELECT id, cohort_week_id, title, status, visibility_status, meeting_url, scheduled_at, recording_url, created_at
-		FROM class_sessions
-		WHERE cohort_week_id = $1
+		SELECT id, cohort_week_id, title, status, visibility_status, meeting_url, scheduled_at, recording_url, reminder_sent, created_at
+		FROM class_sessions WHERE cohort_week_id = $1
 		ORDER BY scheduled_at ASC
 	`
 	rows, err := r.db.Query(ctx, query, weekID)
@@ -643,7 +642,10 @@ func (r *AcademyRepository) GetClassSessionsByWeek(ctx context.Context, weekID i
 	var sessions []*domain.ClassSession
 	for rows.Next() {
 		s := &domain.ClassSession{}
-		err := rows.Scan(&s.ID, &s.CohortWeekID, &s.Title, &s.Status, &s.VisibilityStatus, &s.MeetingURL, &s.ScheduledAt, &s.RecordingURL, &s.CreatedAt)
+		err := rows.Scan(
+			&s.ID, &s.CohortWeekID, &s.Title, &s.Status, &s.VisibilityStatus,
+			&s.MeetingURL, &s.ScheduledAt, &s.RecordingURL, &s.ReminderSent, &s.CreatedAt,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -656,13 +658,51 @@ func (r *AcademyRepository) GetClassSessionsByWeek(ctx context.Context, weekID i
 }
 
 func (r *AcademyRepository) GetClassSessionByID(ctx context.Context, id int) (*domain.ClassSession, error) {
-	query := `SELECT id, cohort_week_id, title, status, meeting_url, scheduled_at, recording_url, created_at FROM class_sessions WHERE id = $1`
+	query := `
+		SELECT id, cohort_week_id, title, status, visibility_status, meeting_url, scheduled_at, recording_url, reminder_sent, created_at
+		FROM class_sessions WHERE id = $1
+	`
 	s := &domain.ClassSession{}
-	err := r.db.QueryRow(ctx, query, id).Scan(&s.ID, &s.CohortWeekID, &s.Title, &s.Status, &s.MeetingURL, &s.ScheduledAt, &s.RecordingURL, &s.CreatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&s.ID, &s.CohortWeekID, &s.Title, &s.Status, &s.VisibilityStatus,
+		&s.MeetingURL, &s.ScheduledAt, &s.RecordingURL, &s.ReminderSent, &s.CreatedAt,
+	)
 	if err != nil {
 		return nil, err
 	}
 	return s, nil
+}
+
+func (r *AcademyRepository) GetUpcomingSessions(ctx context.Context, from, to time.Time) ([]*domain.ClassSession, error) {
+	query := `
+		SELECT id, cohort_week_id, title, status, visibility_status, meeting_url, scheduled_at, recording_url, reminder_sent, created_at
+		FROM class_sessions
+		WHERE scheduled_at >= $1 AND scheduled_at <= $2 AND reminder_sent = false
+	`
+	rows, err := r.db.Query(ctx, query, from, to)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sessions []*domain.ClassSession
+	for rows.Next() {
+		s := &domain.ClassSession{}
+		if err := rows.Scan(
+			&s.ID, &s.CohortWeekID, &s.Title, &s.Status, &s.VisibilityStatus,
+			&s.MeetingURL, &s.ScheduledAt, &s.RecordingURL, &s.ReminderSent, &s.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		sessions = append(sessions, s)
+	}
+	return sessions, nil
+}
+
+func (r *AcademyRepository) MarkSessionReminderSent(ctx context.Context, id int) error {
+	query := `UPDATE class_sessions SET reminder_sent = true WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, id)
+	return err
 }
 
 func (r *AcademyRepository) AutoStartScheduledSessions(ctx context.Context) (int64, error) {
@@ -1255,9 +1295,9 @@ func (r *AcademyRepository) CreateCohort(ctx context.Context, name string) (int,
 }
 
 func (r *AcademyRepository) GetCohortByID(ctx context.Context, id int) (*domain.Cohort, error) {
-	query := `SELECT id, name, status, created_at FROM cohorts WHERE id = $1`
+	query := `SELECT id, name, status, telegram_chat_id, created_at FROM cohorts WHERE id = $1`
 	c := &domain.Cohort{}
-	err := r.db.QueryRow(ctx, query, id).Scan(&c.ID, &c.Name, &c.Status, &c.CreatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&c.ID, &c.Name, &c.Status, &c.TelegramChatID, &c.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -1524,4 +1564,34 @@ func (r *AcademyRepository) GetLabIDBySubmissionID(ctx context.Context, subID in
 	query := `SELECT lab_id FROM lab_submissions WHERE id = $1`
 	err := r.db.QueryRow(ctx, query, subID).Scan(&labID)
 	return labID, err
+}
+
+func (r *AcademyRepository) GetStudentsByCohort(ctx context.Context, cohortID int) ([]*domain.Student, error) {
+	query := `
+		SELECT 
+			id, first_name, last_name, email, status, cohort_id, created_at
+		FROM students
+		WHERE cohort_id = $1
+	`
+	rows, err := r.db.Query(ctx, query, cohortID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []*domain.Student
+	for rows.Next() {
+		s := &domain.Student{}
+		err := rows.Scan(
+			&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.Status, &s.CohortID, &s.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		students = append(students, s)
+	}
+	if students == nil {
+		students = []*domain.Student{}
+	}
+	return students, nil
 }

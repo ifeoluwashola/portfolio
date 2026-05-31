@@ -15,6 +15,7 @@ import (
 
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/cache"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/cron"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/database"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/handler"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/middleware"
@@ -291,6 +292,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/admin/academy/submissions", authMW.RequireAuth(academyHandler.HandleGetSubmissions))
 	mux.HandleFunc("POST /api/v1/admin/academy/submissions/grade", authMW.RequireAuth(academyHandler.HandleGradeSubmission))
 	mux.HandleFunc("POST /api/v1/admin/academy/broadcast-reschedule", authMW.RequireAuth(academyHandler.HandleBroadcastReschedule))
+	mux.HandleFunc("POST /api/v1/admin/cohorts/{id}/email", authMW.RequireAuth(academyHandler.HandleBroadcastEmail))
 
 	// Break-It Labs Management (admin)
 	mux.HandleFunc("POST /api/v1/admin/labs", authMW.RequireAuth(academyHandler.HandleAdminCreateLab))
@@ -347,6 +349,7 @@ func main() {
 	cronCtx, cronCancel := context.WithCancel(context.Background())
 	go academySvc.RunPaymentLockCron(cronCtx)
 	go academySvc.RunClassSessionAutomator(cronCtx)
+	go cron.StartSessionReminderCron(cronCtx, academyRepo, notifications.NewTelegramService(academyRepo, cfg), cfg)
 
 	// 10. Start Server
 	srv := &http.Server{

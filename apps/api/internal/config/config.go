@@ -19,6 +19,7 @@ type Config struct {
 	JWTSecret         string
 	RedisURL          string
 	S3BucketName      string
+	TelegramBotToken  string
 }
 
 func LoadConfig() *Config {
@@ -62,6 +63,7 @@ func LoadConfig() *Config {
 		RedisURL:          getEnv("REDIS_URL", ""),
 		DatabaseURL:       dbURL,
 		S3BucketName:      getEnv("S3_BUCKET_NAME", ""),
+		TelegramBotToken:  getEnv("TELEGRAM_BOT_TOKEN", ""),
 	}
 }
 

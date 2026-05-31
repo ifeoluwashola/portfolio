@@ -4,8 +4,11 @@ import (
 	"context"
 	"time"
 
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/notifications"
 	"github.com/google/uuid"
+	"fmt"
 )
 
 // NotificationSystem defines the centralized in-app notification system
@@ -15,12 +18,16 @@ type NotificationSystem interface {
 }
 
 type notificationSystem struct {
-	repo domain.AcademyRepository
+	repo        domain.AcademyRepository
+	telegramSvc notifications.TelegramService
+	cfg         *config.Config
 }
 
-func NewNotificationSystem(repo domain.AcademyRepository) NotificationSystem {
+func NewNotificationSystem(repo domain.AcademyRepository, telegramSvc notifications.TelegramService, cfg *config.Config) NotificationSystem {
 	return &notificationSystem{
-		repo: repo,
+		repo:        repo,
+		telegramSvc: telegramSvc,
+		cfg:         cfg,
 	}
 }
 
@@ -67,6 +74,19 @@ func (s *notificationSystem) NotifyCohort(ctx context.Context, actorID *string, 
 
 	if len(notifications) == 0 {
 		return nil
+	}
+
+	// Trigger telegram message asynchronously
+	if s.telegramSvc != nil {
+		go func() {
+			var link string
+			if referenceURL != nil {
+				link = "\n\n🔗 " + *referenceURL
+			}
+			msgText := fmt.Sprintf("🔔 *%s*\n\n%s%s", notifType, message, link)
+			// A background context since the parent ctx might cancel before this finishes
+			_ = s.telegramSvc.SendCohortMessage(context.Background(), cohortID, msgText)
+		}()
 	}
 
 	return s.repo.BulkCreateNotifications(ctx, notifications)

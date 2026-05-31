@@ -1020,3 +1020,45 @@ func (n *ResendNotifier) SendCapstoneApprovedEmail(firstName, email, slug string
 	return err
 }
 
+// SendCohortEmail sends an arbitrary broadcast email to a student.
+func (n *ResendNotifier) SendCohortEmail(firstName, email, subject, body string) error {
+	sender := "Kybern Academy <academy@kyberncloud.com>"
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Inter", -apple-system, sans-serif; line-height: 1.6; color: #cbd5e1; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+				.header { background-color: #020617; padding: 32px; text-align: center; border-bottom: 1px solid #1e293b; }
+				.content { padding: 48px 32px; color: #f8fafc; font-size: 15px; white-space: pre-wrap; }
+				.footer { background-color: #020617; padding: 32px; text-align: center; font-size: 11px; color: #475569; border-top: 1px solid #1e293b; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<h2 style="color: #f8fafc; margin: 0;">Kybern Academy Notice</h2>
+				</div>
+				<div class="content">Hello %s,
+
+%s</div>
+				<div class="footer">
+					KYBERN ACADEMY · CLOUD NATIVE MENTORSHIP
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+	htmlBody := fmt.Sprintf(htmlTemplate, firstName, body)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}
+
