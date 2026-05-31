@@ -47,7 +47,7 @@ func (s *telegramService) SendCohortMessage(ctx context.Context, cohortID int, m
 	payload := map[string]interface{}{
 		"chat_id":    *cohort.TelegramChatID,
 		"text":       markdownText,
-		"parse_mode": "Markdown",
+		"parse_mode": "HTML",
 	}
 
 	payloadBytes, err := json.Marshal(payload)

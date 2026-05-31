@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -47,6 +48,7 @@ func (m *AuthMiddleware) SetStudentRepo(repo interface {
 }
 
 func writeJSONError(w http.ResponseWriter, message string, statusCode int) {
+	log.Printf("Auth Error [%d]: %s", statusCode, message)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(map[string]string{"error": message})

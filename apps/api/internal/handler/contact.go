@@ -100,6 +100,7 @@ func (h *ContactHandler) HandleGetContactByID(w http.ResponseWriter, r *http.Req
 }
 
 func writeJSONError(w http.ResponseWriter, message string, statusCode int) {
+	log.Printf("API Error [%d]: %s", statusCode, message)
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	json.NewEncoder(w).Encode(map[string]string{
