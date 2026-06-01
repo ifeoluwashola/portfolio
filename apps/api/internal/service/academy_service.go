@@ -494,12 +494,16 @@ func (s *academyService) ChangePassword(ctx context.Context, studentID uuid.UUID
 	if err != nil {
 		return err
 	}
-	if err := bcrypt.CompareHashAndPassword([]byte(student.PasswordHash), []byte(req.CurrentPassword)); err != nil {
-		return errors.New("invalid current password")
-	}
-
-	if req.CurrentPassword == req.NewPassword {
-		return errors.New("new password cannot be the same as current password")
+	if !student.IsFirstLogin {
+		if req.CurrentPassword == "" {
+			return errors.New("current password is required")
+		}
+		if err := bcrypt.CompareHashAndPassword([]byte(student.PasswordHash), []byte(req.CurrentPassword)); err != nil {
+			return errors.New("invalid current password")
+		}
+		if req.CurrentPassword == req.NewPassword {
+			return errors.New("new password cannot be the same as current password")
+		}
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.NewPassword), bcrypt.DefaultCost)

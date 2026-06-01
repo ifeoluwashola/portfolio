@@ -222,7 +222,6 @@ export async function changePassword(formData: FormData) {
   const token = (await cookies()).get("academy_token")?.value;
 
   if (!token) return { error: "Unauthorized" };
-  if (!currentPassword) return { error: "Current password is required" };
   if (!newPassword || newPassword.length < 8) {
     return { error: "Password must be at least 8 characters long" };
   }
