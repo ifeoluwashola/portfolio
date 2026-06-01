@@ -49,7 +49,7 @@ func processReminders(ctx context.Context, repo domain.AcademyRepository, telegr
 			continue
 		}
 
-		sessionLink := fmt.Sprintf("%s/academy/sessions/%d", cfg.FrontendURL, session.ID)
+		sessionLink := fmt.Sprintf("%s/academy/dashboard/week/%d", cfg.FrontendURL, week.ID)
 		msg := fmt.Sprintf("🚨 <b>Live Ops Session starting in 10 minutes!</b>\n\nTopic: %s\n<a href=\"%s\">Enter the Live Ops Bridge</a>", session.Title, sessionLink)
 
 		err = telegramSvc.SendCohortMessage(ctx, week.CohortID, msg)

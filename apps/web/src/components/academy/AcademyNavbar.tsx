@@ -86,7 +86,7 @@ export async function AcademyNavbar() {
             <>
               <Link
                 href="/academy/login"
-                className="hidden sm:block px-4 py-2 text-muted-foreground/60 hover:text-foreground text-[10px] font-bold tracking-[0.15em] uppercase transition-colors"
+                className="px-4 py-2 text-muted-foreground/60 hover:text-foreground text-[10px] font-bold tracking-[0.15em] uppercase transition-colors"
               >
                 Login
               </Link>
