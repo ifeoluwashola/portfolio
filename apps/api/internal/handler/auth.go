@@ -27,7 +27,7 @@ type LoginRequest struct {
 
 func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -49,7 +49,7 @@ func (h *AuthHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -106,7 +106,7 @@ func (h *AuthHandler) HandleLogin(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -150,7 +150,7 @@ func (h *AuthHandler) HandleLogout(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) HandleRefreshToken(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -199,7 +199,7 @@ func (h *AuthHandler) HandleRefreshToken(w http.ResponseWriter, r *http.Request)
 
 func (h *AuthHandler) HandleInviteAdmin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -231,7 +231,7 @@ func (h *AuthHandler) HandleInviteAdmin(w http.ResponseWriter, r *http.Request) 
 
 func (h *AuthHandler) HandleChangePassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 

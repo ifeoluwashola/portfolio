@@ -19,7 +19,7 @@ func NewProfileHandler(service domain.ProfileService) *ProfileHandler {
 
 func (h *ProfileHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -36,7 +36,7 @@ func (h *ProfileHandler) HandleGetProfile(w http.ResponseWriter, r *http.Request
 
 func (h *ProfileHandler) HandleUpsertProfile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut && r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 

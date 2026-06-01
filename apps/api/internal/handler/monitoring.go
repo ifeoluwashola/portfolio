@@ -25,7 +25,7 @@ func NewMonitoringHandler(auditSvc domain.AuditService, logBuffer *middleware.Ri
 
 func (h *MonitoringHandler) HandleGetMetrics(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -45,7 +45,7 @@ func (h *MonitoringHandler) HandleGetMetrics(w http.ResponseWriter, r *http.Requ
 
 func (h *MonitoringHandler) HandleGetLogs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -72,7 +72,7 @@ func (h *MonitoringHandler) HandleGetLogs(w http.ResponseWriter, r *http.Request
 
 func (h *MonitoringHandler) HandleGetAuditLogs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -85,7 +85,7 @@ func (h *MonitoringHandler) HandleGetAuditLogs(w http.ResponseWriter, r *http.Re
 
 	logs, err := h.auditSvc.GetRecentAuditLogs(r.Context(), 100, query, hours)
 	if err != nil {
-		http.Error(w, "Failed to retrieve audit logs: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to retrieve audit logs:", err)
 		return
 	}
 

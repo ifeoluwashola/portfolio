@@ -24,7 +24,7 @@ func NewContactHandler(service domain.ContactService, notifier service.Notifier)
 
 func (h *ContactHandler) HandleSubmitContact(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -60,7 +60,7 @@ func (h *ContactHandler) HandleSubmitContact(w http.ResponseWriter, r *http.Requ
 
 func (h *ContactHandler) HandleGetContacts(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -77,7 +77,7 @@ func (h *ContactHandler) HandleGetContacts(w http.ResponseWriter, r *http.Reques
 
 func (h *ContactHandler) HandleGetContactByID(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 

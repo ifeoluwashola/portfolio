@@ -24,18 +24,18 @@ func NewAcademyHandler(svc domain.AcademyService, auditSvc domain.AuditService) 
 
 func (h *AcademyHandler) HandleApply(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	var req domain.AcademyApplyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
 		return
 	}
 
 	if req.Email == "" || req.FirstName == "" {
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Missing required fields", nil)
 		return
 	}
 
@@ -43,40 +43,40 @@ func (h *AcademyHandler) HandleApply(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Differentiate configuration errors and business failures if necessary,
 		// but standard 500 covers general Paystack issues safely in this demo.
-		http.Error(w, "Payment initialization failed: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Payment initialization failed:", err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(resp); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to encode response", nil)
 	}
 }
 
 func (h *AcademyHandler) HandlePaystackWebhook(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	// Paystack requires raw body to verify HMAC signature
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(w, "Cannot read body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Cannot read body", nil)
 		return
 	}
 	defer r.Body.Close()
 
 	signature := r.Header.Get("x-paystack-signature")
 	if signature == "" {
-		http.Error(w, "Missing signature", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Missing signature", nil)
 		return
 	}
 
 	err = h.svc.ProcessWebhook(r.Context(), signature, bodyBytes)
 	if err != nil {
-		http.Error(w, "Webhook processing failed: "+err.Error(), http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Webhook processing failed:", err)
 		return
 	}
 
@@ -86,43 +86,43 @@ func (h *AcademyHandler) HandlePaystackWebhook(w http.ResponseWriter, r *http.Re
 
 func (h *AcademyHandler) HandleGetAdminApplications(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	apps, err := h.svc.GetAdminApplications(r.Context())
 	if err != nil {
-		http.Error(w, "Failed to retrieve applications: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to retrieve applications:", err)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(w).Encode(apps); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to encode response", nil)
 	}
 }
 
 func (h *AcademyHandler) HandleGrantScholarship(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	idStr := r.PathValue("id")
 	appID, err := uuid.Parse(idStr)
 	if err != nil {
-		http.Error(w, "Invalid application ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid application ID", nil)
 		return
 	}
 
 	var req domain.GrantScholarshipRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
 		return
 	}
 
 	if req.AmountNaira <= 0 {
-		http.Error(w, "Scholarship amount must be greater than zero", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Scholarship amount must be greater than zero", nil)
 		return
 	}
 
@@ -130,7 +130,7 @@ func (h *AcademyHandler) HandleGrantScholarship(w http.ResponseWriter, r *http.R
 
 	err = h.svc.GrantScholarship(r.Context(), appID, amountKobo)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 
@@ -140,7 +140,7 @@ func (h *AcademyHandler) HandleGrantScholarship(w http.ResponseWriter, r *http.R
 
 func (h *AcademyHandler) HandleGetSession(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -163,25 +163,25 @@ func (h *AcademyHandler) HandleGetSession(w http.ResponseWriter, r *http.Request
 
 func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	var req domain.AcademyLoginRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
 		return
 	}
 
 	if req.Email == "" || req.Password == "" {
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Missing required fields", nil)
 		return
 	}
 
 	resp, err := h.svc.LoginStudent(r.Context(), &req)
 	if err != nil {
 		slog.Warn("Student login failed", "email", req.Email, "error", err)
-		http.Error(w, err.Error(), http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "An error occurred", err)
 		return
 	}
 
@@ -224,7 +224,7 @@ func (h *AcademyHandler) HandleAcademyLogin(w http.ResponseWriter, r *http.Reque
 
 func (h *AcademyHandler) HandleRefreshStudentToken(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -272,7 +272,7 @@ func (h *AcademyHandler) HandleRefreshStudentToken(w http.ResponseWriter, r *htt
 
 func (h *AcademyHandler) HandleAcademyLogout(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -313,31 +313,31 @@ func (h *AcademyHandler) HandleAcademyLogout(w http.ResponseWriter, r *http.Requ
 
 func (h *AcademyHandler) HandleAcademyChangePassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	var req domain.AcademyChangePasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
 		return
 	}
 
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized session", nil)
 		return
 	}
 
 	stID, err := uuid.Parse(studentIDStr)
 	if err != nil {
-		http.Error(w, "Invalid student ID formatted", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student ID formatted", nil)
 		return
 	}
 
 	err = h.svc.ChangePassword(r.Context(), stID, &req)
 	if err != nil {
-		http.Error(w, "Failed to change password: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to change password:", err)
 		return
 	}
 
@@ -356,19 +356,19 @@ func (h *AcademyHandler) HandleAcademyChangePassword(w http.ResponseWriter, r *h
 
 func (h *AcademyHandler) HandleAcademyForgotPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	var req domain.AcademyForgotPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
 		return
 	}
 
 	err := h.svc.ForgotPassword(r.Context(), &req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 
@@ -378,19 +378,19 @@ func (h *AcademyHandler) HandleAcademyForgotPassword(w http.ResponseWriter, r *h
 
 func (h *AcademyHandler) HandleAcademyResetPassword(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	var req domain.AcademyResetPasswordRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
 		return
 	}
 
 	err := h.svc.ResetPassword(r.Context(), &req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "An error occurred", err)
 		return
 	}
 
@@ -402,7 +402,7 @@ func (h *AcademyHandler) HandleAcademyResetPassword(w http.ResponseWriter, r *ht
 
 func (h *AcademyHandler) HandleGetCurriculum(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -416,7 +416,7 @@ func (h *AcademyHandler) HandleGetCurriculum(w http.ResponseWriter, r *http.Requ
 
 	weeks, err := h.svc.GetCurriculum(r.Context(), cohortID)
 	if err != nil {
-		http.Error(w, "Failed to get curriculum: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to get curriculum:", err)
 		return
 	}
 
@@ -426,19 +426,19 @@ func (h *AcademyHandler) HandleGetCurriculum(w http.ResponseWriter, r *http.Requ
 
 func (h *AcademyHandler) HandleUpdateWeek(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	var req domain.UpdateWeekRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
 		return
 	}
 
 	err := h.svc.UpdateCohortWeek(r.Context(), &req)
 	if err != nil {
-		http.Error(w, "Failed to update week: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to update week:", err)
 		return
 	}
 
@@ -447,24 +447,24 @@ func (h *AcademyHandler) HandleUpdateWeek(w http.ResponseWriter, r *http.Request
 
 func (h *AcademyHandler) HandleAdminCloneCohort(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	var req domain.AdminCloneCohortRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
 		return
 	}
 
 	if req.NewCohortName == "" || req.SourceCohortID == 0 {
-		http.Error(w, "Missing required fields", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Missing required fields", nil)
 		return
 	}
 
 	err := h.svc.AdminCloneCohort(r.Context(), &req)
 	if err != nil {
-		http.Error(w, "Failed to clone cohort: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to clone cohort:", err)
 		return
 	}
 
@@ -474,13 +474,13 @@ func (h *AcademyHandler) HandleAdminCloneCohort(w http.ResponseWriter, r *http.R
 
 func (h *AcademyHandler) HandleGetSubmissions(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	subs, err := h.svc.GetAdminSubmissions(r.Context())
 	if err != nil {
-		http.Error(w, "Failed to fetch submissions: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to fetch submissions:", err)
 		return
 	}
 
@@ -490,19 +490,19 @@ func (h *AcademyHandler) HandleGetSubmissions(w http.ResponseWriter, r *http.Req
 
 func (h *AcademyHandler) HandleGradeSubmission(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	var req domain.GradeAssignmentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
 		return
 	}
 
 	err := h.svc.GradeSubmission(r.Context(), &req)
 	if err != nil {
-		http.Error(w, "Failed to grade submission: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to grade submission:", err)
 		return
 	}
 
@@ -511,25 +511,25 @@ func (h *AcademyHandler) HandleGradeSubmission(w http.ResponseWriter, r *http.Re
 
 func (h *AcademyHandler) HandleGetStudentDashboard(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized session", nil)
 		return
 	}
 
 	stID, err := uuid.Parse(studentIDStr)
 	if err != nil {
-		http.Error(w, "Invalid student ID formatted", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student ID formatted", nil)
 		return
 	}
 
 	data, err := h.svc.GetStudentDashboardData(r.Context(), stID)
 	if err != nil {
-		http.Error(w, "Failed to fetch dashboard data: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to fetch dashboard data:", err)
 		return
 	}
 
@@ -539,31 +539,31 @@ func (h *AcademyHandler) HandleGetStudentDashboard(w http.ResponseWriter, r *htt
 
 func (h *AcademyHandler) HandleSubmitAssignment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized session", nil)
 		return
 	}
 
 	stID, err := uuid.Parse(studentIDStr)
 	if err != nil {
-		http.Error(w, "Invalid student ID formatted", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student ID formatted", nil)
 		return
 	}
 
 	var req domain.SubmitAssignmentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
 		return
 	}
 
 	err = h.svc.SubmitAssignment(r.Context(), stID, &req)
 	if err != nil {
-		http.Error(w, "Submission failed: "+err.Error(), http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Submission failed:", err)
 		return
 	}
 
@@ -572,25 +572,25 @@ func (h *AcademyHandler) HandleSubmitAssignment(w http.ResponseWriter, r *http.R
 
 func (h *AcademyHandler) HandleGetUploadURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized session", nil)
 		return
 	}
 
 	stID, err := uuid.Parse(studentIDStr)
 	if err != nil {
-		http.Error(w, "Invalid student ID formatted", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student ID formatted", nil)
 		return
 	}
 
 	filename := r.URL.Query().Get("filename")
 	if filename == "" {
-		http.Error(w, "Missing filename parameter", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Missing filename parameter", nil)
 		return
 	}
 
@@ -598,7 +598,7 @@ func (h *AcademyHandler) HandleGetUploadURL(w http.ResponseWriter, r *http.Reque
 
 	url, key, err := h.svc.GeneratePresignedUploadURL(r.Context(), stID, filename, uploadType)
 	if err != nil {
-		http.Error(w, "Failed to generate upload URL: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to generate upload URL:", err)
 		return
 	}
 
@@ -611,19 +611,19 @@ func (h *AcademyHandler) HandleGetUploadURL(w http.ResponseWriter, r *http.Reque
 
 func (h *AcademyHandler) HandleGetDownloadURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
 	fileKey := r.URL.Query().Get("key")
 	if fileKey == "" {
-		http.Error(w, "Missing key parameter", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Missing key parameter", nil)
 		return
 	}
 
 	url, err := h.svc.GeneratePresignedDownloadURL(r.Context(), fileKey)
 	if err != nil {
-		http.Error(w, "Failed to generate download URL: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to generate download URL:", err)
 		return
 	}
 
@@ -638,17 +638,17 @@ func (h *AcademyHandler) HandleGetDownloadURL(w http.ResponseWriter, r *http.Req
 func (h *AcademyHandler) HandleGetAvatarURL(w http.ResponseWriter, r *http.Request) {
 	fileKey := r.URL.Query().Get("key")
 	if fileKey == "" {
-		http.Error(w, "Missing key parameter", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Missing key parameter", nil)
 		return
 	}
 	if len(fileKey) < 8 || fileKey[:8] != "avatars/" {
-		http.Error(w, "Invalid key: must be an avatar key", http.StatusForbidden)
+		RespondWithError(w, r, http.StatusForbidden, "Invalid key: must be an avatar key", nil)
 		return
 	}
 
 	url, err := h.svc.GeneratePresignedDownloadURL(r.Context(), fileKey)
 	if err != nil {
-		http.Error(w, "Failed to generate avatar URL: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to generate avatar URL:", err)
 		return
 	}
 
@@ -664,7 +664,7 @@ func (h *AcademyHandler) HandleGetAvatarURL(w http.ResponseWriter, r *http.Reque
 func (h *AcademyHandler) HandleListLabs(w http.ResponseWriter, r *http.Request) {
 	labs, err := h.svc.ListLabs(r.Context())
 	if err != nil {
-		http.Error(w, "Failed to fetch labs: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to fetch labs:", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -675,13 +675,13 @@ func (h *AcademyHandler) HandleGetLab(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid lab ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid lab ID", nil)
 		return
 	}
 
 	lab, err := h.svc.GetLab(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Lab not found: "+err.Error(), http.StatusNotFound)
+		RespondWithError(w, r, http.StatusNotFound, "Lab not found:", err)
 		return
 	}
 
@@ -693,27 +693,27 @@ func (h *AcademyHandler) HandleSubmitLabFix(w http.ResponseWriter, r *http.Reque
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid lab ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid lab ID", nil)
 		return
 	}
 
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
 		return
 	}
 	stID, _ := uuid.Parse(studentIDStr)
 
 	var req domain.SubmitLabFixRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid body", nil)
 		return
 	}
 	req.LabID = id
 
 	err = h.svc.SubmitLabFix(r.Context(), stID, &req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -723,26 +723,26 @@ func (h *AcademyHandler) HandleAddSubmissionComment(w http.ResponseWriter, r *ht
 	subIDStr := r.PathValue("id")
 	subID, err := strconv.Atoi(subIDStr)
 	if err != nil {
-		http.Error(w, "Invalid submission ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid submission ID", nil)
 		return
 	}
 
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
 		return
 	}
 	stID, _ := uuid.Parse(studentIDStr)
 
 	var req domain.SubmissionCommentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid body", nil)
 		return
 	}
 
 	err = h.svc.AddSubmissionComment(r.Context(), stID, subID, req.Body)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -751,12 +751,12 @@ func (h *AcademyHandler) HandleAddSubmissionComment(w http.ResponseWriter, r *ht
 func (h *AcademyHandler) HandleAdminCreateLab(w http.ResponseWriter, r *http.Request) {
 	var lab domain.BreakItLab
 	if err := json.NewDecoder(r.Body).Decode(&lab); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid body", nil)
 		return
 	}
 	err := h.svc.AdminCreateLab(r.Context(), &lab)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -765,12 +765,12 @@ func (h *AcademyHandler) HandleAdminCreateLab(w http.ResponseWriter, r *http.Req
 func (h *AcademyHandler) HandleAdminUpdateLab(w http.ResponseWriter, r *http.Request) {
 	var lab domain.BreakItLab
 	if err := json.NewDecoder(r.Body).Decode(&lab); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid body", nil)
 		return
 	}
 	err := h.svc.AdminUpdateLab(r.Context(), &lab)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -781,7 +781,7 @@ func (h *AcademyHandler) HandleAdminDeleteLab(w http.ResponseWriter, r *http.Req
 	id, _ := strconv.Atoi(idStr)
 	err := h.svc.AdminDeleteLab(r.Context(), id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 
@@ -797,12 +797,12 @@ func (h *AcademyHandler) HandleAdminDeleteLab(w http.ResponseWriter, r *http.Req
 func (h *AcademyHandler) HandleAdminSetLabWinner(w http.ResponseWriter, r *http.Request) {
 	var req domain.SetLabWinnerRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid body", nil)
 		return
 	}
 	err := h.svc.AdminSetLabWinner(r.Context(), &req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -813,7 +813,7 @@ func (h *AcademyHandler) HandleAdminSetLabWinner(w http.ResponseWriter, r *http.
 func (h *AcademyHandler) HandleListAllStudents(w http.ResponseWriter, r *http.Request) {
 	students, err := h.svc.ListAllStudents(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -824,7 +824,7 @@ func (h *AcademyHandler) HandleSearchStudents(w http.ResponseWriter, r *http.Req
 	q := r.URL.Query().Get("q")
 	students, err := h.svc.SearchStudents(r.Context(), q)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -834,19 +834,19 @@ func (h *AcademyHandler) HandleSearchStudents(w http.ResponseWriter, r *http.Req
 func (h *AcademyHandler) HandleWarnStudent(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid student id", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "invalid student id", nil)
 		return
 	}
 
 	var req domain.WarnStudentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "invalid request body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "invalid request body", nil)
 		return
 	}
 
 	if err := h.svc.AdminWarnStudent(r.Context(), id, req.Reason); err != nil {
 		slog.Error("Failed to issue warning to student", "student_id", id, "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	
@@ -858,19 +858,19 @@ func (h *AcademyHandler) HandleWarnStudent(w http.ResponseWriter, r *http.Reques
 func (h *AcademyHandler) HandleDisqualifyStudent(w http.ResponseWriter, r *http.Request) {
 	id, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "invalid student id", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "invalid student id", nil)
 		return
 	}
 
 	var req domain.DisqualifyRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "An error occurred", err)
 		return
 	}
 
 	if err := h.svc.AdminDisqualifyStudent(r.Context(), id, req.Reason); err != nil {
 		slog.Error("Failed to disqualify student", "student_id", id, "error", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 
@@ -889,23 +889,23 @@ func (h *AcademyHandler) HandleDisqualifyStudent(w http.ResponseWriter, r *http.
 func (h *AcademyHandler) HandleSubmitCapstone(w http.ResponseWriter, r *http.Request) {
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized session", nil)
 		return
 	}
 	studentID, err := uuid.Parse(studentIDStr)
 	if err != nil {
-		http.Error(w, "Invalid student ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student ID", nil)
 		return
 	}
 
 	var req domain.CapstoneProjectRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "An error occurred", err)
 		return
 	}
 
 	if err := h.svc.SubmitCapstone(r.Context(), studentID, &req); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -914,22 +914,22 @@ func (h *AcademyHandler) HandleSubmitCapstone(w http.ResponseWriter, r *http.Req
 func (h *AcademyHandler) HandleGetStudentCapstone(w http.ResponseWriter, r *http.Request) {
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized session", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized session", nil)
 		return
 	}
 	studentID, err := uuid.Parse(studentIDStr)
 	if err != nil {
-		http.Error(w, "Invalid student ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student ID", nil)
 		return
 	}
 
 	cap, err := h.svc.GetStudentCapstone(r.Context(), studentID)
 	if err != nil {
 		if strings.Contains(err.Error(), "no rows in result set") {
-			http.Error(w, "Not found", http.StatusNotFound)
+			RespondWithError(w, r, http.StatusNotFound, "Not found", nil)
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -939,7 +939,7 @@ func (h *AcademyHandler) HandleGetStudentCapstone(w http.ResponseWriter, r *http
 func (h *AcademyHandler) HandleListPendingCapstones(w http.ResponseWriter, r *http.Request) {
 	caps, err := h.svc.GetPendingCapstones(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -950,13 +950,13 @@ func (h *AcademyHandler) HandleGetCapstone(w http.ResponseWriter, r *http.Reques
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid capstone ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid capstone ID", nil)
 		return
 	}
 
 	cap, err := h.svc.GetCapstoneByID(r.Context(), id)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -969,12 +969,12 @@ func (h *AcademyHandler) HandleApproveCapstone(w http.ResponseWriter, r *http.Re
 
 	var req domain.ApproveCapstoneRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "An error occurred", err)
 		return
 	}
 
 	if err := h.svc.ApproveCapstone(r.Context(), id, &req); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -984,18 +984,18 @@ func (h *AcademyHandler) HandleRejectCapstone(w http.ResponseWriter, r *http.Req
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid capstone ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid capstone ID", nil)
 		return
 	}
 
 	var req domain.RejectCapstoneRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "An error occurred", err)
 		return
 	}
 
 	if err := h.svc.RejectCapstone(r.Context(), id, req.Feedback); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -1004,12 +1004,12 @@ func (h *AcademyHandler) HandleRejectCapstone(w http.ResponseWriter, r *http.Req
 func (h *AcademyHandler) HandleRevokeAlumni(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		http.Error(w, "Slug is required", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Slug is required", nil)
 		return
 	}
 
 	if err := h.svc.RevokeAlumni(r.Context(), slug); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -1018,13 +1018,13 @@ func (h *AcademyHandler) HandleRevokeAlumni(w http.ResponseWriter, r *http.Reque
 func (h *AcademyHandler) HandleManualCreateAlumni(w http.ResponseWriter, r *http.Request) {
 	var req domain.ManualAlumniRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid body", nil)
 		return
 	}
 
 	err := h.svc.ManualCreateAlumni(r.Context(), &req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
@@ -1034,19 +1034,19 @@ func (h *AcademyHandler) HandleAdminUpdateAlumni(w http.ResponseWriter, r *http.
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid alumni ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid alumni ID", nil)
 		return
 	}
 
 	var req domain.GraduateStudentRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid body", nil)
 		return
 	}
 
 	err = h.svc.AdminUpdateAlumni(r.Context(), id, &req)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
@@ -1055,7 +1055,7 @@ func (h *AcademyHandler) HandleAdminUpdateAlumni(w http.ResponseWriter, r *http.
 func (h *AcademyHandler) HandleGetEligibleStudents(w http.ResponseWriter, r *http.Request) {
 	students, err := h.svc.GetEligibleStudents(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -1065,7 +1065,7 @@ func (h *AcademyHandler) HandleGetEligibleStudents(w http.ResponseWriter, r *htt
 func (h *AcademyHandler) HandleListAlumni(w http.ResponseWriter, r *http.Request) {
 	alumni, err := h.svc.ListAlumni(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -1076,7 +1076,7 @@ func (h *AcademyHandler) HandleGetAlumniPortfolio(w http.ResponseWriter, r *http
 	slug := r.PathValue("slug")
 	portfolio, err := h.svc.GetAlumniPortfolio(r.Context(), slug)
 	if err != nil {
-		http.Error(w, "Portfolio not found", http.StatusNotFound)
+		RespondWithError(w, r, http.StatusNotFound, "Portfolio not found", nil)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -1088,13 +1088,13 @@ func (h *AcademyHandler) HandleGetAlumniPortfolio(w http.ResponseWriter, r *http
 func (h *AcademyHandler) HandleCreateClassSession(w http.ResponseWriter, r *http.Request) {
 	var sess domain.ClassSession
 	if err := json.NewDecoder(r.Body).Decode(&sess); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
 		return
 	}
 
 	err := h.svc.AdminCreateClassSession(r.Context(), &sess)
 	if err != nil {
-		http.Error(w, "Failed to create session: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to create session:", err)
 		return
 	}
 
@@ -1105,20 +1105,20 @@ func (h *AcademyHandler) HandleUpdateClassSession(w http.ResponseWriter, r *http
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid session ID", nil)
 		return
 	}
 
 	var sess domain.ClassSession
 	if err := json.NewDecoder(r.Body).Decode(&sess); err != nil {
-		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
 		return
 	}
 	sess.ID = id
 
 	err = h.svc.AdminUpdateClassSession(r.Context(), &sess)
 	if err != nil {
-		http.Error(w, "Failed to update session: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to update session:", err)
 		return
 	}
 
@@ -1129,13 +1129,13 @@ func (h *AcademyHandler) HandleDeleteClassSession(w http.ResponseWriter, r *http
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid session ID", nil)
 		return
 	}
 
 	err = h.svc.AdminDeleteClassSession(r.Context(), id)
 	if err != nil {
-		http.Error(w, "Failed to delete session: "+err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to delete session:", err)
 		return
 	}
 
@@ -1148,7 +1148,7 @@ func (h *AcademyHandler) HandleDeleteClassSession(w http.ResponseWriter, r *http
 // GET /api/v1/academy/billing
 func (h *AcademyHandler) HandleGetBillingStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -1179,7 +1179,7 @@ func (h *AcademyHandler) HandleGetBillingStatus(w http.ResponseWriter, r *http.R
 // POST /api/v1/academy/billing/pay
 func (h *AcademyHandler) HandleInitiateInstallmentPayment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -1224,7 +1224,7 @@ func (h *AcademyHandler) HandleInitiateInstallmentPayment(w http.ResponseWriter,
 // GET /api/v1/academy/billing/hub
 func (h *AcademyHandler) HandleGetBillingHub(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -1253,7 +1253,7 @@ func (h *AcademyHandler) HandleGetBillingHub(w http.ResponseWriter, r *http.Requ
 
 func (h *AcademyHandler) HandleGetAdminBillingOverview(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -1269,7 +1269,7 @@ func (h *AcademyHandler) HandleGetAdminBillingOverview(w http.ResponseWriter, r 
 
 func (h *AcademyHandler) HandleGetAllStudentBillings(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -1285,7 +1285,7 @@ func (h *AcademyHandler) HandleGetAllStudentBillings(w http.ResponseWriter, r *h
 
 func (h *AcademyHandler) HandleManualPayment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -1312,7 +1312,7 @@ func (h *AcademyHandler) HandleManualPayment(w http.ResponseWriter, r *http.Requ
 
 func (h *AcademyHandler) HandleUpdateStudentStatus(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -1351,20 +1351,20 @@ func (h *AcademyHandler) HandleUpdateStudentStatus(w http.ResponseWriter, r *htt
 func (h *AcademyHandler) HandleJoinSession(w http.ResponseWriter, r *http.Request) {
 	sessionID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid session ID", nil)
 		return
 	}
 
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {
-		http.Error(w, "Unauthorized", http.StatusUnauthorized)
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
 		return
 	}
 	studentID, _ := uuid.Parse(studentIDStr)
 
 	redirectURL, err := h.svc.JoinSession(r.Context(), studentID, sessionID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 
@@ -1374,13 +1374,13 @@ func (h *AcademyHandler) HandleJoinSession(w http.ResponseWriter, r *http.Reques
 func (h *AcademyHandler) HandleGetStudentAttendanceHistory(w http.ResponseWriter, r *http.Request) {
 	studentID, err := uuid.Parse(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "Invalid student ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student ID", nil)
 		return
 	}
 
 	history, err := h.svc.GetStudentAttendanceHistory(r.Context(), studentID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 
@@ -1391,13 +1391,13 @@ func (h *AcademyHandler) HandleGetStudentAttendanceHistory(w http.ResponseWriter
 func (h *AcademyHandler) HandleGetSessionAttendance(w http.ResponseWriter, r *http.Request) {
 	sessionID, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
-		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid session ID", nil)
 		return
 	}
 
 	students, err := h.svc.GetSessionAttendance(r.Context(), sessionID)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 
@@ -1407,7 +1407,7 @@ func (h *AcademyHandler) HandleGetSessionAttendance(w http.ResponseWriter, r *ht
 
 func (h *AcademyHandler) HandleBroadcastReschedule(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -1415,18 +1415,18 @@ func (h *AcademyHandler) HandleBroadcastReschedule(w http.ResponseWriter, r *htt
 		Reason string `json:"reason"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid body", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid body", nil)
 		return
 	}
 
 	if req.Reason == "" {
-		http.Error(w, "Reason is required", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Reason is required", nil)
 		return
 	}
 
 	err := h.svc.BroadcastReschedule(r.Context(), req.Reason)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
 		return
 	}
 

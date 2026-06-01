@@ -20,13 +20,13 @@ func NewBlogHandler(blogService domain.BlogService) *BlogHandler {
 func (h *BlogHandler) GetPostData(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		http.Error(w, "Slug is required", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Slug is required", nil)
 		return
 	}
 
 	metrics, comments, err := h.blogService.GetPostData(slug)
 	if err != nil {
-		http.Error(w, "Failed to fetch post data", http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to fetch post data", nil)
 		return
 	}
 
@@ -44,12 +44,12 @@ func (h *BlogHandler) GetPostData(w http.ResponseWriter, r *http.Request) {
 func (h *BlogHandler) RegisterView(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		http.Error(w, "Slug is required", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Slug is required", nil)
 		return
 	}
 
 	if err := h.blogService.RegisterView(slug); err != nil {
-		http.Error(w, "Failed to register view", http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to register view", nil)
 		return
 	}
 
@@ -61,12 +61,12 @@ func (h *BlogHandler) RegisterView(w http.ResponseWriter, r *http.Request) {
 func (h *BlogHandler) RegisterLike(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		http.Error(w, "Slug is required", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Slug is required", nil)
 		return
 	}
 
 	if err := h.blogService.RegisterLike(slug); err != nil {
-		http.Error(w, "Failed to register like", http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to register like", nil)
 		return
 	}
 
@@ -78,7 +78,7 @@ func (h *BlogHandler) RegisterLike(w http.ResponseWriter, r *http.Request) {
 func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 	slug := r.PathValue("slug")
 	if slug == "" {
-		http.Error(w, "Slug is required", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Slug is required", nil)
 		return
 	}
 
@@ -88,12 +88,12 @@ func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
 		return
 	}
 
 	if req.DisplayName == "" || req.Content == "" {
-		http.Error(w, "Display name and content are required", http.StatusBadRequest)
+		RespondWithError(w, r, http.StatusBadRequest, "Display name and content are required", nil)
 		return
 	}
 
@@ -103,7 +103,7 @@ func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 
 	comment, err := h.blogService.LeaveComment(slug, sanitizedName, sanitizedContent)
 	if err != nil {
-		http.Error(w, "Failed to leave comment", http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to leave comment", nil)
 		return
 	}
 
@@ -116,7 +116,7 @@ func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 func (h *BlogHandler) GetAdminStats(w http.ResponseWriter, r *http.Request) {
 	stats, err := h.blogService.GetAdminStats()
 	if err != nil {
-		http.Error(w, "Failed to fetch admin stats", http.StatusInternalServerError)
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to fetch admin stats", nil)
 		return
 	}
 

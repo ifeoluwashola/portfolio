@@ -20,7 +20,7 @@ func NewProjectDataHandler(service domain.ProjectDataService) *ProjectDataHandle
 
 func (h *ProjectDataHandler) HandleGetProjects(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -37,7 +37,7 @@ func (h *ProjectDataHandler) HandleGetProjects(w http.ResponseWriter, r *http.Re
 
 func (h *ProjectDataHandler) HandleCreateProject(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -63,7 +63,7 @@ func (h *ProjectDataHandler) HandleCreateProject(w http.ResponseWriter, r *http.
 
 func (h *ProjectDataHandler) HandleDeleteProject(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodDelete {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
@@ -87,7 +87,7 @@ func (h *ProjectDataHandler) HandleDeleteProject(w http.ResponseWriter, r *http.
 
 func (h *ProjectDataHandler) HandleUpdateProject(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPut {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
 	}
 
