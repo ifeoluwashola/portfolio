@@ -210,6 +210,7 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 				PasswordHash: string(hashedPassword),
 				IsFirstLogin: true,
 				Username:     username,
+				CohortID:     1,
 				CreatedAt:    time.Now(),
 			}
 			if err = s.repo.CreateStudent(ctx, student); err == nil {
@@ -311,6 +312,7 @@ func (s *academyService) GrantScholarship(ctx context.Context, applicationID uui
 			PasswordHash: string(hashedPassword),
 			IsFirstLogin: true,
 			Username:     username,
+			CohortID:     1,
 			CreatedAt:    time.Now(),
 		}
 
