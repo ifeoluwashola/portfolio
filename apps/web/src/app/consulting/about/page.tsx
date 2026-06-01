@@ -63,7 +63,8 @@ export default async function AboutPage() {
   }
   
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8081/api"}/profile`, {
+    const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1` : "https://api.kyberncloud.com/api/v1";
+    const res = await fetch(`${apiUrl}/profile`, {
       next: { revalidate: 10 } // Revalidate every 10 seconds for caching
     });
     if (res.ok) {
@@ -86,6 +87,24 @@ export default async function AboutPage() {
   } catch (error) {
     console.error("Failed to fetch profile data:", error);
     // Fallback to default Profile gracefully on crash
+  }
+
+  // Resolve S3 avatar key to a pre-signed URL if necessary
+  if (profile.avatar_url && profile.avatar_url.startsWith("avatars/")) {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/v1` : "https://api.kyberncloud.com/api/v1";
+      const s3Res = await fetch(`${apiUrl}/public/avatar-url?key=${encodeURIComponent(profile.avatar_url)}`, {
+        next: { revalidate: 300 }
+      });
+      if (s3Res.ok) {
+        const s3Data = await s3Res.json();
+        if (s3Data.download_url) {
+          profile.avatar_url = s3Data.download_url;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to resolve S3 avatar URL", e);
+    }
   }
 
   return (

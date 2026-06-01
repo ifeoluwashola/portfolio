@@ -273,6 +273,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/admin/invite", inviteLimit(authMW.RequireAuth(authHandler.HandleInviteAdmin)))
 	mux.HandleFunc("POST /api/v1/admin/change-password", loginLimit(authMW.RequireAuth(authHandler.HandleChangePassword)))
 	mux.HandleFunc("GET /api/v1/admin/media/download-url", authMW.RequireAuth(academyHandler.HandleGetDownloadURL))
+	mux.HandleFunc("GET /api/v1/admin/media/upload-url", authMW.RequireAuth(academyHandler.HandleAdminGetUploadURL))
 
 	// Contacts & Blog (admin)
 	mux.HandleFunc("/api/v1/contacts", authMW.RequireAuth(contactHandler.HandleGetContacts))

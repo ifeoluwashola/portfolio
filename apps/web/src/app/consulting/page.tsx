@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/HeroSection";
+import { EngineerTeaser } from "@/components/EngineerTeaser";
 import { FirmPhilosophy } from "@/components/FirmPhilosophy";
 import { PainPointsSection } from "@/components/PainPointsSection";
 import { ServicesGrid } from "@/components/ServicesGrid";
@@ -15,6 +16,7 @@ export default function Home() {
       <PainPointsSection />
       <ServicesGrid />
       <EngagementProcess />
+      <EngineerTeaser />
       <ProjectsGrid />
       <LatestPosts />
       <ContactSection />

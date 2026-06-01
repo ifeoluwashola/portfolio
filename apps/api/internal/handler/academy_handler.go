@@ -609,6 +609,35 @@ func (h *AcademyHandler) HandleGetUploadURL(w http.ResponseWriter, r *http.Reque
 	})
 }
 
+func (h *AcademyHandler) HandleAdminGetUploadURL(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	filename := r.URL.Query().Get("filename")
+	if filename == "" {
+		RespondWithError(w, r, http.StatusBadRequest, "Missing filename parameter", nil)
+		return
+	}
+
+	uploadType := r.URL.Query().Get("type")
+
+	// Use a fixed UUID for admin uploads so they are grouped together
+	adminID := uuid.MustParse("00000000-0000-0000-0000-000000000000")
+	url, key, err := h.svc.GeneratePresignedUploadURL(r.Context(), adminID, filename, uploadType)
+	if err != nil {
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to generate upload URL:", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"upload_url": url,
+		"file_key":   key,
+	})
+}
+
 func (h *AcademyHandler) HandleGetDownloadURL(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)

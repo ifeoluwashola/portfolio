@@ -210,6 +210,30 @@ export async function adminInvite(formData: FormData) {
   }
 }
 
+
+
+export async function getAdminS3UploadUrl(filename: string, type: string) {
+  const token = (await cookies()).get("auth_token")?.value;
+  if (!token) return { error: "Unauthorized" };
+  
+  try {
+    const res = await fetch(`${API_BASE_URL}/v1/admin/media/upload-url?filename=${encodeURIComponent(filename)}&type=${encodeURIComponent(type)}`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store"
+    });
+    
+    if (!res.ok) {
+      const err = await res.json().catch(() => null);
+      return { error: err?.error || "Failed to get upload URL" };
+    }
+    
+    return res.json();
+  } catch (error) {
+    return { error: "Network error" };
+  }
+}
+
+
 // ===== API PROXY HELPER =====
 // Used by admin pages to make authenticated API calls via server actions
 // instead of reading the cookie from client-side JS

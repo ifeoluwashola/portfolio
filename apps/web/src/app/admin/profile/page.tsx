@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Plus, Trash2, CheckCircle2, Pencil, X, Mail, Phone, MapPin, Github, Linkedin, Twitter, Briefcase, GraduationCap, Award, Code, MessageCircle } from "lucide-react";
+import { Plus, Trash2, CheckCircle2, Pencil, X, Mail, Phone, MapPin, Github, Linkedin, Twitter, Briefcase, GraduationCap, Award, Code, MessageCircle, Camera, Loader2, AlertTriangle } from "lucide-react";
+import { getAdminS3UploadUrl } from "../actions";
 
 export interface Experience {
   role: string;
@@ -48,6 +49,142 @@ export interface ProfileData {
 }
 
 
+// ── Avatar Component ──────────────────────────────────────────────────────────
+function AvatarUploader({
+  currentKey,
+  onUploadComplete,
+}: {
+  currentKey?: string;
+  onUploadComplete: (key: string) => void;
+}) {
+  const fRef = useRef<HTMLInputElement>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!currentKey) return;
+    if (currentKey.startsWith("http")) {
+      setAvatarUrl(currentKey);
+      return;
+    }
+    fetch(
+      `/api/admin/proxy/v1/public/avatar-url?key=${encodeURIComponent(currentKey)}`,
+      { cache: "no-store" }
+    )
+      .then((r) => r.json())
+      .then((d: { download_url: string }) => setAvatarUrl(d.download_url))
+      .catch(() => {});
+  }, [currentKey]);
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setError(null);
+
+    try {
+      const urlResult = await getAdminS3UploadUrl(file.name, "avatar");
+      if ("error" in urlResult) throw new Error(urlResult.error as string);
+      const { upload_url, file_key } = urlResult;
+
+      const putRes = await fetch(upload_url, {
+        method: "PUT",
+        body: file,
+        headers: { "Content-Type": file.type },
+      });
+      if (!putRes.ok) throw new Error("Upload to S3 failed");
+
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+      setAvatarUrl(dataUrl);
+
+      onUploadComplete(file_key);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-4">
+      <div
+        onClick={() => !uploading && fRef.current?.click()}
+        className="relative w-32 h-32 rounded-full cursor-pointer group border-4 border-emerald-500/20 hover:border-emerald-500/50 transition-all flex items-center justify-center bg-muted/30"
+      >
+        {uploading ? (
+          <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+        ) : avatarUrl ? (
+          <Image
+            src={avatarUrl}
+            alt="Avatar"
+            fill
+            className="object-cover rounded-full"
+            sizes="128px"
+          />
+        ) : (
+          <span className="text-xs text-muted-foreground">No Photo</span>
+        )}
+        
+        {!uploading && (
+          <div className="absolute inset-0 rounded-full bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <Camera className="w-6 h-6 text-white" />
+          </div>
+        )}
+      </div>
+
+      <input
+        ref={fRef}
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+
+      <div className="text-left">
+        <p className="text-xs font-medium text-muted-foreground">
+          {uploading ? "Uploading..." : "Click photo to change"}
+        </p>
+        {error && (
+          <div className="flex items-center gap-1 text-red-400 text-xs mt-1">
+            <AlertTriangle className="w-3 h-3" /> {error}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ProfileAvatar({ urlOrKey }: { urlOrKey: string }) {
+  const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!urlOrKey) return;
+    if (urlOrKey.startsWith("http")) {
+      setResolvedUrl(urlOrKey);
+      return;
+    }
+    fetch(
+      `/api/admin/proxy/v1/public/avatar-url?key=${encodeURIComponent(urlOrKey)}`,
+      { cache: "no-store" }
+    )
+      .then((r) => r.json())
+      .then((d: { download_url: string }) => setResolvedUrl(d.download_url))
+      .catch(() => {});
+  }, [urlOrKey]);
+
+  if (!resolvedUrl) return <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-border flex-shrink-0 text-muted-foreground">Loading...</div>;
+
+  return (
+    <Image src={resolvedUrl} alt="Avatar" width={128} height={128} className="w-32 h-32 rounded-full object-cover border-4 border-muted flex-shrink-0 shadow-sm" />
+  );
+}
 
 export default function AdminProfilePage() {
   const router = useRouter();
@@ -228,9 +365,11 @@ export default function AdminProfilePage() {
           {editKey === 'core' ? (
             <div className="space-y-4 relative z-10">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Avatar Picture URL</label>
-                <input type="url" value={draft.avatar_url} onChange={e => handleDraftChange("avatar_url", e.target.value)}
-                  className="w-full h-10 px-3 rounded-md border border-input bg-background focus:ring-2 focus:ring-primary/50 text-sm" />
+                <label className="text-sm font-medium">Avatar Picture</label>
+                <AvatarUploader 
+                  currentKey={draft.avatar_url} 
+                  onUploadComplete={(key) => handleDraftChange("avatar_url", key)} 
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Bio Summary</label>
@@ -245,7 +384,7 @@ export default function AdminProfilePage() {
           ) : (
             <div className="flex flex-col md:flex-row gap-8 items-start relative z-10">
               {profile.avatar_url ? (
-                <Image src={profile.avatar_url} alt="Avatar" width={128} height={128} className="w-32 h-32 rounded-full object-cover border-4 border-muted flex-shrink-0 shadow-sm" />
+                <ProfileAvatar urlOrKey={profile.avatar_url} />
               ) : (
                 <div className="w-32 h-32 rounded-full bg-muted flex items-center justify-center border-4 border-border flex-shrink-0 text-muted-foreground">No Photo</div>
               )}

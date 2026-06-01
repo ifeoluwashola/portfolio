@@ -793,3 +793,265 @@
 {"time":"2026-05-31T19:21:25.252643045+01:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/v1/admin/refresh","remote_ip":"127.0.0.1:56442","user_agent":"node","status":200,"duration":69314629}
 {"time":"2026-05-31T19:21:25.278021364+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:56442","user_agent":"node","status":200,"duration":10121786}
 {"time":"2026-05-31T19:21:30.993449755+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/cohort-applications","remote_ip":"127.0.0.1:36358","user_agent":"node","status":200,"duration":2074200}
+{"time":"2026-06-01T15:38:15.890182905+01:00","level":"INFO","msg":"Initializing database connection..."}
+{"time":"2026-06-01T15:38:15.965861914+01:00","level":"INFO","msg":"Connected to PostgreSQL successfully"}
+{"time":"2026-06-01T15:38:15.97258082+01:00","level":"INFO","msg":"Database connection established."}
+{"time":"2026-06-01T15:38:15.97265483+01:00","level":"INFO","msg":"Starting database migrations..."}
+{"time":"2026-06-01T15:38:16.217384043+01:00","level":"INFO","msg":"Database schema is already up to date"}
+{"time":"2026-06-01T15:38:16.406874205+01:00","level":"INFO","msg":"Token cache initialized (Redis) — persistent session layer active"}
+{"time":"2026-06-01T15:38:16.408323501+01:00","level":"INFO","msg":"[Cron] Payment lock worker started — running every 24 hours"}
+{"time":"2026-06-01T15:38:16.40846152+01:00","level":"INFO","msg":"[Automator] Class Session Automator started — running every 60 seconds"}
+{"time":"2026-06-01T15:38:16.408589037+01:00","level":"INFO","msg":"Started session reminder cron engine"}
+{"time":"2026-06-01T15:38:16.408915681+01:00","level":"INFO","msg":"Starting API Server","port":"8080"}
+{"time":"2026-06-01T15:38:16.450409478+01:00","level":"INFO","msg":"Audit log cleanup (startup) completed successfully"}
+{"time":"2026-06-01T15:44:54.428432706+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"[::1]:57328","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":88815804}
+{"time":"2026-06-01T15:44:55.847076805+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects/guardrail/stats","remote_ip":"[::1]:57328","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":1392053444}
+{"time":"2026-06-01T15:45:23.951354608+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57140","user_agent":"node","status":404,"duration":6128647}
+{"time":"2026-06-01T15:50:34.928190949+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:53318","user_agent":"node","status":404,"duration":99534}
+{"time":"2026-06-01T15:50:35.131661041+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"[::1]:54396","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":1047304}
+{"time":"2026-06-01T15:50:35.134052747+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"[::1]:54396","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":354876}
+{"time":"2026-06-01T15:50:36.040531699+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects/guardrail/stats","remote_ip":"[::1]:54396","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":903095946}
+{"time":"2026-06-01T15:50:36.519885471+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects/guardrail/stats","remote_ip":"[::1]:54396","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":473078123}
+{"time":"2026-06-01T15:50:54.692456739+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:39988","user_agent":"node","status":404,"duration":35003}
+{"time":"2026-06-01T15:51:06.083867246+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"[::1]:50644","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":521752}
+{"time":"2026-06-01T15:51:06.089465307+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"[::1]:50644","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":413142}
+{"time":"2026-06-01T15:51:06.831800507+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects/guardrail/stats","remote_ip":"[::1]:50644","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":706278786}
+{"time":"2026-06-01T15:51:07.324680905+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects/guardrail/stats","remote_ip":"[::1]:50644","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":476129220}
+{"time":"2026-06-01T15:54:30.812406559+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:54090","user_agent":"node","status":404,"duration":59005}
+{"time":"2026-06-01T15:55:52.842220291+01:00","level":"INFO","msg":"Admin logged in successfully","email":"ifeoluwashola06@gmail.com","role":"admin"}
+{"time":"2026-06-01T15:55:52.847665805+01:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/v1/admin/login","remote_ip":"127.0.0.1:47414","user_agent":"node","status":200,"duration":279463260}
+{"time":"2026-06-01T15:55:52.969256374+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:47414","user_agent":"node","status":200,"duration":16655054}
+{"time":"2026-06-01T15:55:55.295503215+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"127.0.0.1:47414","user_agent":"node","status":200,"duration":5929345}
+{"time":"2026-06-01T15:55:55.378032424+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"127.0.0.1:47414","user_agent":"node","status":200,"duration":202708}
+{"time":"2026-06-01T15:55:58.836410757+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:47414","user_agent":"node","status":200,"duration":13668965}
+{"time":"2026-06-01T15:55:58.885034365+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:47414","user_agent":"node","status":200,"duration":320313}
+{"time":"2026-06-01T16:00:41.193356003+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":90904}
+{"time":"2026-06-01T16:00:41.367940981+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":14400}
+{"time":"2026-06-01T16:00:41.447702443+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:49648","user_agent":"node","status":200,"duration":76833435}
+{"time":"2026-06-01T16:00:41.989256949+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":19801}
+{"time":"2026-06-01T16:00:42.576226226+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":16901}
+{"time":"2026-06-01T16:00:42.676411175+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:49632","user_agent":"node","status":200,"duration":729432}
+{"time":"2026-06-01T16:00:42.679352703+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:49648","user_agent":"node","status":200,"duration":487221}
+{"time":"2026-06-01T16:00:42.717738269+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:41230","user_agent":"node","status":200,"duration":616726}
+{"time":"2026-06-01T16:00:43.213184074+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":14501}
+{"time":"2026-06-01T16:00:43.471792065+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":21901}
+{"time":"2026-06-01T16:00:43.627315124+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":13801}
+{"time":"2026-06-01T16:00:43.756924356+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":15701}
+{"time":"2026-06-01T16:00:43.897309557+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":13800}
+{"time":"2026-06-01T16:00:44.023767353+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":27501}
+{"time":"2026-06-01T16:00:44.186779937+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":18700}
+{"time":"2026-06-01T16:00:44.328553798+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":15601}
+{"time":"2026-06-01T16:00:44.477381365+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":19101}
+{"time":"2026-06-01T16:00:44.608758675+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":35502}
+{"time":"2026-06-01T16:00:44.749303883+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":14100}
+{"time":"2026-06-01T16:00:45.005214704+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":15001}
+{"time":"2026-06-01T16:00:45.138438493+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":16301}
+{"time":"2026-06-01T16:00:45.300437833+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":29001}
+{"time":"2026-06-01T16:00:45.430345879+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":14401}
+{"time":"2026-06-01T16:00:45.55809003+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":19301}
+{"time":"2026-06-01T16:00:45.675834947+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":19701}
+{"time":"2026-06-01T16:00:45.794317196+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":14201}
+{"time":"2026-06-01T16:00:45.913327768+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":13401}
+{"time":"2026-06-01T16:00:46.053170645+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":14001}
+{"time":"2026-06-01T16:00:46.209445036+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":14601}
+{"time":"2026-06-01T16:00:46.35450284+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":40402}
+{"time":"2026-06-01T16:00:46.474923673+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":15601}
+{"time":"2026-06-01T16:00:46.668865802+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":134506}
+{"time":"2026-06-01T16:00:47.257305174+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":28601}
+{"time":"2026-06-01T16:00:48.269224949+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":21701}
+{"time":"2026-06-01T16:00:48.59509911+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":20901}
+{"time":"2026-06-01T16:00:48.807447639+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":18301}
+{"time":"2026-06-01T16:00:49.067630945+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":27901}
+{"time":"2026-06-01T16:00:49.500993878+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":27601}
+{"time":"2026-06-01T16:00:49.656949756+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":18100}
+{"time":"2026-06-01T16:00:49.87382478+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":24201}
+{"time":"2026-06-01T16:00:50.320209179+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":107705}
+{"time":"2026-06-01T16:00:50.507207006+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":21301}
+{"time":"2026-06-01T16:00:50.664089623+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":27001}
+{"time":"2026-06-01T16:00:50.82118295+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":39302}
+{"time":"2026-06-01T16:00:50.954985865+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":18501}
+{"time":"2026-06-01T16:00:51.142400809+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":404,"duration":35501}
+{"time":"2026-06-01T16:00:52.00593514+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:49632","user_agent":"node","status":200,"duration":39386917}
+{"time":"2026-06-01T16:00:59.388301974+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":84804}
+{"time":"2026-06-01T16:01:00.269853938+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":23701}
+{"time":"2026-06-01T16:01:01.042399146+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":19601}
+{"time":"2026-06-01T16:01:01.382748596+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":41302}
+{"time":"2026-06-01T16:01:01.388013826+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:52676","user_agent":"node","status":200,"duration":2122893}
+{"time":"2026-06-01T16:01:02.290963824+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":74203}
+{"time":"2026-06-01T16:01:02.619319451+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":27601}
+{"time":"2026-06-01T16:01:03.029367242+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":21401}
+{"time":"2026-06-01T16:01:03.252472777+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":45202}
+{"time":"2026-06-01T16:01:03.509638798+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":27201}
+{"time":"2026-06-01T16:01:03.695659214+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":28602}
+{"time":"2026-06-01T16:01:03.980466641+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":37602}
+{"time":"2026-06-01T16:01:04.219279161+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":19801}
+{"time":"2026-06-01T16:01:04.481133686+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":18501}
+{"time":"2026-06-01T16:01:04.655508895+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":23301}
+{"time":"2026-06-01T16:01:05.060206352+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":19401}
+{"time":"2026-06-01T16:01:05.188011829+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":26301}
+{"time":"2026-06-01T16:01:05.3638303+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":18301}
+{"time":"2026-06-01T16:01:05.557093833+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":40902}
+{"time":"2026-06-01T16:01:05.754172632+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":40702}
+{"time":"2026-06-01T16:01:05.916580618+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":19101}
+{"time":"2026-06-01T16:01:06.104774329+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":18401}
+{"time":"2026-06-01T16:01:06.232265792+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":21301}
+{"time":"2026-06-01T16:01:06.424683888+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":127905}
+{"time":"2026-06-01T16:01:06.628873997+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":18801}
+{"time":"2026-06-01T16:01:06.849296215+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":23601}
+{"time":"2026-06-01T16:01:06.996876454+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":18301}
+{"time":"2026-06-01T16:01:07.395586942+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":26202}
+{"time":"2026-06-01T16:01:08.327599668+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":28001}
+{"time":"2026-06-01T16:01:09.143956465+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":20701}
+{"time":"2026-06-01T16:01:09.37382136+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":17601}
+{"time":"2026-06-01T16:01:09.759830145+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":19001}
+{"time":"2026-06-01T16:01:09.762309053+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":18400}
+{"time":"2026-06-01T16:01:10.08951578+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":38101}
+{"time":"2026-06-01T16:01:10.092021189+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52682","user_agent":"node","status":404,"duration":19401}
+{"time":"2026-06-01T16:01:10.454810964+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":19501}
+{"time":"2026-06-01T16:01:10.632863007+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":18301}
+{"time":"2026-06-01T16:01:10.950641924+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":19901}
+{"time":"2026-06-01T16:01:11.110977796+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":18301}
+{"time":"2026-06-01T16:01:11.253937613+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":17601}
+{"time":"2026-06-01T16:01:11.413814364+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":19101}
+{"time":"2026-06-01T16:01:11.622554241+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":18301}
+{"time":"2026-06-01T16:01:11.780969529+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":404,"duration":25601}
+{"time":"2026-06-01T16:01:12.416980785+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:52676","user_agent":"node","status":200,"duration":2306600}
+{"time":"2026-06-01T16:01:24.615076546+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:36910","user_agent":"node","status":404,"duration":52902}
+{"time":"2026-06-01T16:01:26.966970745+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:36910","user_agent":"node","status":404,"duration":27401}
+{"time":"2026-06-01T16:01:28.161985225+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:36910","user_agent":"node","status":200,"duration":181237999}
+{"time":"2026-06-01T16:01:29.555835371+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:36910","user_agent":"node","status":404,"duration":206109}
+{"time":"2026-06-01T16:01:30.169045695+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:36922","user_agent":"node","status":404,"duration":38602}
+{"time":"2026-06-01T16:01:30.170276049+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:36934","user_agent":"node","status":404,"duration":55703}
+{"time":"2026-06-01T16:01:58.774603811+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:41190","user_agent":"node","status":404,"duration":59603}
+{"time":"2026-06-01T16:01:58.777708948+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:41188","user_agent":"node","status":200,"duration":8499374}
+{"time":"2026-06-01T16:01:59.214866425+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:41188","user_agent":"node","status":404,"duration":18501}
+{"time":"2026-06-01T16:01:59.442991185+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:41188","user_agent":"node","status":404,"duration":17301}
+{"time":"2026-06-01T16:01:59.57372605+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:41190","user_agent":"node","status":404,"duration":144306}
+{"time":"2026-06-01T16:01:59.676856498+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:41188","user_agent":"node","status":200,"duration":636528}
+{"time":"2026-06-01T16:02:38.53552205+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:46694","user_agent":"node","status":404,"duration":102385}
+{"time":"2026-06-01T16:02:38.551169552+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:46702","user_agent":"node","status":200,"duration":975357}
+{"time":"2026-06-01T16:02:50.916074242+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:37182","user_agent":"node","status":404,"duration":29301}
+{"time":"2026-06-01T16:07:10.523572193+01:00","level":"INFO","msg":"Shutting down server..."}
+{"time":"2026-06-01T16:07:10.526869363+01:00","level":"INFO","msg":"[Automator] Class Session Automator shutting down"}
+{"time":"2026-06-01T16:07:10.527241971+01:00","level":"INFO","msg":"Stopping session reminder cron engine"}
+{"time":"2026-06-01T16:07:10.529419618+01:00","level":"INFO","msg":"Server stopped gracefully"}
+{"time":"2026-06-01T16:07:10.532857292+01:00","level":"INFO","msg":"[Cron] Payment lock worker shutting down"}
+{"time":"2026-06-01T16:07:18.923090617+01:00","level":"INFO","msg":"Initializing database connection..."}
+{"time":"2026-06-01T16:07:18.945807274+01:00","level":"INFO","msg":"Connected to PostgreSQL successfully"}
+{"time":"2026-06-01T16:07:18.946107801+01:00","level":"INFO","msg":"Database connection established."}
+{"time":"2026-06-01T16:07:18.946139604+01:00","level":"INFO","msg":"Starting database migrations..."}
+{"time":"2026-06-01T16:07:19.074767351+01:00","level":"INFO","msg":"Database schema is already up to date"}
+{"time":"2026-06-01T16:07:19.114476647+01:00","level":"INFO","msg":"Token cache initialized (Redis) — persistent session layer active"}
+{"time":"2026-06-01T16:07:19.116285811+01:00","level":"INFO","msg":"[Automator] Class Session Automator started — running every 60 seconds"}
+{"time":"2026-06-01T16:07:19.116555235+01:00","level":"INFO","msg":"[Cron] Payment lock worker started — running every 24 hours"}
+{"time":"2026-06-01T16:07:19.116771255+01:00","level":"INFO","msg":"Started session reminder cron engine"}
+{"time":"2026-06-01T16:07:19.116840661+01:00","level":"INFO","msg":"Starting API Server","port":"8080"}
+{"time":"2026-06-01T16:07:19.221844069+01:00","level":"INFO","msg":"Audit log cleanup (startup) completed successfully"}
+{"time":"2026-06-01T16:07:31.215317606+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:57810","user_agent":"node","status":200,"duration":2090854}
+{"time":"2026-06-01T16:07:33.473759268+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:57810","user_agent":"node","status":200,"duration":13004479}
+{"time":"2026-06-01T16:07:52.535255737+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:57812","user_agent":"node","status":200,"duration":923583}
+{"time":"2026-06-01T16:08:15.507218902+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:56874","user_agent":"node","status":200,"duration":1897434}
+{"time":"2026-06-01T16:08:20.557269135+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":7475528}
+{"time":"2026-06-01T16:08:22.779170933+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/metrics","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":11714862}
+{"time":"2026-06-01T16:08:23.16222032+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":1359446}
+{"time":"2026-06-01T16:08:23.517256487+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/audit-logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":16424170}
+{"time":"2026-06-01T16:08:23.720967945+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/metrics","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":708176}
+{"time":"2026-06-01T16:08:23.896519166+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":877094}
+{"time":"2026-06-01T16:08:24.13563684+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/audit-logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":1034012}
+{"time":"2026-06-01T16:08:25.659511991+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/metrics","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":746880}
+{"time":"2026-06-01T16:08:25.963672375+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":1075016}
+{"time":"2026-06-01T16:08:28.644890371+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/metrics","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":3807211}
+{"time":"2026-06-01T16:08:28.873532116+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":850092}
+{"time":"2026-06-01T16:08:31.60567674+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/metrics","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":795371}
+{"time":"2026-06-01T16:08:31.686468646+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":2476321}
+{"time":"2026-06-01T16:08:34.624901617+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/metrics","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":525247}
+{"time":"2026-06-01T16:08:34.690070029+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":737565}
+{"time":"2026-06-01T16:08:37.607319911+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/metrics","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":395935}
+{"time":"2026-06-01T16:08:37.691916356+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":742966}
+{"time":"2026-06-01T16:08:40.731272458+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/metrics","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":1955419}
+{"time":"2026-06-01T16:08:40.886401056+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/monitoring/logs","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":991560}
+{"time":"2026-06-01T16:08:41.514479809+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":3886938}
+{"time":"2026-06-01T16:08:41.645763547+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:56882","user_agent":"node","status":200,"duration":5171416}
+{"time":"2026-06-01T16:08:48.878650981+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:43752","user_agent":"node","status":200,"duration":2010169}
+{"time":"2026-06-01T16:11:04.49327429+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57478","user_agent":"node","status":404,"duration":174314}
+{"time":"2026-06-01T16:11:04.745173767+01:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/v1/admin/refresh","remote_ip":"127.0.0.1:57468","user_agent":"node","status":200,"duration":252091193}
+{"time":"2026-06-01T16:11:05.332362768+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57478","user_agent":"node","status":404,"duration":38703}
+{"time":"2026-06-01T16:11:05.346905761+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:57468","user_agent":"node","status":200,"duration":1205199}
+{"time":"2026-06-01T16:11:05.771844243+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":32602}
+{"time":"2026-06-01T16:11:06.092805889+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57478","user_agent":"node","status":404,"duration":14201}
+{"time":"2026-06-01T16:11:06.196639713+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":19901}
+{"time":"2026-06-01T16:11:06.344457747+01:00","level":"INFO","msg":"API Error [401]: refresh token expired or revoked"}
+{"time":"2026-06-01T16:11:06.344764272+01:00","level":"WARN","msg":"HTTP Request","method":"POST","path":"/api/v1/admin/refresh","remote_ip":"127.0.0.1:57468","user_agent":"node","status":401,"duration":9875510}
+{"time":"2026-06-01T16:11:06.376114145+01:00","level":"INFO","msg":"API Error [401]: refresh token expired or revoked"}
+{"time":"2026-06-01T16:11:06.37617505+01:00","level":"WARN","msg":"HTTP Request","method":"POST","path":"/api/v1/admin/refresh","remote_ip":"127.0.0.1:57468","user_agent":"node","status":401,"duration":8943235}
+{"time":"2026-06-01T16:11:06.531143571+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":15401}
+{"time":"2026-06-01T16:11:07.023280268+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":22202}
+{"time":"2026-06-01T16:11:07.16668754+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":19502}
+{"time":"2026-06-01T16:11:07.407031969+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57478","user_agent":"node","status":404,"duration":16202}
+{"time":"2026-06-01T16:11:07.516211531+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":30203}
+{"time":"2026-06-01T16:11:07.664797328+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":26703}
+{"time":"2026-06-01T16:11:07.933297268+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":33803}
+{"time":"2026-06-01T16:11:08.170296723+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":15201}
+{"time":"2026-06-01T16:11:08.321624945+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":20902}
+{"time":"2026-06-01T16:11:08.439572826+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57478","user_agent":"node","status":404,"duration":21502}
+{"time":"2026-06-01T16:11:08.589004493+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":49404}
+{"time":"2026-06-01T16:11:08.736699716+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":27802}
+{"time":"2026-06-01T16:11:09.224599466+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":22101}
+{"time":"2026-06-01T16:11:09.352903098+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":15301}
+{"time":"2026-06-01T16:11:09.48753835+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":18601}
+{"time":"2026-06-01T16:11:09.702700812+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":48304}
+{"time":"2026-06-01T16:11:10.101935561+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":25802}
+{"time":"2026-06-01T16:11:10.949740472+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":36103}
+{"time":"2026-06-01T16:11:11.561440294+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":19001}
+{"time":"2026-06-01T16:11:11.716953073+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":40503}
+{"time":"2026-06-01T16:11:12.034913667+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":33303}
+{"time":"2026-06-01T16:11:12.218881539+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":56205}
+{"time":"2026-06-01T16:11:12.375884834+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":17601}
+{"time":"2026-06-01T16:11:12.898078461+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":40103}
+{"time":"2026-06-01T16:11:13.141181788+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":28302}
+{"time":"2026-06-01T16:11:13.378247455+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":25602}
+{"time":"2026-06-01T16:11:13.579062925+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":43804}
+{"time":"2026-06-01T16:11:13.729367104+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":18201}
+{"time":"2026-06-01T16:11:13.866594575+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":27602}
+{"time":"2026-06-01T16:11:14.036437759+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":57604}
+{"time":"2026-06-01T16:11:14.287924132+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":24802}
+{"time":"2026-06-01T16:11:14.496415593+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":17501}
+{"time":"2026-06-01T16:11:14.664574247+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":18602}
+{"time":"2026-06-01T16:11:14.836395183+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":17202}
+{"time":"2026-06-01T16:11:15.140728827+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":26502}
+{"time":"2026-06-01T16:11:15.343120619+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":25902}
+{"time":"2026-06-01T16:11:15.614929357+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":59904}
+{"time":"2026-06-01T16:11:15.860091243+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":39103}
+{"time":"2026-06-01T16:11:16.067036585+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:57468","user_agent":"node","status":404,"duration":25902}
+{"time":"2026-06-01T16:14:12.315430496+01:00","level":"INFO","msg":"Admin logged in successfully","email":"ifeoluwashola06@gmail.com","role":"admin"}
+{"time":"2026-06-01T16:14:12.315537905+01:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/v1/admin/login","remote_ip":"127.0.0.1:38938","user_agent":"node","status":200,"duration":113465254}
+{"time":"2026-06-01T16:14:12.414163388+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:38938","user_agent":"node","status":200,"duration":1355507}
+{"time":"2026-06-01T16:14:13.108793106+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"127.0.0.1:38938","user_agent":"node","status":200,"duration":2733716}
+{"time":"2026-06-01T16:14:13.173203489+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"127.0.0.1:38938","user_agent":"node","status":200,"duration":737058}
+{"time":"2026-06-01T16:14:16.005294839+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:38938","user_agent":"node","status":200,"duration":4714825}
+{"time":"2026-06-01T16:14:16.033751198+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:38938","user_agent":"node","status":200,"duration":448231}
+{"time":"2026-06-01T16:14:50.966753889+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:32858","user_agent":"node","status":200,"duration":2336477}
+{"time":"2026-06-01T16:14:50.996003305+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/media/upload-url","remote_ip":"127.0.0.1:32858","user_agent":"node","status":200,"duration":13306308}
+{"time":"2026-06-01T16:15:16.514060408+01:00","level":"INFO","msg":"HTTP Request","method":"PUT","path":"/api/v1/profile","remote_ip":"127.0.0.1:45928","user_agent":"node","status":200,"duration":35375332}
+{"time":"2026-06-01T16:18:11.387865352+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:53154","user_agent":"node","status":200,"duration":3087637}
+{"time":"2026-06-01T16:18:23.753732345+01:00","level":"INFO","msg":"HTTP Request","method":"PUT","path":"/api/v1/profile","remote_ip":"127.0.0.1:37578","user_agent":"node","status":200,"duration":20513069}
+{"time":"2026-06-01T16:18:23.856700921+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:37578","user_agent":"node","status":200,"duration":17406031}
+{"time":"2026-06-01T16:18:24.271214928+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/public/avatar-url","remote_ip":"127.0.0.1:37578","user_agent":"node","status":200,"duration":16083031}
+{"time":"2026-06-01T16:18:24.34628067+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/public/avatar-url","remote_ip":"127.0.0.1:37578","user_agent":"node","status":200,"duration":1470412}
+{"time":"2026-06-01T16:18:59.471859102+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:36674","user_agent":"node","status":404,"duration":24502}
+{"time":"2026-06-01T16:19:01.083411869+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"[::1]:59822","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":3403759}
+{"time":"2026-06-01T16:19:02.416502991+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects/guardrail/stats","remote_ip":"[::1]:59822","user_agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.0.0 Safari/537.36","status":200,"duration":1286605193}
+{"time":"2026-06-01T16:19:18.985853281+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:35522","user_agent":"node","status":404,"duration":61205}
+{"time":"2026-06-01T16:19:23.343078781+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:47686","user_agent":"node","status":404,"duration":29802}
+{"time":"2026-06-01T16:19:50.24534085+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:38348","user_agent":"node","status":200,"duration":12264142}
+{"time":"2026-06-01T16:19:53.337274393+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:38348","user_agent":"node","status":200,"duration":4305435}
+{"time":"2026-06-01T16:19:53.992173302+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/public/avatar-url","remote_ip":"127.0.0.1:38348","user_agent":"node","status":200,"duration":1490916}
+{"time":"2026-06-01T16:19:54.028492925+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/public/avatar-url","remote_ip":"127.0.0.1:38348","user_agent":"node","status":200,"duration":767160}
+{"time":"2026-06-01T16:20:02.951275748+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:37538","user_agent":"node","status":404,"duration":37604}
+{"time":"2026-06-01T16:20:05.655514168+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:37538","user_agent":"node","status":404,"duration":14401}
+{"time":"2026-06-01T16:22:56.399086065+01:00","level":"WARN","msg":"HTTP Request","method":"GET","path":"/api/profile","remote_ip":"127.0.0.1:33506","user_agent":"node","status":404,"duration":41702}
+{"time":"2026-06-01T16:23:12.652081421+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:41292","user_agent":"node","status":200,"duration":630239}
+{"time":"2026-06-01T16:23:12.699630532+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/public/avatar-url","remote_ip":"127.0.0.1:41292","user_agent":"node","status":200,"duration":1255177}
+{"time":"2026-06-01T16:23:12.789728648+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:41306","user_agent":"node","status":200,"duration":1180472}
+{"time":"2026-06-01T16:25:47.022622997+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/profile","remote_ip":"127.0.0.1:42400","user_agent":"node","status":200,"duration":7375208}
+{"time":"2026-06-01T16:25:47.107631697+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/public/avatar-url","remote_ip":"127.0.0.1:42400","user_agent":"node","status":200,"duration":63823529}
