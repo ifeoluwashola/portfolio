@@ -30,7 +30,7 @@ export function KybernNexusNavbar() {
             <Link href="/blog" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Blog</Link>
             <Link href="/#contact" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Contact</Link>
             <ModeToggle />
-            <Link href="/consulting" className="bg-kn-accent hover:brightness-110 text-kn-bg px-5 py-2.5 rounded-md text-sm font-bold transition-all shadow-[0_0_15px_var(--kn-accent-glow)] hover:shadow-[0_0_25px_var(--kn-accent-glow)]">
+            <Link href="/consulting#contact" className="bg-kn-accent hover:brightness-110 text-kn-bg px-5 py-2.5 rounded-md text-sm font-bold transition-all shadow-[0_0_15px_var(--kn-accent-glow)] hover:shadow-[0_0_25px_var(--kn-accent-glow)]">
               Consult With Us
             </Link>
           </div>
@@ -54,7 +54,7 @@ export function KybernNexusNavbar() {
             <Link href="/#about" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">About Us</Link>
             <Link href="/blog" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Blog</Link>
             <Link href="/#contact" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Contact</Link>
-            <Link href="/consulting" className="block px-3 py-2 text-base font-bold text-kn-accent">Consult With Us</Link>
+            <Link href="/consulting#contact" className="block px-3 py-2 text-base font-bold text-kn-accent">Consult With Us</Link>
           </div>
         </div>
       )}

@@ -164,7 +164,7 @@ export default async function AboutPage() {
               {/* Connect / Socials */}
               <div>
                 <h3 className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-4">Let&apos;s Connect</h3>
-                <div className="flex flex-wrap gap-4">
+                <div className="flex flex-wrap gap-4 items-center mt-2">
                   {profile.linkedin_url && (
                     <Link href={profile.linkedin_url} target="_blank" className="flex items-center gap-2 px-4 py-2 rounded-md bg-secondary border border-border hover:bg-emerald-500/10 hover:border-emerald-500/50 hover:text-emerald-500 transition-all text-sm text-foreground shadow-sm">
                       <Linkedin className="w-4 h-4 text-[#0A66C2] group-hover:text-emerald-500" /> LinkedIn
@@ -182,6 +182,14 @@ export default async function AboutPage() {
                       </svg> <span className="px-1">X</span>
                     </Link>
                   )}
+                  
+                  {/* Primary Call To Action */}
+                  <Link 
+                    href="/consulting#contact" 
+                    className="ml-auto bg-kn-accent hover:brightness-110 text-kn-bg px-6 py-2.5 rounded-md text-sm font-bold transition-all shadow-[0_0_15px_var(--kn-accent-glow)] hover:shadow-[0_0_25px_var(--kn-accent-glow)]"
+                  >
+                    Book an Infrastructure Audit
+                  </Link>
                 </div>
               </div>
             </div>

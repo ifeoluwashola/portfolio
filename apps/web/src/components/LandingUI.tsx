@@ -154,7 +154,7 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
                 <p className="text-kn-muted mb-6 leading-relaxed">
                   Architecting resilient, scalable enterprise software and cloud-native infrastructure.
                 </p>
-                <Link href="/consulting" className="text-kn-accent font-semibold flex items-center gap-2 hover:gap-3 transition-all">
+                <Link href="/consulting#contact" className="text-kn-accent font-semibold flex items-center gap-2 hover:gap-3 transition-all">
                   Consult With Us <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
