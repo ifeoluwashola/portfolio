@@ -789,3 +789,7 @@
 {"time":"2026-05-31T19:05:17.987316617+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/projects","remote_ip":"127.0.0.1:42786","user_agent":"node","status":200,"duration":1857989}
 {"time":"2026-05-31T19:05:41.348844361+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/cohort-applications","remote_ip":"127.0.0.1:54944","user_agent":"node","status":200,"duration":33714704}
 {"time":"2026-05-31T19:05:41.5237156+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/cohort-applications","remote_ip":"127.0.0.1:54944","user_agent":"node","status":200,"duration":1257323}
+{"time":"2026-05-31T19:21:04.502605296+01:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/v1/academy/apply","remote_ip":"127.0.0.1:40468","user_agent":"node","status":200,"duration":6276701458}
+{"time":"2026-05-31T19:21:25.252643045+01:00","level":"INFO","msg":"HTTP Request","method":"POST","path":"/api/v1/admin/refresh","remote_ip":"127.0.0.1:56442","user_agent":"node","status":200,"duration":69314629}
+{"time":"2026-05-31T19:21:25.278021364+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/auth/session","remote_ip":"127.0.0.1:56442","user_agent":"node","status":200,"duration":10121786}
+{"time":"2026-05-31T19:21:30.993449755+01:00","level":"INFO","msg":"HTTP Request","method":"GET","path":"/api/v1/admin/cohort-applications","remote_ip":"127.0.0.1:36358","user_agent":"node","status":200,"duration":2074200}

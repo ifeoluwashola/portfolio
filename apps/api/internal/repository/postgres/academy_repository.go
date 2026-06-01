@@ -212,10 +212,10 @@ func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*
 
 func (r *AcademyRepository) CreateStudent(ctx context.Context, student *domain.Student) error {
 	query := `
-		INSERT INTO students (id, first_name, last_name, email, password_hash, is_first_login, cohort_id, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO students (id, first_name, last_name, email, password_hash, is_first_login, username, cohort_id, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 	`
-	_, err := r.db.Exec(ctx, query, student.ID, student.FirstName, student.LastName, student.Email, student.PasswordHash, student.IsFirstLogin, student.CohortID, student.CreatedAt)
+	_, err := r.db.Exec(ctx, query, student.ID, student.FirstName, student.LastName, student.Email, student.PasswordHash, student.IsFirstLogin, student.Username, student.CohortID, student.CreatedAt)
 	return err
 }
 

@@ -201,6 +201,7 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 		tempPassword, _ := generateTempPassword(8)
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(tempPassword), bcrypt.DefaultCost)
 		if err == nil {
+			username := strings.Split(studentEmail, "@")[0] + "_" + uuid.New().String()[:4]
 			student := &domain.Student{
 				ID:           targetStudentID,
 				FirstName:    firstName,
@@ -208,6 +209,7 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 				Email:        studentEmail,
 				PasswordHash: string(hashedPassword),
 				IsFirstLogin: true,
+				Username:     username,
 				CreatedAt:    time.Now(),
 			}
 			if err = s.repo.CreateStudent(ctx, student); err == nil {
@@ -300,6 +302,7 @@ func (s *academyService) GrantScholarship(ctx context.Context, applicationID uui
 			return fmt.Errorf("failed to hash temp password: %w", err)
 		}
 
+		username := strings.Split(studentEmail, "@")[0] + "_" + uuid.New().String()[:4]
 		newStudent := &domain.Student{
 			ID:           targetStudentID,
 			FirstName:    firstName,
@@ -307,6 +310,7 @@ func (s *academyService) GrantScholarship(ctx context.Context, applicationID uui
 			Email:        studentEmail,
 			PasswordHash: string(hashedPassword),
 			IsFirstLogin: true,
+			Username:     username,
 			CreatedAt:    time.Now(),
 		}
 
