@@ -668,13 +668,43 @@ func (s *academyService) UpdateCohortWeek(ctx context.Context, req *domain.Updat
 		return fmt.Errorf("week not found: %w", err)
 	}
 
+	addedAssignment := false
+	if (week.AssignmentInstructions == nil || *week.AssignmentInstructions == "") && req.AssignmentInstructions != nil && *req.AssignmentInstructions != "" {
+		addedAssignment = true
+	}
+
+	addedMaterials := false
+	if len(req.Materials) > len(week.Materials) {
+		addedMaterials = true
+	}
+
 	week.Title = req.Title
 	week.RecordingURL = req.RecordingURL
 	week.Materials = req.Materials
 	week.Transcript = req.Transcript
 	week.AssignmentInstructions = req.AssignmentInstructions
 
-	return s.repo.UpdateWeek(ctx, week)
+	err = s.repo.UpdateWeek(ctx, week)
+	if err != nil {
+		return err
+	}
+
+	if addedAssignment || addedMaterials {
+		go func() {
+			refURL := fmt.Sprintf("/academy/dashboard/week/%d", week.ID)
+			var msg string
+			if addedAssignment && addedMaterials {
+				msg = fmt.Sprintf("Assignments and course materials have been added for %s", req.Title)
+			} else if addedAssignment {
+				msg = fmt.Sprintf("Assignment instructions have been added for %s", req.Title)
+			} else if addedMaterials {
+				msg = fmt.Sprintf("New course materials have been added for %s", req.Title)
+			}
+			_ = s.notifSystem.NotifyCohort(context.Background(), nil, week.CohortID, "system", msg, &refURL)
+		}()
+	}
+
+	return nil
 }
 
 func (s *academyService) SubmitAssignment(ctx context.Context, studentID uuid.UUID, req *domain.SubmitAssignmentRequest) error {
