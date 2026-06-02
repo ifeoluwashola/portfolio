@@ -260,7 +260,7 @@ func (r *AcademyRepository) GetAllStudents(ctx context.Context) ([]*domain.Stude
 	query := `
 		SELECT 
 			s.id, s.first_name, s.last_name, s.email, s.status, s.warning_count, 
-			s.disqualification_reason, s.is_manually_locked, s.created_at,
+			s.disqualification_reason, s.is_manually_locked, s.created_at, s.cohort_id,
 			COUNT(sa.id) as attended_count,
 			(SELECT COUNT(*) FROM class_sessions WHERE status IN ('live', 'archived')) as total_held
 		FROM students s
@@ -280,7 +280,7 @@ func (r *AcademyRepository) GetAllStudents(ctx context.Context) ([]*domain.Stude
 		var attended, total int
 		err := rows.Scan(
 			&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.Status, &s.WarningCount, 
-			&s.DisqualificationReason, &s.IsManuallyLocked, &s.CreatedAt,
+			&s.DisqualificationReason, &s.IsManuallyLocked, &s.CreatedAt, &s.CohortID,
 			&attended, &total,
 		)
 		if err != nil {
