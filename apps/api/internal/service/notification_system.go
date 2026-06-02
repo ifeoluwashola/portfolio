@@ -9,6 +9,7 @@ import (
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/notifications"
 	"github.com/google/uuid"
 	"fmt"
+	"strings"
 )
 
 // NotificationSystem defines the centralized in-app notification system
@@ -81,7 +82,16 @@ func (s *notificationSystem) NotifyCohort(ctx context.Context, actorID *string, 
 		go func() {
 			var link string
 			if referenceURL != nil {
-				link = "\n\n🔗 " + *referenceURL
+				frontendURL := s.cfg.FrontendURL
+				if frontendURL == "" {
+					frontendURL = "https://kyberncloud.com"
+				}
+				fullURL := strings.TrimSuffix(frontendURL, "/")
+				if !strings.HasPrefix(*referenceURL, "/") {
+					fullURL += "/"
+				}
+				fullURL += *referenceURL
+				link = "\n\n🔗 " + fullURL
 			}
 			msgText := fmt.Sprintf("🔔 *%s*\n\n%s%s", notifType, message, link)
 			// A background context since the parent ctx might cancel before this finishes
