@@ -9,6 +9,37 @@ category: "Technology"
 
 DevOps tools are applications used by DevOps engineers. There are numerous tools out there but in this article I’ll mention a few of them.
 
+## Linux
+
+While not strictly a single "tool", Linux is the foundational operating system that powers the vast majority of DevOps and cloud environments. An in-depth understanding of Linux is practically a prerequisite for a successful career in DevOps.
+
+Most servers, containerization platforms, and CI/CD pipelines run on Linux distributions like Ubuntu, Alpine, or CentOS. From executing command-line operations to managing file permissions, networking, and shell scripting, Linux is the environment where DevOps engineering takes place. Mastering the Linux terminal allows you to interact directly with servers, troubleshoot misconfigurations, and write automation scripts efficiently.
+
+## Git and GitHub
+
+A version control system records changes to files stored in the system. These files can be source code, assets, or other documents that might be part of a software development project. Teams make changes in groups called commits or revisions. They are software that help track changes in codes per time.
+
+There are several version control systems out there like Git, Subversion, Mercurial etc. But in this article I’ll only talk about Git, being the most commonly used, and its cloud-hosted counterpart, GitHub.
+
+### What is Git?
+
+Git allows developers and IT professionals to collaborate and work together locally or remotely.
+
+### Features of Git
+Below are some features that Git offer:
+
+- **Collaboration**: Git is designed for collaboration, this means that many developers can work together on a project and then merge it together to make a product.
+- **Distributed**: Each developer working on a project has a full copy of the entire repository and the commits histories which makes it possible to work offline.
+- **Staging**: With the staging area in git, it is possible to add changes selectively to commit, rather than committing all the changes at once.
+- **Branching and Merging**: Git makes it possible to have many branches on a project in order to work on different aspects of the project without interfering or interrupting others. The branches will be merged together upon completion to the main (master/main) branch.
+- **Support for Plugins**: Git has robust support for plugins, allowing developers to add new features and integrate with other tools.
+
+### GitHub
+
+GitHub is a cloud-based hosting service that lets you manage Git repositories. It provides a web-based graphical interface and access control, as well as collaboration features such as bug tracking, feature requests, task management, continuous integration (via GitHub Actions), and wikis for every project.
+
+Download link: [Git](https://git-scm.com/downloads)
+
 ## Docker
 
 Docker is a platform that allows developers to easily create, deploy, and run applications in containers.
@@ -41,27 +72,6 @@ Kubernetes provides a number of features for managing containerized applications
 - **Namespaces**: Kubernetes uses Namespaces to create virtual clusters within a cluster, providing a way to separate resources between different teams or environments.
 - **Multi-cluster and Multi-cloud support**: Kubernetes can run on multiple clusters, and can also be used to manage resources across different cloud providers.
 
-## Version Control System
-
-A version control system records changes to files stored in the system. These files can be source code, assets, or other documents that might be part of a software development project. Teams make changes in groups called commits or revisions. They are software that help track changes in codes per time.
-
-There are several version control systems out there like git, subversion, mercurial etc. But in this article I’ll only talk about Git, being the most commonly used.
-
-### What is Git?
-
-Git allow developers and IT professionals to collaborate and work together locally or remotely.
-
-### Features of Git
-Below are some features that Git offer:
-
-- **Collaboration**: Git is designed for collaboration, this means that many developers can work together on a project and then merge it together to make a product.
-- **Distributed**: Each developer working on a project has a full copy of the entire repository and the commits histories which makes it possible to work offline.
-- **Staging**: With the staging area in git, it is possible to add changes selectively to commit, rather than committing all the changes at once.
-- **Branching and Merging**: Git makes it possible to have many branches on a project in order to work on different aspects of the project without interfering or interrupting others. The branches will be merged together upon completion to the main (master/main) branch.
-- **Support for Plugins**: Git has robust support for plugins, allowing developers to add new features and integrate with other tools.
-
-Download link: [Git](https://git-scm.com/downloads)
-
 ## Continuous Integration and Continuous Delivery (CI/CD)
 
 CI/CD is a software development practice by which integrating code changes are made to the central repository frequently and reliably, and automatically building, testing and deploying software changes to various environments. This approach is commonly used in DevOps because it allows early discovery of bugs during development and also aids the release of software application updates faster and with less risk.
@@ -85,6 +95,16 @@ GitHub Actions has the following features:
 - **Easy to Use (Configuration)**: GitHub Actions is built directly into GitHub which makes it easy for developers to set up and configure in a way to manage and monitor their builds, tests and deployment.
 
 These are a few out of what GitHub Actions can do depending on how and what you want.
+
+## Cloud Computing (AWS, Azure, GCP)
+
+Cloud platforms are the backbone of modern software delivery. A DevOps engineer relies heavily on cloud providers to host infrastructure, run containers, and manage networking instead of maintaining physical data centers. The major cloud platforms provide a suite of on-demand services for computing, storage, and networking.
+
+- **Amazon Web Services (AWS)**: The pioneer and market leader in cloud computing, offering a vast array of services like EC2 (Virtual Machines), S3 (Storage), and EKS (Managed Kubernetes).
+- **Microsoft Azure**: A popular choice for enterprise environments, deeply integrated with Microsoft's ecosystem.
+- **Google Cloud Platform (GCP)**: Known for its strong data analytics, machine learning capabilities, and being the birthplace of Kubernetes.
+
+Understanding at least one of these major cloud providers is non-negotiable for deploying scalable, highly-available applications.
 
 ## Infrastructure as Code (IaC)
 
@@ -204,3 +224,9 @@ Threat Modeler is a cutting-edge cybersecurity solution designed to empower orga
 #### Checkmarx
 
 Checkmarx is a pioneer in application security testing, offering a comprehensive suite of solutions designed to secure every phase of the software development lifecycle. As the industry-leading provider, Checkmarx stands out for its innovative approach to application security, combining cutting-edge technology with expertise and innovation to build a DevSecTrust ecosystem.
+
+## Programming Languages in DevOps
+
+Finally, it is worth noting that **understanding of a programming language is a huge advantage** in DevOps. While you don't necessarily need to be a full-stack developer to be a DevOps engineer, the ability to read, write, and understand code elevates you from an operator to a true engineer.
+
+Programming languages like **Python, Go, Node.js, or Ruby** are frequently used to write automation scripts, develop custom tooling, integrate APIs, and interact with infrastructure. Additionally, understanding the code structure of the applications you are deploying makes debugging CI/CD pipeline failures and diagnosing production issues significantly faster.
