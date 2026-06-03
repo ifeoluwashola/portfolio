@@ -1,6 +1,7 @@
 package domain
 
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -43,6 +44,7 @@ type BlogRepository interface {
 	AddComment(comment *BlogComment) error
 	AddCommentLike(commentID int, studentID uuid.UUID) error
 	GetAdminStats() ([]BlogStats, error)
+	UpdateComment(ctx context.Context, id int, studentID uuid.UUID, content string) error
 }
 
 // BlogService defines the business logic methods for blog operations
@@ -53,4 +55,5 @@ type BlogService interface {
 	LeaveComment(slug, displayName, content string, studentID *uuid.UUID, parentID *int) (*BlogComment, error)
 	LikeComment(commentID int, studentID uuid.UUID) error
 	GetAdminStats() ([]BlogStats, error)
+	EditComment(ctx context.Context, commentID int, studentID uuid.UUID, content string) error
 }

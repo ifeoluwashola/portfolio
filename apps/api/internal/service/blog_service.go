@@ -161,3 +161,7 @@ func (s *blogService) LikeComment(commentID int, studentID uuid.UUID) error {
 func (s *blogService) GetAdminStats() ([]domain.BlogStats, error) {
 	return s.repo.GetAdminStats()
 }
+
+func (s *blogService) EditComment(ctx context.Context, commentID int, studentID uuid.UUID, content string) error {
+	return s.repo.UpdateComment(ctx, commentID, studentID, content)
+}

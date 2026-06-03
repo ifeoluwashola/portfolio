@@ -43,6 +43,9 @@ export function BlogInteractivity({ slug }: { slug: string }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
   
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState("");
+  
   const formRef = useRef<HTMLFormElement>(null);
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
@@ -219,6 +222,44 @@ export function BlogInteractivity({ slug }: { slug: string }) {
 
   const startReply = (comment: Comment) => {
     setReplyingTo(comment);
+    setEditingCommentId(null);
+  };
+
+  const startEdit = (comment: Comment) => {
+    setEditingCommentId(comment.id);
+    setEditContent(comment.content);
+    setReplyingTo(null);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent, commentId: number) => {
+    e.preventDefault();
+    if (!editContent || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      const res = await academyFetch(`/v1/blog/comments/${commentId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ content: editContent })
+      });
+
+      if (!res.error) {
+        setData(prev => {
+          if (!prev) return prev;
+          const mapComment = (c: Comment): Comment => {
+            if (c.id === commentId) return { ...c, content: editContent };
+            if (c.replies) return { ...c, replies: c.replies.map(r => r.id === commentId ? { ...r, content: editContent } : r) };
+            return c;
+          };
+          return { ...prev, comments: prev.comments.map(mapComment) };
+        });
+        setEditingCommentId(null);
+        setEditContent("");
+      } else {
+        console.error("Failed to edit comment", res.error);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Replace @usernames with styled spans
@@ -232,40 +273,73 @@ export function BlogInteractivity({ slug }: { slug: string }) {
     });
   };
 
-  const renderCommentCard = (comment: Comment, isReply = false) => (
-    <div className={`bg-background rounded-xl p-5 border border-border ${isReply ? 'ml-8 sm:ml-12 relative before:absolute before:-left-6 before:top-6 before:w-4 before:h-px before:bg-border' : ''}`}>
-      <div className="flex items-center justify-between mb-3">
-        <span className="font-bold text-foreground">{comment.display_name}</span>
-        <span className="text-xs text-muted-foreground flex items-center gap-3">
-          {new Date(comment.created_at).toLocaleDateString("en-US", {
-            year: "numeric", month: "short", day: "numeric"
-          })}
-        </span>
+  const renderCommentCard = (comment: Comment, isReply = false) => {
+    const isEditing = editingCommentId === comment.id;
+    
+    return (
+      <div className={`bg-background rounded-xl p-5 border border-border ${isReply ? 'ml-8 sm:ml-12 relative before:absolute before:-left-6 before:top-6 before:w-4 before:h-px before:bg-border' : ''}`}>
+        <div className="flex items-center justify-between mb-3">
+          <span className="font-bold text-foreground">{comment.display_name}</span>
+          <span className="text-xs text-muted-foreground flex items-center gap-3">
+            {new Date(comment.created_at).toLocaleDateString("en-US", {
+              year: "numeric", month: "short", day: "numeric"
+            })}
+          </span>
+        </div>
+        
+        {isEditing ? (
+          <form onSubmit={(e) => handleEditSubmit(e, comment.id)} className="space-y-3 mb-4">
+            <MentionTextArea
+              value={editContent}
+              onChange={setEditContent}
+              placeholder="Edit your comment..."
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px]"
+            />
+            <div className="flex gap-2">
+              <Button type="submit" disabled={isSubmitting} size="sm" className="bg-sky-600 hover:bg-sky-500 text-white">
+                {isSubmitting ? "Saving..." : "Save"}
+              </Button>
+              <Button type="button" disabled={isSubmitting} size="sm" variant="outline" onClick={() => setEditingCommentId(null)}>
+                Cancel
+              </Button>
+            </div>
+          </form>
+        ) : (
+          <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm mb-4">
+            {formatCommentContent(comment.content)}
+          </p>
+        )}
+        
+        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+          <button 
+            type="button"
+            onClick={() => handleCommentLike(comment.id)} 
+            className="flex items-center gap-1.5 hover:text-rose-500 transition-colors"
+          >
+            <ThumbsUp className="w-3.5 h-3.5" />
+            <span>{comment.likes || 0}</span>
+          </button>
+          <button 
+            type="button"
+            onClick={() => startReply(comment)}
+            className="flex items-center gap-1.5 hover:text-sky-500 transition-colors"
+          >
+            <CornerDownRight className="w-3.5 h-3.5" />
+            <span>Reply</span>
+          </button>
+          {user && user.id === comment.student_id && !isEditing && (
+            <button 
+              type="button"
+              onClick={() => startEdit(comment)}
+              className="flex items-center gap-1.5 hover:text-yellow-500 transition-colors ml-auto"
+            >
+              <span>Edit</span>
+            </button>
+          )}
+        </div>
       </div>
-      <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm mb-4">
-        {formatCommentContent(comment.content)}
-      </p>
-      
-      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
-        <button 
-          type="button"
-          onClick={() => handleCommentLike(comment.id)} 
-          className="flex items-center gap-1.5 hover:text-rose-500 transition-colors"
-        >
-          <ThumbsUp className="w-3.5 h-3.5" />
-          <span>{comment.likes || 0}</span>
-        </button>
-        <button 
-          type="button"
-          onClick={() => startReply(comment)}
-          className="flex items-center gap-1.5 hover:text-sky-500 transition-colors"
-        >
-          <CornerDownRight className="w-3.5 h-3.5" />
-          <span>Reply</span>
-        </button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   const renderCommentForm = (isReply = false) => (
     <form ref={isReply ? undefined : formRef} onSubmit={handleCommentSubmit} className={`space-y-4 ${isReply ? 'ml-8 sm:ml-12 mt-4' : 'mb-10'}`}>

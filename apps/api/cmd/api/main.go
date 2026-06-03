@@ -181,6 +181,7 @@ func main() {
 	mux.HandleFunc("POST /api/v1/blog/{slug}/view", blogHandler.RegisterView)
 	mux.HandleFunc("POST /api/v1/blog/{slug}/like", blogHandler.RegisterLike)
 	mux.HandleFunc("POST /api/v1/blog/{slug}/comment", authMW.OptionalStudentAuth(commentLimit(blogHandler.LeaveComment)))
+	mux.HandleFunc("PATCH /api/v1/blog/comments/{id}", authMW.RequireStudentAuth(blogHandler.EditComment))
 	mux.HandleFunc("POST /api/v1/blog/comments/{id}/like", authMW.RequireStudentAuth(blogHandler.LikeComment))
 
 	// Academy Public Routes

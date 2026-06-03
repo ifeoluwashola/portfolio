@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
 	"github.com/google/uuid"
@@ -152,4 +153,15 @@ func (r *blogRepository) GetAdminStats() ([]domain.BlogStats, error) {
 	}
 
 	return stats, nil
+}
+
+func (r *blogRepository) UpdateComment(ctx context.Context, id int, studentID uuid.UUID, content string) error {
+	cmdTag, err := r.db.Exec(ctx, "UPDATE blog_comments SET content = $1 WHERE id = $2 AND student_id = $3", content, id, studentID)
+	if err != nil {
+		return err
+	}
+	if cmdTag.RowsAffected() == 0 {
+		return fmt.Errorf("comment not found or unauthorized")
+	}
+	return nil
 }

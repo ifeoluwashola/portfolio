@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"html"
 	"net/http"
 	"strconv"
 	
@@ -110,11 +109,7 @@ func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Sanitize inputs to prevent stored XSS
-	sanitizedName := html.EscapeString(req.DisplayName)
-	sanitizedContent := html.EscapeString(req.Content)
-
-	comment, err := h.blogService.LeaveComment(slug, sanitizedName, sanitizedContent, studentIDPtr, req.ParentID)
+	comment, err := h.blogService.LeaveComment(slug, req.DisplayName, req.Content, studentIDPtr, req.ParentID)
 	if err != nil {
 		RespondWithError(w, r, http.StatusInternalServerError, "Failed to leave comment", nil)
 		return
@@ -169,4 +164,50 @@ func (h *BlogHandler) GetAdminStats(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(stats)
+}
+
+// EditComment handles PATCH /api/v1/blog/comments/{id}
+func (h *BlogHandler) EditComment(w http.ResponseWriter, r *http.Request) {
+	commentIDStr := r.PathValue("id")
+	if commentIDStr == "" {
+		RespondWithError(w, r, http.StatusBadRequest, "Comment ID is required", nil)
+		return
+	}
+	
+	commentID, err := strconv.Atoi(commentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid Comment ID", nil)
+		return
+	}
+
+	var req struct {
+		Content string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request payload", nil)
+		return
+	}
+	if req.Content == "" {
+		RespondWithError(w, r, http.StatusBadRequest, "Content is required", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok || studentIDStr == "" {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusUnauthorized, "Invalid Student ID", nil)
+		return
+	}
+
+	if err := h.blogService.EditComment(r.Context(), commentID, studentID, req.Content); err != nil {
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to edit comment", nil)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"success"}`))
 }
