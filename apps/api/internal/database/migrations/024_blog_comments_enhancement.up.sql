@@ -1,0 +1,10 @@
+ALTER TABLE blog_comments ADD COLUMN IF NOT EXISTS student_id UUID REFERENCES students(id) ON DELETE SET NULL;
+ALTER TABLE blog_comments ADD COLUMN IF NOT EXISTS parent_id INT REFERENCES blog_comments(id) ON DELETE CASCADE;
+ALTER TABLE blog_comments ADD COLUMN IF NOT EXISTS likes INT DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS blog_comment_likes (
+    comment_id INT NOT NULL REFERENCES blog_comments(id) ON DELETE CASCADE,
+    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (comment_id, student_id)
+);

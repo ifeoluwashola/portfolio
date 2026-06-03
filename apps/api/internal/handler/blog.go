@@ -4,8 +4,11 @@ import (
 	"encoding/json"
 	"html"
 	"net/http"
+	"strconv"
 	
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/middleware"
+	"github.com/google/uuid"
 )
 
 type BlogHandler struct {
@@ -85,6 +88,7 @@ func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		DisplayName string `json:"display_name"`
 		Content     string `json:"content"`
+		ParentID    *int   `json:"parent_id"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -97,11 +101,20 @@ func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var studentIDPtr *uuid.UUID
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if ok && studentIDStr != "" {
+		id, err := uuid.Parse(studentIDStr)
+		if err == nil {
+			studentIDPtr = &id
+		}
+	}
+
 	// Sanitize inputs to prevent stored XSS
 	sanitizedName := html.EscapeString(req.DisplayName)
 	sanitizedContent := html.EscapeString(req.Content)
 
-	comment, err := h.blogService.LeaveComment(slug, sanitizedName, sanitizedContent)
+	comment, err := h.blogService.LeaveComment(slug, sanitizedName, sanitizedContent, studentIDPtr, req.ParentID)
 	if err != nil {
 		RespondWithError(w, r, http.StatusInternalServerError, "Failed to leave comment", nil)
 		return
@@ -110,6 +123,40 @@ func (h *BlogHandler) LeaveComment(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(comment)
+}
+
+// LikeComment handles POST /api/blog/comments/{id}/like
+func (h *BlogHandler) LikeComment(w http.ResponseWriter, r *http.Request) {
+	commentIDStr := r.PathValue("id")
+	if commentIDStr == "" {
+		RespondWithError(w, r, http.StatusBadRequest, "Comment ID is required", nil)
+		return
+	}
+	
+	commentID, err := strconv.Atoi(commentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid Comment ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok || studentIDStr == "" {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusUnauthorized, "Invalid Student ID", nil)
+		return
+	}
+
+	if err := h.blogService.LikeComment(commentID, studentID); err != nil {
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to like comment", nil)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"success"}`))
 }
 
 // GetAdminStats handles GET /api/admin/blog/stats

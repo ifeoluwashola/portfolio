@@ -188,6 +188,33 @@ func (m *AuthMiddleware) RequireStudentAuth(next http.HandlerFunc) http.HandlerF
 	}
 }
 
+// OptionalStudentAuth parses the token if present, setting StudentIDKey in context, but does not enforce it
+func (m *AuthMiddleware) OptionalStudentAuth(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_, claims, rawToken, err := m.parseAndValidateJWT(r)
+		if err == nil {
+			tokenType, _ := claims["type"].(string)
+			if tokenType == "student" && !m.isTokenRevoked(r.Context(), rawToken) {
+				studentIDStr, ok := claims["sub"].(string)
+				if ok {
+					status, found := m.cache.GetStudentStatus(r.Context(), studentIDStr)
+					if !found {
+						status, _ = claims["status"].(string)
+						if status != "" {
+							m.cache.SetStudentStatus(r.Context(), studentIDStr, status, 2*time.Minute)
+						}
+					}
+					if status != "disqualified" {
+						ctx := context.WithValue(r.Context(), StudentIDKey, studentIDStr)
+						r = r.WithContext(ctx)
+					}
+				}
+			}
+		}
+		next.ServeHTTP(w, r)
+	}
+}
+
 func hashTokenMW(rawToken string) string {
 	h := sha256.Sum256([]byte(rawToken))
 	return hex.EncodeToString(h[:])

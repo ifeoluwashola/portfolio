@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // BlogMetrics represents the views and likes for a specific blog post
 type BlogMetrics struct {
@@ -11,11 +15,15 @@ type BlogMetrics struct {
 
 // BlogComment represents a single comment on a blog post
 type BlogComment struct {
-	ID          int       `json:"id"`
-	Slug        string    `json:"slug"`
-	DisplayName string    `json:"display_name"`
-	Content     string    `json:"content"`
-	CreatedAt   time.Time `json:"created_at"`
+	ID          int           `json:"id"`
+	Slug        string        `json:"slug"`
+	DisplayName string        `json:"display_name"`
+	Content     string        `json:"content"`
+	StudentID   *uuid.UUID    `json:"student_id,omitempty"`
+	ParentID    *int          `json:"parent_id,omitempty"`
+	Likes       int           `json:"likes"`
+	CreatedAt   time.Time     `json:"created_at"`
+	Replies     []BlogComment `json:"replies,omitempty"`
 }
 
 // BlogStats represents the aggregate stats returned to the admin dashboard
@@ -31,7 +39,9 @@ type BlogRepository interface {
 	GetMetricsAndComments(slug string) (*BlogMetrics, []BlogComment, error)
 	IncrementViews(slug string) error
 	IncrementLikes(slug string) error
+	GetComment(id int) (*BlogComment, error)
 	AddComment(comment *BlogComment) error
+	AddCommentLike(commentID int, studentID uuid.UUID) error
 	GetAdminStats() ([]BlogStats, error)
 }
 
@@ -40,6 +50,7 @@ type BlogService interface {
 	GetPostData(slug string) (*BlogMetrics, []BlogComment, error)
 	RegisterView(slug string) error
 	RegisterLike(slug string) error
-	LeaveComment(slug, displayName, content string) (*BlogComment, error)
+	LeaveComment(slug, displayName, content string, studentID *uuid.UUID, parentID *int) (*BlogComment, error)
+	LikeComment(commentID int, studentID uuid.UUID) error
 	GetAdminStats() ([]BlogStats, error)
 }

@@ -103,7 +103,7 @@ func main() {
 	projectSvc := service.NewProjectService(githubRepo)
 	projectDataSvc := service.NewProjectDataService(projectDataRepo)
 	profileSvc := service.NewProfileService(profileRepo)
-	blogSvc := service.NewBlogService(blogRepo)
+	blogSvc := service.NewBlogService(blogRepo, academyRepo)
 
 	resendNotifier := notifications.NewResendNotifier(cfg)
 	authSvc := service.NewAuthService(userRepo, userRepo, cfg, tokenCache, resendNotifier)
@@ -180,7 +180,8 @@ func main() {
 	mux.HandleFunc("GET /api/v1/blog/{slug}", blogHandler.GetPostData)
 	mux.HandleFunc("POST /api/v1/blog/{slug}/view", blogHandler.RegisterView)
 	mux.HandleFunc("POST /api/v1/blog/{slug}/like", blogHandler.RegisterLike)
-	mux.HandleFunc("POST /api/v1/blog/{slug}/comment", commentLimit(blogHandler.LeaveComment))
+	mux.HandleFunc("POST /api/v1/blog/{slug}/comment", authMW.OptionalStudentAuth(commentLimit(blogHandler.LeaveComment)))
+	mux.HandleFunc("POST /api/v1/blog/comments/{id}/like", authMW.RequireStudentAuth(blogHandler.LikeComment))
 
 	// Academy Public Routes
 	mux.HandleFunc("POST /api/v1/academy/apply", academyHandler.HandleApply)

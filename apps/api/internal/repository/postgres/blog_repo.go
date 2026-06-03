@@ -2,7 +2,9 @@ package postgres
 
 import (
 	"context"
+
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -16,34 +18,51 @@ func NewBlogRepository(db *pgxpool.Pool) domain.BlogRepository {
 
 func (r *blogRepository) GetMetricsAndComments(slug string) (*domain.BlogMetrics, []domain.BlogComment, error) {
 	metrics := &domain.BlogMetrics{Slug: slug, Views: 0, Likes: 0}
-	
+
 	// Try to get metrics
 	err := r.db.QueryRow(context.Background(),
 		"SELECT views, likes FROM blog_metrics WHERE slug = $1", slug).Scan(&metrics.Views, &metrics.Likes)
-	
+
 	if err != nil {
-		// If it doesn't exist, that's fine, we'll just return 0s (handled by the struct initialization)
+		// If it doesn't exist, that's fine, we'll just return 0s
 	}
 
 	// Get comments
-	comments := make([]domain.BlogComment, 0)
+	commentsMap := make(map[int]*domain.BlogComment)
+	topLevelComments := make([]*domain.BlogComment, 0)
+
 	rows, err := r.db.Query(context.Background(),
-		"SELECT id, slug, display_name, content, created_at FROM blog_comments WHERE slug = $1 ORDER BY created_at DESC", slug)
-	
+		"SELECT id, slug, display_name, content, student_id, parent_id, likes, created_at FROM blog_comments WHERE slug = $1 ORDER BY created_at ASC", slug)
+
 	if err != nil {
-		return metrics, comments, err
+		return metrics, []domain.BlogComment{}, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var c domain.BlogComment
-		if err := rows.Scan(&c.ID, &c.Slug, &c.DisplayName, &c.Content, &c.CreatedAt); err != nil {
-			return metrics, comments, err
+		c := &domain.BlogComment{Replies: []domain.BlogComment{}}
+		if err := rows.Scan(&c.ID, &c.Slug, &c.DisplayName, &c.Content, &c.StudentID, &c.ParentID, &c.Likes, &c.CreatedAt); err != nil {
+			return metrics, []domain.BlogComment{}, err
 		}
-		comments = append(comments, c)
+		commentsMap[c.ID] = c
+
+		if c.ParentID == nil {
+			topLevelComments = append(topLevelComments, c)
+		} else {
+			if parent, exists := commentsMap[*c.ParentID]; exists {
+				parent.Replies = append(parent.Replies, *c)
+			}
+		}
 	}
 
-	return metrics, comments, nil
+	// Reverse top level comments to show newest first
+	result := make([]domain.BlogComment, len(topLevelComments))
+	for i, c := range topLevelComments {
+		// Reverse it so newest is at top
+		result[len(topLevelComments)-1-i] = *c
+	}
+
+	return metrics, result, nil
 }
 
 func (r *blogRepository) IncrementViews(slug string) error {
@@ -60,16 +79,51 @@ func (r *blogRepository) IncrementLikes(slug string) error {
 	return err
 }
 
+func (r *blogRepository) GetComment(id int) (*domain.BlogComment, error) {
+	c := &domain.BlogComment{}
+	err := r.db.QueryRow(context.Background(),
+		"SELECT id, slug, display_name, content, student_id, parent_id, likes, created_at FROM blog_comments WHERE id = $1", id).
+		Scan(&c.ID, &c.Slug, &c.DisplayName, &c.Content, &c.StudentID, &c.ParentID, &c.Likes, &c.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return c, nil
+}
+
 func (r *blogRepository) AddComment(comment *domain.BlogComment) error {
 	return r.db.QueryRow(context.Background(),
-		`INSERT INTO blog_comments (slug, display_name, content)
-		 VALUES ($1, $2, $3) RETURNING id, created_at`,
-		comment.Slug, comment.DisplayName, comment.Content).Scan(&comment.ID, &comment.CreatedAt)
+		`INSERT INTO blog_comments (slug, display_name, content, student_id, parent_id)
+		 VALUES ($1, $2, $3, $4, $5) RETURNING id, likes, created_at`,
+		comment.Slug, comment.DisplayName, comment.Content, comment.StudentID, comment.ParentID).Scan(&comment.ID, &comment.Likes, &comment.CreatedAt)
+}
+
+func (r *blogRepository) AddCommentLike(commentID int, studentID uuid.UUID) error {
+	// Insert into blog_comment_likes and increment likes in blog_comments
+	tx, err := r.db.Begin(context.Background())
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(context.Background())
+
+	_, err = tx.Exec(context.Background(),
+		`INSERT INTO blog_comment_likes (comment_id, student_id) VALUES ($1, $2)`, commentID, studentID)
+	if err != nil {
+		// likely unique constraint violation, meaning already liked
+		return err
+	}
+
+	_, err = tx.Exec(context.Background(),
+		`UPDATE blog_comments SET likes = likes + 1 WHERE id = $1`, commentID)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit(context.Background())
 }
 
 func (r *blogRepository) GetAdminStats() ([]domain.BlogStats, error) {
 	stats := make([]domain.BlogStats, 0)
-	
+
 	// Left join metrics with comments count
 	query := `
 		SELECT 
@@ -82,7 +136,7 @@ func (r *blogRepository) GetAdminStats() ([]domain.BlogStats, error) {
 		GROUP BY COALESCE(m.slug, c.slug), m.views, m.likes
 		ORDER BY views DESC, likes DESC
 	`
-	
+
 	rows, err := r.db.Query(context.Background(), query)
 	if err != nil {
 		return stats, err

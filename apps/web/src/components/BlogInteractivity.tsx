@@ -1,23 +1,34 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Heart, Eye, MessageSquare, Send } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { Heart, Eye, MessageSquare, Send, CornerDownRight, ThumbsUp, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { getStudentProfile, academyFetch } from "@/app/academy/actions";
+import { MentionTextArea } from "@/components/academy/MentionTextArea";
 
 interface Comment {
   id: number;
   slug: string;
   display_name: string;
   content: string;
+  student_id: string | null;
+  likes: number;
   created_at: string;
+  replies?: Comment[];
 }
 
 interface BlogData {
   views: number;
   likes: number;
   comments: Comment[];
+}
+
+interface UserProfile {
+  id: string;
+  username?: string;
+  display_name?: string;
 }
 
 const viewedPosts = new Set<string>();
@@ -28,6 +39,11 @@ export function BlogInteractivity({ slug }: { slug: string }) {
   const [displayName, setDisplayName] = useState("");
   const [commentContent, setCommentContent] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [replyingTo, setReplyingTo] = useState<Comment | null>(null);
+  
+  const formRef = useRef<HTMLFormElement>(null);
 
   const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
   const API_URL = apiBase;
@@ -35,10 +51,25 @@ export function BlogInteractivity({ slug }: { slug: string }) {
   useEffect(() => {
     let isMounted = true;
 
+    const fetchUser = async () => {
+      try {
+        const profile = await getStudentProfile();
+        if (!('error' in profile) && profile.id) {
+          if (isMounted) {
+            setUser(profile);
+            const name = profile.display_name || profile.username || "Student";
+            setDisplayName(name);
+          }
+        }
+      } catch {
+        // Not logged in or error, ignore
+      }
+    };
+    fetchUser();
+
     // Register View
     const registerView = async () => {
       if (viewedPosts.has(slug)) return;
-      
       try {
         await fetch(`${API_URL}/v1/blog/${slug}/view`, { method: "POST" });
         viewedPosts.add(slug);
@@ -77,14 +108,12 @@ export function BlogInteractivity({ slug }: { slug: string }) {
 
   const handleLike = async () => {
     if (hasLiked) return;
-
     try {
       const res = await fetch(`${API_URL}/v1/blog/${slug}/like`, { method: "POST" });
       if (res.ok) {
         setHasLiked(true);
         setData(prev => prev ? { ...prev, likes: prev.likes + 1 } : null);
         
-        // Save to local storage
         if (typeof window !== "undefined") {
           const likedPosts = JSON.parse(localStorage.getItem("liked_posts") || "[]");
           likedPosts.push(slug);
@@ -96,23 +125,90 @@ export function BlogInteractivity({ slug }: { slug: string }) {
     }
   };
 
+  const handleCommentLike = async (commentId: number) => {
+    if (!user) {
+      alert("You must be logged in to like comments.");
+      return;
+    }
+    
+    // We'll use academyFetch to automatically include the auth token
+    const result = await academyFetch(`/v1/blog/comments/${commentId}/like`, { method: "POST" });
+    if (result.error) {
+      console.error("Failed to like comment:", result.error);
+      return;
+    }
+
+    // Optimistically update UI
+    setData(prev => {
+      if (!prev) return prev;
+      
+      const updatedComments = prev.comments.map(c => {
+        if (c.id === commentId) return { ...c, likes: c.likes + 1 };
+        if (c.replies) {
+          return {
+            ...c,
+            replies: c.replies.map(r => r.id === commentId ? { ...r, likes: r.likes + 1 } : r)
+          };
+        }
+        return c;
+      });
+      
+      return { ...prev, comments: updatedComments };
+    });
+  };
+
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!displayName || !commentContent) return;
 
     setIsSubmitting(true);
     try {
-      const res = await fetch(`${API_URL}/v1/blog/${slug}/comment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ display_name: displayName, content: commentContent })
-      });
+      // If user is logged in, we should use academyFetch to include auth token for mentions/likes features
+      const payload = {
+        display_name: displayName,
+        content: commentContent,
+        ...(replyingTo ? { parent_id: replyingTo.id } : {})
+      };
 
-      if (res.ok) {
-        const data = await res.json();
-        setData(prev => prev ? { ...prev, comments: [data, ...prev.comments] } : null);
-        setDisplayName("");
+      let newComment = null;
+
+      if (user) {
+        const res = await academyFetch(`/v1/blog/${slug}/comment`, {
+          method: "POST",
+          body: JSON.stringify(payload)
+        });
+        if (!res.error) newComment = res.data;
+      } else {
+        const res = await fetch(`${API_URL}/v1/blog/${slug}/comment`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) newComment = await res.json();
+      }
+
+      if (newComment) {
+        setData(prev => {
+          if (!prev) return prev;
+          if (replyingTo) {
+            return {
+              ...prev,
+              comments: prev.comments.map(c => {
+                if (c.id === replyingTo.id) {
+                  return { ...c, replies: [...(c.replies || []), newComment] };
+                }
+                // If replying to a reply, attach it to the root parent
+                if (c.replies?.some(r => r.id === replyingTo.id)) {
+                   return { ...c, replies: [...(c.replies || []), newComment] };
+                }
+                return c;
+              })
+            };
+          }
+          return { ...prev, comments: [newComment, ...prev.comments] };
+        });
         setCommentContent("");
+        setReplyingTo(null);
       }
     } catch (err) {
       console.error("Failed to post comment", err);
@@ -120,6 +216,103 @@ export function BlogInteractivity({ slug }: { slug: string }) {
       setIsSubmitting(false);
     }
   };
+
+  const startReply = (comment: Comment) => {
+    setReplyingTo(comment);
+  };
+
+  // Replace @usernames with styled spans
+  const formatCommentContent = (content: string) => {
+    const parts = content.split(/(@[a-zA-Z0-9_-]+)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('@')) {
+        return <span key={i} className="text-yellow-500 font-semibold">{part}</span>;
+      }
+      return <span key={i}>{part}</span>;
+    });
+  };
+
+  const renderCommentCard = (comment: Comment, isReply = false) => (
+    <div className={`bg-background rounded-xl p-5 border border-border ${isReply ? 'ml-8 sm:ml-12 relative before:absolute before:-left-6 before:top-6 before:w-4 before:h-px before:bg-border' : ''}`}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="font-bold text-foreground">{comment.display_name}</span>
+        <span className="text-xs text-muted-foreground flex items-center gap-3">
+          {new Date(comment.created_at).toLocaleDateString("en-US", {
+            year: "numeric", month: "short", day: "numeric"
+          })}
+        </span>
+      </div>
+      <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap text-sm mb-4">
+        {formatCommentContent(comment.content)}
+      </p>
+      
+      <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+        <button 
+          type="button"
+          onClick={() => handleCommentLike(comment.id)} 
+          className="flex items-center gap-1.5 hover:text-rose-500 transition-colors"
+        >
+          <ThumbsUp className="w-3.5 h-3.5" />
+          <span>{comment.likes || 0}</span>
+        </button>
+        <button 
+          type="button"
+          onClick={() => startReply(comment)}
+          className="flex items-center gap-1.5 hover:text-sky-500 transition-colors"
+        >
+          <CornerDownRight className="w-3.5 h-3.5" />
+          <span>Reply</span>
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderCommentForm = (isReply = false) => (
+    <form ref={isReply ? undefined : formRef} onSubmit={handleCommentSubmit} className={`space-y-4 ${isReply ? 'ml-8 sm:ml-12 mt-4' : 'mb-10'}`}>
+      {isReply && replyingTo && (
+        <div className="flex items-center justify-between bg-sky-500/10 text-sky-500 px-4 py-2 rounded-lg text-sm border border-sky-500/20">
+          <span className="flex items-center gap-2">
+            <CornerDownRight className="w-4 h-4" />
+            Replying to <span className="font-bold">{replyingTo.display_name}</span>
+          </span>
+          <button type="button" onClick={() => setReplyingTo(null)} className="hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+      
+      <Input 
+        placeholder="Name (displayed publicly)" 
+        value={displayName}
+        onChange={(e) => setDisplayName(e.target.value)}
+        required
+        disabled={!!user}
+        className="max-w-xs bg-background"
+      />
+      
+      {user ? (
+        <MentionTextArea
+          value={commentContent}
+          onChange={setCommentContent}
+          placeholder="Share your thoughts... (use @ to mention someone)"
+          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 min-h-[100px]"
+        />
+      ) : (
+        <Textarea 
+          placeholder="Share your thoughts on this article..." 
+          value={commentContent}
+          onChange={(e) => setCommentContent(e.target.value)}
+          required
+          className="min-h-[100px] bg-background"
+        />
+      )}
+
+      <Button type="submit" disabled={isSubmitting} className="bg-sky-600 hover:bg-sky-500 text-white gap-2">
+        <Send className="w-4 h-4" />
+        {isSubmitting ? "Posting..." : "Post Comment"}
+      </Button>
+    </form>
+  );
 
   return (
     <div className="mt-16 pt-8 border-t border-border">
@@ -155,46 +348,31 @@ export function BlogInteractivity({ slug }: { slug: string }) {
           Discussion
         </h3>
 
-        {/* Comment Form */}
-        <form onSubmit={handleCommentSubmit} className="mb-10 space-y-4">
-          <Input 
-            placeholder="Name (displayed publicly)" 
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            required
-            className="max-w-xs bg-background"
-          />
-          <Textarea 
-            placeholder="Share your thoughts on this article..." 
-            value={commentContent}
-            onChange={(e) => setCommentContent(e.target.value)}
-            required
-            className="min-h-[100px] bg-background"
-          />
-          <Button type="submit" disabled={isSubmitting} className="bg-sky-600 hover:bg-sky-500 text-white gap-2">
-            <Send className="w-4 h-4" />
-            {isSubmitting ? "Posting..." : "Post Comment"}
-          </Button>
-        </form>
+        {/* Comment Form - Hide top form if replying to someone */}
+        {!replyingTo && renderCommentForm()}
 
         {/* Existing Comments */}
         <div className="space-y-6">
           {data?.comments && data.comments.length > 0 ? (
             data.comments.map((comment) => (
-              <div key={comment.id} className="bg-background rounded-xl p-5 border border-border">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="font-bold text-foreground">{comment.display_name}</span>
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(comment.created_at).toLocaleDateString("en-US", {
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric"
-                    })}
-                  </span>
-                </div>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                  {comment.content}
-                </p>
+              <div key={comment.id} className="space-y-4">
+                {renderCommentCard(comment)}
+                
+                {/* Render inline reply form under the main comment if selected */}
+                {replyingTo?.id === comment.id && renderCommentForm(true)}
+                
+                {/* Replies */}
+                {comment.replies && comment.replies.length > 0 && (
+                  <div className="space-y-4 pl-2">
+                    {comment.replies.map(reply => (
+                      <div key={reply.id}>
+                        {renderCommentCard(reply, true)}
+                        {/* Render inline reply form under the reply if selected */}
+                        {replyingTo?.id === reply.id && renderCommentForm(true)}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))
           ) : (
