@@ -55,6 +55,15 @@ interface Assignment {
   submission_file_key?: string;
 }
 
+function getThumbnailUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  if (match && match[1]) {
+    return `https://drive.google.com/thumbnail?id=${match[1]}&sz=w800-h450`;
+  }
+  return null;
+}
+
 export default function WeekPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const [week, setWeek] = useState<CohortWeek | null>(null);
@@ -387,6 +396,8 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {week.sessions.filter(s => s.status === 'archived').map((sess) => {
                     const isActive = activeSession?.id === sess.id;
+                    const thumbnailUrl = getThumbnailUrl(sess.recording_url);
+                    
                     return (
                       <button 
                         key={sess.id}
@@ -399,7 +410,11 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                       >
                         {/* Video Thumbnail Placeholder */}
                         <div className="w-full aspect-video bg-slate-900 relative flex items-center justify-center overflow-hidden border-b border-border">
-                           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent group-hover:opacity-40 transition-opacity"></div>
+                           {thumbnailUrl ? (
+                             <img src={thumbnailUrl} alt={sess.title} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-300" />
+                           ) : (
+                             <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent group-hover:opacity-40 transition-opacity"></div>
+                           )}
                            
                            <PlayCircle strokeWidth={1.5} className={`w-12 h-12 z-10 transition-all duration-300 ${isActive ? 'text-yellow-500 scale-110 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'text-slate-500 group-hover:text-yellow-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]'}`} />
                            
