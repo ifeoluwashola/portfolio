@@ -30,7 +30,8 @@ func (r *blogRepository) GetMetricsAndComments(slug string) (*domain.BlogMetrics
 
 	// Get comments
 	commentsMap := make(map[int]*domain.BlogComment)
-	topLevelComments := make([]*domain.BlogComment, 0)
+	var orderedComments []*domain.BlogComment
+	var topLevelComments []*domain.BlogComment
 
 	rows, err := r.db.Query(context.Background(),
 		"SELECT id, slug, display_name, content, student_id, parent_id, likes, created_at FROM blog_comments WHERE slug = $1 ORDER BY created_at ASC", slug)
@@ -46,12 +47,25 @@ func (r *blogRepository) GetMetricsAndComments(slug string) (*domain.BlogMetrics
 			return metrics, []domain.BlogComment{}, err
 		}
 		commentsMap[c.ID] = c
+		orderedComments = append(orderedComments, c)
+	}
 
+	var getRoot func(id int) int
+	getRoot = func(id int) int {
+		c, ok := commentsMap[id]
+		if !ok || c.ParentID == nil {
+			return id
+		}
+		return getRoot(*c.ParentID)
+	}
+
+	for _, c := range orderedComments {
 		if c.ParentID == nil {
 			topLevelComments = append(topLevelComments, c)
 		} else {
-			if parent, exists := commentsMap[*c.ParentID]; exists {
-				parent.Replies = append(parent.Replies, *c)
+			rootID := getRoot(c.ID)
+			if root, exists := commentsMap[rootID]; exists {
+				root.Replies = append(root.Replies, *c)
 			}
 		}
 	}
