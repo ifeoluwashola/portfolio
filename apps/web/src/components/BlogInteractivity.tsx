@@ -33,7 +33,7 @@ interface UserProfile {
 
 const viewedPosts = new Set<string>();
 
-export function BlogInteractivity({ slug }: { slug: string }) {
+export function BlogInteractivity({ slug, isAcademy = false }: { slug: string, isAcademy?: boolean }) {
   const [data, setData] = useState<BlogData | null>(null);
   const [hasLiked, setHasLiked] = useState(false);
   const [displayName, setDisplayName] = useState("");
@@ -55,6 +55,8 @@ export function BlogInteractivity({ slug }: { slug: string }) {
     let isMounted = true;
 
     const fetchUser = async () => {
+      if (!isAcademy) return;
+      
       try {
         const profile = await getStudentProfile();
         if (!('error' in profile) && profile.id) {

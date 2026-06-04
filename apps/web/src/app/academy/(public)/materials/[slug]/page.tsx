@@ -77,7 +77,7 @@ export default async function AcademyMaterialPage({ params }: { params: Promise<
           <MDXRemote source={material.content} />
         </div>
 
-        <BlogInteractivity slug={resolvedParams.slug} />
+        <BlogInteractivity slug={resolvedParams.slug} isAcademy={true} />
       </div>
     </article>
   );
