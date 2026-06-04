@@ -314,7 +314,7 @@ export function BlogInteractivity({ slug, isAcademy = false }: { slug: string, i
           </p>
         )}
         
-        <div className="flex items-center gap-4 text-sm text-muted-foreground mt-2">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-4 text-sm text-muted-foreground mt-2">
           <button 
             type="button"
             onClick={() => handleCommentLike(comment.id)} 
