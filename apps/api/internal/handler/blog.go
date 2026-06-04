@@ -32,10 +32,16 @@ func (h *BlogHandler) GetPostData(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	totalComments := 0
+	for _, c := range comments {
+		totalComments += 1 + c.ReplyCount
+	}
+
 	response := map[string]interface{}{
-		"views":    metrics.Views,
-		"likes":    metrics.Likes,
-		"comments": comments,
+		"views":          metrics.Views,
+		"likes":          metrics.Likes,
+		"comments":       comments,
+		"total_comments": totalComments,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

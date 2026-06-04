@@ -25,6 +25,7 @@ type BlogComment struct {
 	Likes       int           `json:"likes"`
 	CreatedAt   time.Time     `json:"created_at"`
 	Replies     []BlogComment `json:"replies,omitempty"`
+	ReplyCount  int           `json:"reply_count"`
 }
 
 // BlogStats represents the aggregate stats returned to the admin dashboard

@@ -17,12 +17,14 @@ interface Comment {
   likes: number;
   created_at: string;
   replies?: Comment[];
+  reply_count?: number;
 }
 
 interface BlogData {
   views: number;
   likes: number;
   comments: Comment[];
+  total_comments?: number;
 }
 
 interface UserProfile {
@@ -329,6 +331,14 @@ export function BlogInteractivity({ slug, isAcademy = false }: { slug: string, i
             <CornerDownRight className="w-3.5 h-3.5" />
             <span>Reply</span>
           </button>
+          
+          {(comment.reply_count !== undefined && comment.reply_count > 0) && (
+            <div className="flex items-center gap-1.5 ml-2 text-sky-500/80">
+              <MessageSquare className="w-3.5 h-3.5" />
+              <span>{comment.reply_count} {comment.reply_count === 1 ? 'reply' : 'replies'}</span>
+            </div>
+          )}
+
           {user && user.id === comment.student_id && !isEditing && (
             <button 
               type="button"
@@ -401,7 +411,7 @@ export function BlogInteractivity({ slug, isAcademy = false }: { slug: string, i
           </div>
           <div className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />
-            <span className="font-medium">{data?.comments?.length || 0}</span>
+            <span className="font-medium">{data?.total_comments !== undefined ? data.total_comments : (data?.comments?.length || 0)}</span>
           </div>
         </div>
 

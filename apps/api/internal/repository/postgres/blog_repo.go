@@ -50,6 +50,21 @@ func (r *blogRepository) GetMetricsAndComments(slug string) (*domain.BlogMetrics
 		orderedComments = append(orderedComments, c)
 	}
 
+	// Compute total descendants for each comment
+	for _, c := range orderedComments {
+		if c.ParentID != nil {
+			curr := c.ParentID
+			for curr != nil {
+				if parent, ok := commentsMap[*curr]; ok {
+					parent.ReplyCount++
+					curr = parent.ParentID
+				} else {
+					curr = nil
+				}
+			}
+		}
+	}
+
 	var getRoot func(id int) int
 	getRoot = func(id int) int {
 		c, ok := commentsMap[id]
