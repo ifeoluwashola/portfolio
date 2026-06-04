@@ -391,27 +391,40 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                       <button 
                         key={sess.id}
                         onClick={() => setActiveSession(sess)}
-                        className={`group p-4 bg-card border text-left transition-all duration-300 rounded-2xl relative overflow-hidden ${
+                        className={`group bg-card border text-left transition-all duration-300 rounded-2xl relative overflow-hidden flex flex-col ${
                           isActive 
                             ? 'border-yellow-500 ring-1 ring-yellow-500 shadow-[0_0_20px_rgba(234,179,8,0.1)]' 
-                            : 'border-border hover:border-yellow-500/40'
+                            : 'border-border hover:border-yellow-500/40 hover:shadow-lg hover:shadow-yellow-500/5'
                         }`}
                       >
-                        {isActive && (
-                          <div className="absolute top-0 right-0 p-2">
-                             <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
-                          </div>
-                        )}
-                        <div className="space-y-2 relative z-10">
-                          <div className="flex items-center gap-2">
-                            <PlayCircle className={`w-4 h-4 ${isActive ? 'text-yellow-500' : 'text-muted-foreground/40 group-hover:text-yellow-500/60'}`} />
-                            <span className={`text-xs font-bold truncate ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
-                              {sess.title}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2 text-[9px] text-muted-foreground/60 uppercase font-black tracking-widest ml-6">
+                        {/* Video Thumbnail Placeholder */}
+                        <div className="w-full aspect-video bg-slate-900 relative flex items-center justify-center overflow-hidden border-b border-border">
+                           <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-yellow-500/20 via-transparent to-transparent group-hover:opacity-40 transition-opacity"></div>
+                           
+                           <PlayCircle strokeWidth={1.5} className={`w-12 h-12 z-10 transition-all duration-300 ${isActive ? 'text-yellow-500 scale-110 drop-shadow-[0_0_15px_rgba(234,179,8,0.5)]' : 'text-slate-500 group-hover:text-yellow-500 group-hover:scale-110 group-hover:drop-shadow-[0_0_15px_rgba(234,179,8,0.3)]'}`} />
+                           
+                           {isActive && (
+                             <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/80 px-2 py-1 rounded backdrop-blur-sm border border-yellow-500/20">
+                               <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+                               <span className="text-[8px] font-black uppercase tracking-widest text-yellow-500">Playing</span>
+                             </div>
+                           )}
+                           
+                           {!isActive && (
+                             <div className="absolute bottom-3 right-3 bg-black/80 px-2 py-1 rounded text-[9px] font-bold text-slate-300 backdrop-blur-sm tracking-widest uppercase border border-white/10">
+                                Recording
+                             </div>
+                           )}
+                        </div>
+
+                        {/* Card Content */}
+                        <div className="p-4 space-y-2 relative z-10 w-full">
+                          <h5 className={`text-sm font-bold line-clamp-2 leading-snug transition-colors ${isActive ? 'text-yellow-500' : 'text-foreground group-hover:text-yellow-500/80'}`}>
+                            {sess.title}
+                          </h5>
+                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground/60 uppercase font-black tracking-widest">
                             <Clock className="w-3 h-3" />
-                            {new Date(sess.scheduled_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            {new Date(sess.scheduled_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                           </div>
                         </div>
                       </button>
