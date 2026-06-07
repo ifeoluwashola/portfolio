@@ -187,7 +187,7 @@ export function MentionTextArea({
         placeholder={placeholder}
         disabled={disabled}
         rows={rows}
-        className={className}
+        className={`w-full ${className}`}
       />
 
       {/* Autocomplete Suggestions Popover */}

@@ -5,8 +5,8 @@ import { AcademyNavbar } from "@/components/academy/AcademyNavbar";
 import { DiscussionForumFeed } from "@/components/academy/DiscussionForumFeed";
 
 export const metadata = {
-  title: "Kybern Academy | Discussion Forum",
-  description: "Internal discussion forum and knowledge base for Kybern Academy students.",
+  title: "Kybern Academy | Threads",
+  description: "Internal discussion threads and knowledge base for Kybern Academy students.",
 };
 
 export default async function DiscussionForumPage() {
@@ -23,7 +23,7 @@ export default async function DiscussionForumPage() {
       <div className="max-w-7xl mx-auto px-6">
         <Suspense fallback={
           <div className="flex items-center justify-center min-h-[400px] text-yellow-400 font-mono animate-pulse uppercase tracking-widest text-xs">
-            Loading Discussion Forum...
+            Loading Threads...
           </div>
         }>
           <DiscussionForumFeed />

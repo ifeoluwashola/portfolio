@@ -56,7 +56,7 @@ export async function AcademyNavbar() {
         <div className="hidden md:flex flex-1 justify-center gap-8 items-center text-[10px] font-bold text-muted-foreground/60 font-mono tracking-[0.15em] uppercase">
           <Link href="/academy" className="hover:text-foreground transition-colors">Home</Link>
           <Link href="/academy/break-it-labs" className="hover:text-foreground transition-colors">Labs</Link>
-          <Link href="/academy/discussion-forum" className="hover:text-foreground transition-colors">Discussion Forum</Link>
+          <Link href="/academy/discussion-forum" className="hover:text-foreground transition-colors">Threads</Link>
           <Link href="/academy/alumni" className="hover:text-foreground transition-colors">Alumni</Link>
           <Link href="/academy/materials" className="hover:text-foreground transition-colors">Resources</Link>
         </div>

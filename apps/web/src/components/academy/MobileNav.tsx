@@ -10,7 +10,7 @@ export function MobileNav() {
   const links = [
     { name: "Home", href: "/academy" },
     { name: "Labs", href: "/academy/break-it-labs" },
-    { name: "Discussion Forum", href: "/academy/discussion-forum" },
+    { name: "Threads", href: "/academy/discussion-forum" },
     { name: "Alumni", href: "/academy/alumni" },
     { name: "Resources", href: "/academy/materials" },
   ];

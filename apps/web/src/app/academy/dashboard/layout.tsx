@@ -12,10 +12,11 @@ import {
   Lock,
   Menu,
   X,
-  ChevronDown,
   Layout,
   CreditCard,
-  Settings
+  Settings,
+  MessageSquare,
+  ChevronDown
 } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { logout, getDashboardData } from "../actions";
@@ -176,6 +177,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href="/academy/break-it-labs" 
               label="Break-It Labs" 
               icon={<Terminal className="w-5 h-5" />} 
+              isCollapsed={!isSidebarOpen}
+            />
+            <NavItem 
+              href="/academy/discussion-forum" 
+              label="Threads" 
+              icon={<MessageSquare className="w-5 h-5" />} 
               isCollapsed={!isSidebarOpen}
             />
             <NavItem

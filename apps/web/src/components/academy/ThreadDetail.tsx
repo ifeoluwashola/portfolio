@@ -268,7 +268,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
         <p className="text-red-400 uppercase tracking-widest text-xs">CRITICAL ERROR: Thread not found.</p>
         {!isDrawer && (
           <Link href="/academy/discussion-forum" className="inline-flex items-center gap-2 text-slate-500 hover:text-white transition-colors text-xs uppercase tracking-widest">
-            <ArrowLeft className="w-4 h-4" /> Return to Discussion Forum
+            <ArrowLeft className="w-4 h-4" /> Return to Threads
           </Link>
         )}
       </div>
@@ -288,7 +288,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
             className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-white transition-colors uppercase tracking-widest font-black"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Discussion Forum
+            Back to Threads
           </Link>
         </div>
       )}
@@ -431,7 +431,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
 
             {/* Thread Content in Markdown */}
             <div className="prose prose-invert prose-sm max-w-none text-slate-300 leading-relaxed
-              prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
+              prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:hidden prose-code:after:hidden
               prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto
               prose-headings:text-white prose-headings:font-bold prose-headings:uppercase
             ">
@@ -567,7 +567,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
 
                 {/* Reply Content in Markdown */}
                 <div className="prose prose-invert prose-sm max-w-none text-slate-300 leading-relaxed
-                  prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono
+                  prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:hidden prose-code:after:hidden
                   prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto
                   prose-headings:text-white prose-headings:font-bold prose-headings:uppercase
                 ">
@@ -601,7 +601,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                       </button>
                     ) : null}
 
-                    {currentUserProfile?.role === "instructor" && !isEndorsed && (
+                    {currentUserProfile?.role === "instructor" && !isEndorsed && !isInstructor && (
                       <button
                         onClick={() => handleEndorseReply(reply.id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all"

@@ -7,6 +7,7 @@ import { getThreads, createThread, getPublicAvatarUrl, getStudentProfile, update
 import { ThreadDetail } from "./ThreadDetail";
 import { MentionTextArea } from "./MentionTextArea";
 import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
 
 
 interface Thread {
@@ -382,8 +383,11 @@ export function DiscussionForumFeed() {
                           </h4>
 
                           {/* Content preview */}
-                          <div className="prose prose-invert prose-xs max-w-none text-xs text-slate-300 leading-relaxed font-mono">
-                            <ReactMarkdown components={markdownComponents}>{preprocessMentions(thread.content)}</ReactMarkdown>
+                          <div className="prose prose-invert prose-xs max-w-none text-xs text-slate-300 leading-relaxed font-mono
+                            prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden
+                            prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto
+                          ">
+                            <ReactMarkdown rehypePlugins={[rehypeHighlight]} components={markdownComponents}>{preprocessMentions(thread.content)}</ReactMarkdown>
                           </div>
 
                           {/* Message Footer Actions */}
