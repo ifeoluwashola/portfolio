@@ -1857,3 +1857,447 @@ func (s *academyService) BroadcastEmailToCohort(ctx context.Context, cohortID in
 
 	return nil
 }
+
+// ─── War Room Discussion Forum Service Methods ─────────────────────────────────
+
+func (s *academyService) CreateThread(ctx context.Context, studentID uuid.UUID, req *domain.CreateThreadRequest) (*domain.Thread, error) {
+	if req.Title == "" || req.Content == "" || req.Category == "" {
+		return nil, errors.New("missing required fields")
+	}
+
+	if req.Category != "Learning" && req.Category != "Question" && req.Category != "Debugging" {
+		return nil, errors.New("invalid category")
+	}
+
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch author: %w", err)
+	}
+
+	thread := &domain.Thread{
+		ID:         uuid.New(),
+		AuthorID:   studentID,
+		Title:      req.Title,
+		Content:    req.Content,
+		Category:   req.Category,
+		IsResolved: false,
+		CreatedAt:  time.Now(),
+	}
+
+	err = s.repo.CreateThread(ctx, thread)
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate author fields for response
+	thread.AuthorName = student.FirstName + " " + student.LastName
+	if student.DisplayName != nil && *student.DisplayName != "" {
+		thread.AuthorName = *student.DisplayName
+	}
+	thread.AuthorAvatarKey = student.AvatarS3Key
+	thread.AuthorRole = student.Role
+
+	cohort, err := s.repo.GetCohortByID(ctx, student.CohortID)
+	if err == nil {
+		thread.CohortName = cohort.Name
+	}
+
+	// Broadcast new thread to all active students in-app
+	go func() {
+		students, err := s.repo.GetAllStudents(context.Background())
+		if err != nil {
+			return
+		}
+		
+		var notifs []*domain.Notification
+		refURL := fmt.Sprintf("/academy/discussion-forum?thread=%s", thread.ID.String())
+		msg := fmt.Sprintf("New discussion posted by %s: %s", thread.AuthorName, thread.Title)
+		
+		for _, std := range students {
+			if std.ID != studentID && std.Status == "active" {
+				notif := &domain.Notification{
+					ID:           uuid.New(),
+					UserID:       std.ID.String(),
+					ActorID:      aws.String(studentID.String()),
+					Type:         "new_thread",
+					Message:      msg,
+					ReferenceURL: &refURL,
+					IsRead:       false,
+					CreatedAt:    time.Now(),
+				}
+				notifs = append(notifs, notif)
+			}
+		}
+		
+		if len(notifs) > 0 {
+			_ = s.repo.BulkCreateNotifications(context.Background(), notifs)
+		}
+	}()
+
+	// Notify mentioned students in thread content in-app
+	go func() {
+		taggedUsernames := extractMentions(thread.Content)
+		if len(taggedUsernames) == 0 {
+			return
+		}
+		
+		var notifs []*domain.Notification
+		refURL := fmt.Sprintf("/academy/discussion-forum?thread=%s", thread.ID.String())
+		msg := fmt.Sprintf("%s tagged you in a new post: %s", thread.AuthorName, thread.Title)
+		
+		for _, username := range taggedUsernames {
+			taggedStudent, err := s.repo.GetStudentByUsername(context.Background(), username)
+			if err == nil && taggedStudent.ID != studentID {
+				notif := &domain.Notification{
+					ID:           uuid.New(),
+					UserID:       taggedStudent.ID.String(),
+					ActorID:      aws.String(studentID.String()),
+					Type:         "mention",
+					Message:      msg,
+					ReferenceURL: &refURL,
+					IsRead:       false,
+					CreatedAt:    time.Now(),
+				}
+				notifs = append(notifs, notif)
+			}
+		}
+		
+		if len(notifs) > 0 {
+			_ = s.repo.BulkCreateNotifications(context.Background(), notifs)
+		}
+	}()
+
+	return thread, nil
+}
+
+func (s *academyService) GetThreads(ctx context.Context, studentID uuid.UUID, category, search string, limit, offset int) ([]*domain.Thread, error) {
+	if limit <= 0 {
+		limit = 10
+	}
+	if offset < 0 {
+		offset = 0
+	}
+	return s.repo.GetThreads(ctx, studentID, category, search, limit, offset)
+}
+
+func (s *academyService) GetThreadByID(ctx context.Context, studentID uuid.UUID, id uuid.UUID) (*domain.Thread, []*domain.Reply, error) {
+	thread, err := s.repo.GetThreadByID(ctx, studentID, id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	replies, err := s.repo.GetRepliesByThreadID(ctx, studentID, id)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return thread, replies, nil
+}
+
+func (s *academyService) CreateReply(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID, req *domain.CreateReplyRequest) (*domain.Reply, error) {
+	if req.Content == "" {
+		return nil, errors.New("reply content cannot be empty")
+	}
+
+	// Verify thread exists
+	thread, err := s.repo.GetThreadByID(ctx, studentID, threadID)
+	if err != nil {
+		return nil, errors.New("thread not found")
+	}
+
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch author: %w", err)
+	}
+
+	reply := &domain.Reply{
+		ID:                   uuid.New(),
+		ThreadID:             threadID,
+		AuthorID:             studentID,
+		Content:              req.Content,
+		IsInstructorEndorsed: false,
+		CreatedAt:            time.Now(),
+	}
+
+	err = s.repo.CreateReply(ctx, reply)
+	if err != nil {
+		return nil, err
+	}
+
+	// Populate author fields for response
+	reply.AuthorName = student.FirstName + " " + student.LastName
+	if student.DisplayName != nil && *student.DisplayName != "" {
+		reply.AuthorName = *student.DisplayName
+	}
+	reply.AuthorAvatarKey = student.AvatarS3Key
+	reply.AuthorRole = student.Role
+
+	cohort, err := s.repo.GetCohortByID(ctx, student.CohortID)
+	if err == nil {
+		reply.CohortName = cohort.Name
+	}
+
+	// Notify thread author about new reply if the replier is not the author
+	if thread.AuthorID != studentID {
+		go func() {
+			refURL := fmt.Sprintf("/academy/discussion-forum?thread=%s", thread.ID.String())
+			msg := fmt.Sprintf("%s replied to your thread: %s", reply.AuthorName, thread.Title)
+			notif := &domain.Notification{
+				ID:           uuid.New(),
+				UserID:       thread.AuthorID.String(),
+				ActorID:      aws.String(studentID.String()),
+				Type:         "reply",
+				Message:      msg,
+				ReferenceURL: &refURL,
+				IsRead:       false,
+				CreatedAt:    time.Now(),
+			}
+			_ = s.repo.CreateNotification(context.Background(), notif)
+		}()
+	}
+
+	// Notify mentioned students in reply content in-app
+	go func() {
+		taggedUsernames := extractMentions(reply.Content)
+		if len(taggedUsernames) == 0 {
+			return
+		}
+		
+		var notifs []*domain.Notification
+		refURL := fmt.Sprintf("/academy/discussion-forum?thread=%s", thread.ID.String())
+		msg := fmt.Sprintf("%s tagged you in a reply", reply.AuthorName)
+		
+		for _, username := range taggedUsernames {
+			taggedStudent, err := s.repo.GetStudentByUsername(context.Background(), username)
+			if err == nil && taggedStudent.ID != studentID {
+				notif := &domain.Notification{
+					ID:           uuid.New(),
+					UserID:       taggedStudent.ID.String(),
+					ActorID:      aws.String(studentID.String()),
+					Type:         "mention",
+					Message:      msg,
+					ReferenceURL: &refURL,
+					IsRead:       false,
+					CreatedAt:    time.Now(),
+				}
+				notifs = append(notifs, notif)
+			}
+		}
+		
+		if len(notifs) > 0 {
+			_ = s.repo.BulkCreateNotifications(context.Background(), notifs)
+		}
+	}()
+
+	return reply, nil
+}
+
+func (s *academyService) EndorseReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) error {
+	// Verify current student is an instructor
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return errors.New("student not found")
+	}
+
+	if student.Role != "instructor" {
+		return errors.New("unauthorized: instructor role required")
+	}
+
+	// Verify reply exists
+	reply, err := s.repo.GetReplyByID(ctx, replyID)
+	if err != nil {
+		return errors.New("reply not found")
+	}
+
+	err = s.repo.EndorseReply(ctx, replyID)
+	if err != nil {
+		return err
+	}
+
+	// Notify reply author about endorsement
+	go func() {
+		refURL := fmt.Sprintf("/academy/discussion-forum?thread=%s", reply.ThreadID.String())
+		msg := "Your reply has been verified as a solution by the instructor!"
+		notif := &domain.Notification{
+			ID:           uuid.New(),
+			UserID:       reply.AuthorID.String(),
+			ActorID:      aws.String(studentID.String()),
+			Type:         "endorsement",
+			Message:      msg,
+			ReferenceURL: &refURL,
+			IsRead:       false,
+			CreatedAt:    time.Now(),
+		}
+		_ = s.repo.CreateNotification(context.Background(), notif)
+	}()
+
+	return nil
+}
+
+func (s *academyService) UpdateThread(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID, title, content, category string) (*domain.Thread, error) {
+	if title == "" || content == "" || category == "" {
+		return nil, errors.New("missing required fields")
+	}
+
+	if category != "Learning" && category != "Question" && category != "Debugging" {
+		return nil, errors.New("invalid category")
+	}
+
+	thread, err := s.repo.GetThreadByID(ctx, studentID, threadID)
+	if err != nil {
+		return nil, errors.New("thread not found")
+	}
+
+	if thread.AuthorID != studentID {
+		return nil, errors.New("unauthorized: you can only edit your own threads")
+	}
+
+	thread.Title = title
+	thread.Content = content
+	thread.Category = category
+
+	err = s.repo.UpdateThread(ctx, thread)
+	if err != nil {
+		return nil, err
+	}
+
+	return thread, nil
+}
+
+func (s *academyService) UpdateReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID, content string) (*domain.Reply, error) {
+	if content == "" {
+		return nil, errors.New("reply content cannot be empty")
+	}
+
+	reply, err := s.repo.GetReplyByID(ctx, replyID)
+	if err != nil {
+		return nil, errors.New("reply not found")
+	}
+
+	if reply.AuthorID != studentID {
+		return nil, errors.New("unauthorized: you can only edit your own replies")
+	}
+
+	reply.Content = content
+
+	err = s.repo.UpdateReply(ctx, reply)
+	if err != nil {
+		return nil, err
+	}
+
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err == nil {
+		reply.AuthorName = student.FirstName + " " + student.LastName
+		if student.DisplayName != nil && *student.DisplayName != "" {
+			reply.AuthorName = *student.DisplayName
+		}
+		reply.AuthorAvatarKey = student.AvatarS3Key
+		reply.AuthorRole = student.Role
+
+		cohort, err := s.repo.GetCohortByID(ctx, student.CohortID)
+		if err == nil {
+			reply.CohortName = cohort.Name
+		}
+	}
+
+	return reply, nil
+}
+
+func extractMentions(content string) []string {
+	re := regexp.MustCompile(`(?:^|\s)@([a-zA-Z0-9_-]+)`)
+	matches := re.FindAllStringSubmatch(content, -1)
+	var usernames []string
+	seen := make(map[string]bool)
+	for _, match := range matches {
+		if len(match) > 1 {
+			username := match[1]
+			if !seen[username] {
+				seen[username] = true
+				usernames = append(usernames, username)
+			}
+		}
+	}
+	return usernames
+}
+
+func (s *academyService) ToggleThreadLike(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID) (bool, int, error) {
+	thread, err := s.repo.GetThreadByID(ctx, studentID, threadID)
+	if err != nil {
+		return false, 0, errors.New("thread not found")
+	}
+
+	liked, likeCount, err := s.repo.ToggleLike(ctx, "thread", studentID, threadID)
+	if err != nil {
+		return false, 0, err
+	}
+
+	// Trigger in-app notification if liked and the liker is not the author of the thread
+	if liked && thread.AuthorID != studentID {
+		student, err := s.repo.GetStudentByID(ctx, studentID)
+		if err == nil {
+			go func() {
+				refURL := fmt.Sprintf("/academy/discussion-forum?thread=%s", threadID.String())
+				likerName := student.FirstName + " " + student.LastName
+				if student.DisplayName != nil && *student.DisplayName != "" {
+					likerName = *student.DisplayName
+				}
+				msg := fmt.Sprintf("%s liked your thread: %s", likerName, thread.Title)
+				notif := &domain.Notification{
+					ID:           uuid.New(),
+					UserID:       thread.AuthorID.String(),
+					ActorID:      aws.String(studentID.String()),
+					Type:         "like",
+					Message:      msg,
+					ReferenceURL: &refURL,
+					IsRead:       false,
+					CreatedAt:    time.Now(),
+				}
+				_ = s.repo.CreateNotification(context.Background(), notif)
+			}()
+		}
+	}
+
+	return liked, likeCount, nil
+}
+
+func (s *academyService) ToggleReplyLike(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) (bool, int, error) {
+	reply, err := s.repo.GetReplyByID(ctx, replyID)
+	if err != nil {
+		return false, 0, errors.New("reply not found")
+	}
+
+	liked, likeCount, err := s.repo.ToggleLike(ctx, "reply", studentID, replyID)
+	if err != nil {
+		return false, 0, err
+	}
+
+	// Trigger in-app notification if liked and the liker is not the author of the reply
+	if liked && reply.AuthorID != studentID {
+		student, err := s.repo.GetStudentByID(ctx, studentID)
+		if err == nil {
+			go func() {
+				refURL := fmt.Sprintf("/academy/discussion-forum?thread=%s", reply.ThreadID.String())
+				likerName := student.FirstName + " " + student.LastName
+				if student.DisplayName != nil && *student.DisplayName != "" {
+					likerName = *student.DisplayName
+				}
+				msg := fmt.Sprintf("%s liked your reply", likerName)
+				notif := &domain.Notification{
+					ID:           uuid.New(),
+					UserID:       reply.AuthorID.String(),
+					ActorID:      aws.String(studentID.String()),
+					Type:         "like",
+					Message:      msg,
+					ReferenceURL: &refURL,
+					IsRead:       false,
+					CreatedAt:    time.Now(),
+				}
+				_ = s.repo.CreateNotification(context.Background(), notif)
+			}()
+		}
+	}
+
+	return liked, likeCount, nil
+}
+
+

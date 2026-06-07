@@ -23,6 +23,8 @@ interface MentionTextAreaProps {
   disabled?: boolean;
   rows?: number;
   className?: string;
+  onFocus?: () => void;
+  inputRef?: React.RefObject<HTMLTextAreaElement | null>;
 }
 
 export function MentionTextArea({
@@ -32,13 +34,16 @@ export function MentionTextArea({
   disabled,
   rows = 3,
   className = "",
+  onFocus,
+  inputRef,
 }: MentionTextAreaProps) {
   const [suggestions, setSuggestions] = useState<Student[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
   const [triggerIndex, setTriggerIndex] = useState(-1);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const localRef = useRef<HTMLTextAreaElement>(null);
+  const textareaRef = inputRef || localRef;
   const popoverRef = useRef<HTMLDivElement>(null);
 
   // Close suggestions on outside click
@@ -178,10 +183,11 @@ export function MentionTextArea({
         onKeyUp={handleTextareaSelectOrKeyUp}
         onSelect={handleTextareaSelectOrKeyUp}
         onKeyDown={handleKeyDown}
+        onFocus={onFocus}
         placeholder={placeholder}
         disabled={disabled}
         rows={rows}
-        className={className}
+        className={`w-full ${className}`}
       />
 
       {/* Autocomplete Suggestions Popover */}

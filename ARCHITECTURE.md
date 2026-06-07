@@ -71,3 +71,8 @@
 * [ ] Phase 3: Frontend UI/UX development (Next.js).
 * [ ] Phase 4: Blog & Content Integration (MDX).
 * [ ] Phase 5: Infrastructure & CI/CD Setup.
+
+```
+python
+print("Hello, World!")
+```
