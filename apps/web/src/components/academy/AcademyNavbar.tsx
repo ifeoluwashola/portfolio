@@ -4,6 +4,7 @@ import { ModeToggle } from "../ModeToggle";
 import { User } from "lucide-react";
 import { API_BASE_URL } from "@/lib/api-config";
 import { NotificationBell } from "./NotificationBell";
+import { MobileNav } from "./MobileNav";
 
 async function fetchAvatarUrl(token: string): Promise<string | null> {
   try {
@@ -34,7 +35,7 @@ export async function AcademyNavbar() {
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-xl">
-      <div className="flex h-16 items-center justify-between px-6 max-w-7xl mx-auto gap-4">
+      <div className="flex h-16 items-center justify-between px-3 sm:px-6 max-w-7xl mx-auto gap-2 sm:gap-4">
 
         {/* Logo */}
         <Link href="/academy" className="flex items-center gap-3 transition-opacity hover:opacity-80 flex-shrink-0">
@@ -55,12 +56,13 @@ export async function AcademyNavbar() {
         <div className="hidden md:flex flex-1 justify-center gap-8 items-center text-[10px] font-bold text-muted-foreground/60 font-mono tracking-[0.15em] uppercase">
           <Link href="/academy" className="hover:text-foreground transition-colors">Home</Link>
           <Link href="/academy/break-it-labs" className="hover:text-foreground transition-colors">Labs</Link>
+          <Link href="/academy/discussion-forum" className="hover:text-foreground transition-colors">Discussion Forum</Link>
           <Link href="/academy/alumni" className="hover:text-foreground transition-colors">Alumni</Link>
           <Link href="/academy/materials" className="hover:text-foreground transition-colors">Resources</Link>
         </div>
 
         {/* Right actions */}
-        <div className="flex items-center gap-3 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           <ModeToggle variant="academy" />
 
           {token ? (
@@ -68,18 +70,18 @@ export async function AcademyNavbar() {
               <NotificationBell />
               <Link
                 href="/academy/dashboard"
-                className="flex items-center gap-2.5 px-4 py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-500/20 transition-all"
+                className="flex items-center justify-center sm:gap-2.5 w-8 h-8 sm:w-auto sm:h-auto sm:px-4 sm:py-2 bg-yellow-500/10 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg hover:bg-yellow-500/20 transition-all"
               >
                 {avatarUrl ? (
                   <img
                     src={avatarUrl}
                     alt="Your avatar"
-                    className="w-5 h-5 rounded-full object-cover border border-yellow-500/40"
+                    className="w-4 h-4 sm:w-5 sm:h-5 rounded-full object-cover border border-yellow-500/40"
                   />
                 ) : (
-                  <User className="w-4 h-4" />
+                  <User className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 )}
-                Dashboard →
+                <span className="hidden sm:inline">Dashboard →</span>
               </Link>
             </>
           ) : (
@@ -93,12 +95,15 @@ export async function AcademyNavbar() {
               {/* Sticky Apply CTA — always visible */}
               <Link
                 href="/academy/register"
-                className="px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg transition-all shadow-[0_0_15px_rgba(234,179,8,0.25)] hover:shadow-[0_0_25px_rgba(234,179,8,0.4)] whitespace-nowrap"
+                className="px-3 sm:px-4 py-2 sm:py-2.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 text-[10px] font-black tracking-[0.15em] uppercase rounded-lg transition-all shadow-[0_0_15px_rgba(234,179,8,0.25)] hover:shadow-[0_0_25px_rgba(234,179,8,0.4)] whitespace-nowrap"
               >
-                Apply Now →
+                <span className="hidden sm:inline">Apply Now →</span>
+                <span className="sm:hidden">Apply</span>
               </Link>
             </>
           )}
+
+          <MobileNav />
         </div>
       </div>
     </nav>

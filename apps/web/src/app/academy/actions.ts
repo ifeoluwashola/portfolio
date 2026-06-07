@@ -689,6 +689,7 @@ export async function getStudentProfile() {
     display_name?: string;
     preferences?: any;
     pending_email?: string;
+    role?: string;
   };
 }
 
@@ -762,3 +763,86 @@ export async function searchStudents(query: string) {
   if (result.error) return [];
   return result.data || [];
 }
+
+// ─── War Room Discussion Forum Server Actions ────────────────────────────────
+
+export async function getThreads(category: string, search: string, limit = 10, offset = 0) {
+  let url = `/v1/threads?limit=${limit}&offset=${offset}`;
+  if (category && category !== "All") {
+    url += `&category=${encodeURIComponent(category)}`;
+  }
+  if (search) {
+    url += `&search=${encodeURIComponent(search)}`;
+  }
+  const result = await academyFetch(url);
+  if (result.error) return { error: result.error, data: [] };
+  return { data: result.data || [] };
+}
+
+export async function createThread(title: string, content: string, category: string) {
+  const result = await academyFetch("/v1/threads", {
+    method: "POST",
+    body: JSON.stringify({ title, content, category }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true, data: result.data };
+}
+
+export async function getThread(id: string) {
+  const result = await academyFetch(`/v1/threads/${id}`);
+  if (result.error) return { error: result.error };
+  return { data: result.data };
+}
+
+export async function createReply(threadId: string, content: string) {
+  const result = await academyFetch(`/v1/threads/${threadId}/replies`, {
+    method: "POST",
+    body: JSON.stringify({ content }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true, data: result.data };
+}
+
+export async function endorseReply(replyId: string) {
+  const result = await academyFetch(`/v1/replies/${replyId}/endorse`, {
+    method: "PUT",
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
+export async function updateThread(threadId: string, title: string, content: string, category: string) {
+  const result = await academyFetch(`/v1/threads/${threadId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ title, content, category }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true, data: result.data };
+}
+
+export async function updateReply(replyId: string, content: string) {
+  const result = await academyFetch(`/v1/replies/${replyId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ content }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true, data: result.data };
+}
+
+export async function toggleThreadLike(threadId: string) {
+  const result = await academyFetch(`/v1/threads/${threadId}/like`, {
+    method: "POST",
+  });
+  if (result.error) return { error: result.error };
+  return { success: true, data: result.data };
+}
+
+export async function toggleReplyLike(replyId: string) {
+  const result = await academyFetch(`/v1/replies/${replyId}/like`, {
+    method: "POST",
+  });
+  if (result.error) return { error: result.error };
+  return { success: true, data: result.data };
+}
+
+

@@ -66,6 +66,7 @@ type Student struct {
 	PendingEmail           *string    `json:"pending_email,omitempty"`
 	EmailVerifyToken       *string    `json:"-"`
 	CreatedAt              time.Time  `json:"created_at"`
+	Role                   string     `json:"role"`
 }
 
 type StudentProfileRequest struct {
@@ -87,6 +88,67 @@ type RequestEmailChangeRequest struct {
 
 type ConfirmEmailChangeRequest struct {
 	Token string `json:"token"`
+}
+
+// ─── War Room (Discussion Forum) Domain ────────────────────────────────────────
+
+type Thread struct {
+	ID         uuid.UUID `json:"id"`
+	AuthorID   uuid.UUID `json:"author_id"`
+	Title      string    `json:"title"`
+	Content    string    `json:"content"`
+	Category   string    `json:"category"` // Learning, Question, Debugging
+	IsResolved bool      `json:"is_resolved"`
+	CreatedAt  time.Time `json:"created_at"`
+
+	// Joined Author Details
+	AuthorName      string  `json:"author_name,omitempty"`
+	AuthorAvatarKey *string `json:"author_avatar_key,omitempty"`
+	AuthorRole      string  `json:"author_role,omitempty"`
+	CohortName      string  `json:"cohort_name,omitempty"`
+
+	// Aggregated Counts
+	ReplyCount int  `json:"reply_count"`
+	LikeCount  int  `json:"like_count"`
+	IsLiked    bool `json:"is_liked"`
+}
+
+type Reply struct {
+	ID                   uuid.UUID `json:"id"`
+	ThreadID             uuid.UUID `json:"thread_id"`
+	AuthorID             uuid.UUID `json:"author_id"`
+	Content              string    `json:"content"`
+	IsInstructorEndorsed bool      `json:"is_instructor_endorsed"`
+	CreatedAt            time.Time `json:"created_at"`
+
+	// Joined Author Details
+	AuthorName      string  `json:"author_name,omitempty"`
+	AuthorAvatarKey *string `json:"author_avatar_key,omitempty"`
+	AuthorRole      string  `json:"author_role,omitempty"`
+	CohortName      string  `json:"cohort_name,omitempty"`
+
+	// Aggregated Counts
+	LikeCount int  `json:"like_count"`
+	IsLiked   bool `json:"is_liked"`
+}
+
+type Reaction struct {
+	ID           uuid.UUID `json:"id"`
+	EntityType   string    `json:"entity_type"` // thread or reply
+	EntityID     uuid.UUID `json:"entity_id"`
+	UserID       uuid.UUID `json:"user_id"`
+	ReactionType string    `json:"reaction_type"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+type CreateThreadRequest struct {
+	Title    string `json:"title"`
+	Content  string `json:"content"`
+	Category string `json:"category"` // Learning, Question, Debugging
+}
+
+type CreateReplyRequest struct {
+	Content string `json:"content"`
 }
 
 // ─── Notifications ─────────────────────────────────────────────────────────────
@@ -217,6 +279,18 @@ type AcademyRepository interface {
 	GetUnreadNotifications(ctx context.Context, userID string) ([]*Notification, error)
 	MarkNotificationRead(ctx context.Context, id uuid.UUID, userID string) error
 	MarkAllNotificationsRead(ctx context.Context, userID string) error
+
+	// War Room Discussion Forum
+	CreateThread(ctx context.Context, thread *Thread) error
+	GetThreads(ctx context.Context, currentStudentID uuid.UUID, category, search string, limit, offset int) ([]*Thread, error)
+	GetThreadByID(ctx context.Context, currentStudentID uuid.UUID, id uuid.UUID) (*Thread, error)
+	UpdateThread(ctx context.Context, thread *Thread) error
+	CreateReply(ctx context.Context, reply *Reply) error
+	GetRepliesByThreadID(ctx context.Context, currentStudentID uuid.UUID, threadID uuid.UUID) ([]*Reply, error)
+	EndorseReply(ctx context.Context, replyID uuid.UUID) error
+	GetReplyByID(ctx context.Context, replyID uuid.UUID) (*Reply, error)
+	UpdateReply(ctx context.Context, reply *Reply) error
+	ToggleLike(ctx context.Context, entityType string, studentID uuid.UUID, entityID uuid.UUID) (bool, int, error)
 }
 
 type AcademyService interface {
@@ -308,6 +382,17 @@ type AcademyService interface {
 	GetUnreadNotifications(ctx context.Context, userID string) ([]*Notification, error)
 	MarkNotificationRead(ctx context.Context, id uuid.UUID, userID string) error
 	MarkAllNotificationsRead(ctx context.Context, userID string) error
+
+	// War Room Discussion Forum
+	CreateThread(ctx context.Context, studentID uuid.UUID, req *CreateThreadRequest) (*Thread, error)
+	GetThreads(ctx context.Context, studentID uuid.UUID, category, search string, limit, offset int) ([]*Thread, error)
+	GetThreadByID(ctx context.Context, studentID uuid.UUID, id uuid.UUID) (*Thread, []*Reply, error)
+	UpdateThread(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID, title, content, category string) (*Thread, error)
+	CreateReply(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID, req *CreateReplyRequest) (*Reply, error)
+	EndorseReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) error
+	UpdateReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID, content string) (*Reply, error)
+	ToggleThreadLike(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID) (bool, int, error)
+	ToggleReplyLike(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) (bool, int, error)
 }
 
 // BillingHubResponse is the aggregate returned by the billing hub endpoint.

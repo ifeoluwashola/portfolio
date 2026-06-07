@@ -9,7 +9,8 @@ import {
   CheckCircle,
   AtSign,
   X,
-  CheckCheck
+  CheckCheck,
+  Heart
 } from "lucide-react";
 import { getUnreadNotifications, markNotificationRead, markAllNotificationsRead } from "@/app/academy/actions";
 
@@ -36,6 +37,8 @@ function getNotifIcon(type: string) {
       return <CheckCircle className="w-4 h-4 text-emerald-500" />;
     case "mention":
       return <AtSign className="w-4 h-4 text-purple-400" />;
+    case "like":
+      return <Heart className="w-4 h-4 text-rose-500 fill-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]" />;
     default:
       return <Bell className="w-4 h-4 text-muted-foreground" />;
   }
@@ -139,7 +142,7 @@ export function NotificationBell() {
 
       {/* Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-background border border-border rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="absolute right-0 sm:-right-2 md:right-0 top-full mt-2 w-[calc(100vw-3rem)] sm:w-96 max-w-[90vw] md:max-w-sm bg-background border border-border rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
           {/* Header */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-muted/30">
             <span className="text-xs font-black uppercase tracking-[0.15em] text-foreground">

@@ -265,6 +265,18 @@ func main() {
 	mux.HandleFunc("PUT /api/v1/notifications/{id}/read", authMW.RequireStudentAuth(academyHandler.HandleMarkNotificationRead))
 	mux.HandleFunc("PUT /api/v1/notifications/read-all", authMW.RequireStudentAuth(academyHandler.HandleMarkAllNotificationsRead))
 
+	// War Room Discussion Forum
+	mux.HandleFunc("GET /api/v1/threads", authMW.RequireStudentAuth(academyHandler.HandleGetThreads))
+	mux.HandleFunc("POST /api/v1/threads", authMW.RequireStudentAuth(academyHandler.HandleCreateThread))
+	mux.HandleFunc("GET /api/v1/threads/{id}", authMW.RequireStudentAuth(academyHandler.HandleGetThread))
+	mux.HandleFunc("PATCH /api/v1/threads/{id}", authMW.RequireStudentAuth(academyHandler.HandleUpdateThread))
+	mux.HandleFunc("POST /api/v1/threads/{id}/like", authMW.RequireStudentAuth(academyHandler.HandleToggleThreadLike))
+	mux.HandleFunc("POST /api/v1/threads/{id}/replies", authMW.RequireStudentAuth(academyHandler.HandleCreateReply))
+	mux.HandleFunc("POST /api/v1/replies/{id}/like", authMW.RequireStudentAuth(academyHandler.HandleToggleReplyLike))
+	mux.HandleFunc("PATCH /api/v1/replies/{id}", authMW.RequireStudentAuth(academyHandler.HandleUpdateReply))
+	mux.HandleFunc("PUT /api/v1/replies/{id}/endorse", authMW.RequireStudentAuth(academyHandler.HandleEndorseReply))
+
+
 	// === ADMIN PROTECTED ROUTES ===
 	// Monitoring & Audit
 	mux.HandleFunc("GET /api/v1/admin/monitoring/metrics", authMW.RequireAuth(monitoringHandler.HandleGetMetrics))

@@ -1708,3 +1708,372 @@ func (h *AcademyHandler) HandleBroadcastEmail(w http.ResponseWriter, r *http.Req
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "success"})
 }
+
+// ─── War Room (Discussion Forum) Handlers ──────────────────────────────────────
+
+func (h *AcademyHandler) HandleGetThreads(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	category := r.URL.Query().Get("category")
+	search := r.URL.Query().Get("search")
+
+	limitStr := r.URL.Query().Get("limit")
+	offsetStr := r.URL.Query().Get("offset")
+
+	limit := 10
+	if limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
+			limit = l
+			if limit > 50 {
+				limit = 50
+			}
+		}
+	}
+
+	offset := 0
+	if offsetStr != "" {
+		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
+			offset = o
+		}
+	}
+
+	threads, err := h.svc.GetThreads(r.Context(), studentID, category, search, limit, offset)
+	if err != nil {
+		RespondWithError(w, r, http.StatusInternalServerError, "Failed to retrieve threads", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(threads)
+}
+
+func (h *AcademyHandler) HandleCreateThread(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	var req domain.CreateThreadRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
+		return
+	}
+
+	thread, err := h.svc.CreateThread(r.Context(), studentID, &req)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(thread)
+}
+
+func (h *AcademyHandler) HandleGetThread(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	idStr := r.PathValue("id")
+	threadID, err := uuid.Parse(idStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid thread ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	thread, replies, err := h.svc.GetThreadByID(r.Context(), studentID, threadID)
+	if err != nil {
+		RespondWithError(w, r, http.StatusNotFound, "Thread not found", err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"thread":  thread,
+		"replies": replies,
+	})
+}
+
+func (h *AcademyHandler) HandleCreateReply(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	threadIDStr := r.PathValue("id")
+	threadID, err := uuid.Parse(threadIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid thread ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	var req domain.CreateReplyRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
+		return
+	}
+
+	reply, err := h.svc.CreateReply(r.Context(), studentID, threadID, &req)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(reply)
+}
+
+func (h *AcademyHandler) HandleEndorseReply(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPut {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	replyIDStr := r.PathValue("id")
+	replyID, err := uuid.Parse(replyIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid reply ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	err = h.svc.EndorseReply(r.Context(), studentID, replyID)
+	if err != nil {
+		// Handled as 403 Forbidden or 400 Bad Request depending on exact failure
+		RespondWithError(w, r, http.StatusForbidden, err.Error(), err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Reply verified successfully"})
+}
+
+func (h *AcademyHandler) HandleUpdateThread(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	threadIDStr := r.PathValue("id")
+	threadID, err := uuid.Parse(threadIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid thread ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	var req struct {
+		Title    string `json:"title"`
+		Content  string `json:"content"`
+		Category string `json:"category"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
+		return
+	}
+
+	thread, err := h.svc.UpdateThread(r.Context(), studentID, threadID, req.Title, req.Content, req.Category)
+	if err != nil {
+		if err.Error() == "unauthorized: you can only edit your own threads" {
+			RespondWithError(w, r, http.StatusForbidden, err.Error(), err)
+		} else {
+			RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(thread)
+}
+
+func (h *AcademyHandler) HandleUpdateReply(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPatch {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	replyIDStr := r.PathValue("id")
+	replyID, err := uuid.Parse(replyIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid reply ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	var req struct {
+		Content string `json:"content"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
+		return
+	}
+
+	reply, err := h.svc.UpdateReply(r.Context(), studentID, replyID, req.Content)
+	if err != nil {
+		if err.Error() == "unauthorized: you can only edit your own replies" {
+			RespondWithError(w, r, http.StatusForbidden, err.Error(), err)
+		} else {
+			RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
+		}
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(reply)
+}
+
+func (h *AcademyHandler) HandleToggleThreadLike(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	threadIDStr := r.PathValue("id")
+	threadID, err := uuid.Parse(threadIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid thread ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	liked, likeCount, err := h.svc.ToggleThreadLike(r.Context(), studentID, threadID)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"liked":      liked,
+		"like_count": likeCount,
+	})
+}
+
+func (h *AcademyHandler) HandleToggleReplyLike(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	replyIDStr := r.PathValue("id")
+	replyID, err := uuid.Parse(replyIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid reply ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	liked, likeCount, err := h.svc.ToggleReplyLike(r.Context(), studentID, replyID)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"liked":      liked,
+		"like_count": likeCount,
+	})
+}
+
+

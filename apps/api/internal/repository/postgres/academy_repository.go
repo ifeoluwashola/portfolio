@@ -131,7 +131,7 @@ func (r *AcademyRepository) GetAdminCohortApplications(ctx context.Context) ([]*
 
 func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at, role
 		FROM students WHERE email = $1
 	`
 	student := &domain.Student{}
@@ -141,7 +141,7 @@ func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string)
 		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID,
 		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio, 
 		&student.Username, &student.DisplayName, &student.Preferences, &student.PendingEmail, &student.EmailVerifyToken,
-		&student.CreatedAt,
+		&student.CreatedAt, &student.Role,
 	)
 	if err != nil {
 		return nil, err
@@ -172,7 +172,7 @@ func (r *AcademyRepository) GetStudentByEmail(ctx context.Context, email string)
 
 func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at, role
 		FROM students WHERE id = $1
 	`
 	student := &domain.Student{}
@@ -182,7 +182,7 @@ func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*
 		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID,
 		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio,
 		&student.Username, &student.DisplayName, &student.Preferences, &student.PendingEmail, &student.EmailVerifyToken,
-		&student.CreatedAt,
+		&student.CreatedAt, &student.Role,
 	)
 	if err != nil {
 		return nil, err
@@ -212,10 +212,14 @@ func (r *AcademyRepository) GetStudentByID(ctx context.Context, id uuid.UUID) (*
 
 func (r *AcademyRepository) CreateStudent(ctx context.Context, student *domain.Student) error {
 	query := `
-		INSERT INTO students (id, first_name, last_name, email, password_hash, is_first_login, username, cohort_id, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO students (id, first_name, last_name, email, password_hash, is_first_login, username, cohort_id, created_at, role)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 	`
-	_, err := r.db.Exec(ctx, query, student.ID, student.FirstName, student.LastName, student.Email, student.PasswordHash, student.IsFirstLogin, student.Username, student.CohortID, student.CreatedAt)
+	role := student.Role
+	if role == "" {
+		role = "student"
+	}
+	_, err := r.db.Exec(ctx, query, student.ID, student.FirstName, student.LastName, student.Email, student.PasswordHash, student.IsFirstLogin, student.Username, student.CohortID, student.CreatedAt, role)
 	return err
 }
 
@@ -241,14 +245,14 @@ func (r *AcademyRepository) SetStudentResetToken(ctx context.Context, email, tok
 
 func (r *AcademyRepository) GetStudentByResetToken(ctx context.Context, token string) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, reset_token, reset_token_expires_at, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, reset_token, reset_token_expires_at, created_at, role
 		FROM students WHERE reset_token = $1
 	`
 	student := &domain.Student{}
 	err := r.db.QueryRow(ctx, query, token).Scan(
 		&student.ID, &student.FirstName, &student.LastName, &student.Email,
 		&student.PasswordHash, &student.IsFirstLogin, &student.Status, &student.WarningCount,
-		&student.DisqualificationReason, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt,
+		&student.DisqualificationReason, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CreatedAt, &student.Role,
 	)
 	if err != nil {
 		return nil, err
@@ -1204,7 +1208,7 @@ func (r *AcademyRepository) GetStudentsByIDs(ctx context.Context, ids []uuid.UUI
 		return []*domain.Student{}, nil
 	}
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, created_at, role
 		FROM students WHERE id = ANY($1)
 	`
 	rows, err := r.db.Query(ctx, query, ids)
@@ -1218,7 +1222,7 @@ func (r *AcademyRepository) GetStudentsByIDs(ctx context.Context, ids []uuid.UUI
 		s := &domain.Student{}
 		err := rows.Scan(
 			&s.ID, &s.FirstName, &s.LastName, &s.Email, &s.PasswordHash, &s.IsFirstLogin,
-			&s.Status, &s.WarningCount, &s.DisqualificationReason, &s.IsManuallyLocked, &s.ResetToken, &s.ResetTokenExpiresAt, &s.CreatedAt,
+			&s.Status, &s.WarningCount, &s.DisqualificationReason, &s.IsManuallyLocked, &s.ResetToken, &s.ResetTokenExpiresAt, &s.CreatedAt, &s.Role,
 		)
 		if err != nil {
 			return nil, err
@@ -1416,7 +1420,7 @@ func (r *AcademyRepository) ConfirmPendingEmail(ctx context.Context, id uuid.UUI
 
 func (r *AcademyRepository) GetStudentByUsername(ctx context.Context, username string) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at, role
 		FROM students WHERE username = $1
 	`
 	student := &domain.Student{}
@@ -1426,14 +1430,14 @@ func (r *AcademyRepository) GetStudentByUsername(ctx context.Context, username s
 		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID,
 		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio, 
 		&student.Username, &student.DisplayName, &student.Preferences, &student.PendingEmail, &student.EmailVerifyToken, 
-		&student.CreatedAt,
+		&student.CreatedAt, &student.Role,
 	)
 	return student, err
 }
 
 func (r *AcademyRepository) GetStudentByEmailVerifyToken(ctx context.Context, token string) (*domain.Student, error) {
 	query := `
-		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at
+		SELECT id, first_name, last_name, email, password_hash, is_first_login, status, warning_count, disqualification_reason, is_manually_locked, reset_token, reset_token_expires_at, cohort_id, avatar_s3_key, linkedin_url, github_url, bio, username, display_name, preferences, pending_email, email_verify_token, created_at, role
 		FROM students WHERE email_verify_token = $1
 	`
 	student := &domain.Student{}
@@ -1443,7 +1447,7 @@ func (r *AcademyRepository) GetStudentByEmailVerifyToken(ctx context.Context, to
 		&student.DisqualificationReason, &student.IsManuallyLocked, &student.ResetToken, &student.ResetTokenExpiresAt, &student.CohortID,
 		&student.AvatarS3Key, &student.LinkedInURL, &student.GitHubURL, &student.Bio, 
 		&student.Username, &student.DisplayName, &student.Preferences, &student.PendingEmail, &student.EmailVerifyToken, 
-		&student.CreatedAt,
+		&student.CreatedAt, &student.Role,
 	)
 	return student, err
 }
@@ -1595,3 +1599,237 @@ func (r *AcademyRepository) GetStudentsByCohort(ctx context.Context, cohortID in
 	}
 	return students, nil
 }
+
+// ─── War Room Discussion Forum Repository Methods ────────────────────────────
+
+func (r *AcademyRepository) CreateThread(ctx context.Context, thread *domain.Thread) error {
+	query := `
+		INSERT INTO threads (id, author_id, title, content, category, is_resolved, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`
+	_, err := r.db.Exec(ctx, query, thread.ID, thread.AuthorID, thread.Title, thread.Content, thread.Category, thread.IsResolved, thread.CreatedAt)
+	return err
+}
+
+func (r *AcademyRepository) GetThreads(ctx context.Context, currentStudentID uuid.UUID, category, search string, limit, offset int) ([]*domain.Thread, error) {
+	var query string
+	var args []interface{}
+	args = append(args, currentStudentID)
+	argIndex := 2
+
+	query = `
+		SELECT t.id, t.author_id, t.title, t.content, t.category, t.is_resolved, t.created_at,
+		       COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as author_name,
+		       s.avatar_s3_key, s.role as author_role, c.name as cohort_name,
+		       (SELECT COUNT(*) FROM replies WHERE thread_id = t.id) as reply_count,
+		       (SELECT COUNT(*) FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND reaction_type = 'like') as like_count,
+		       EXISTS(SELECT 1 FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND user_id = $1 AND reaction_type = 'like') as is_liked
+		FROM threads t
+		JOIN students s ON t.author_id = s.id
+		JOIN cohorts c ON s.cohort_id = c.id
+		WHERE 1=1
+	`
+
+	if category != "" {
+		query += fmt.Sprintf(" AND t.category = $%d", argIndex)
+		args = append(args, category)
+		argIndex++
+	}
+
+	if search != "" {
+		query += fmt.Sprintf(" AND (to_tsvector('english', t.title) @@ plainto_tsquery('english', $%d) OR t.content ILIKE $%d)", argIndex, argIndex+1)
+		args = append(args, search, "%"+search+"%")
+		argIndex += 2
+	}
+
+	query += fmt.Sprintf(" ORDER BY t.created_at DESC LIMIT $%d OFFSET $%d", argIndex, argIndex+1)
+	args = append(args, limit, offset)
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var threads []*domain.Thread
+	for rows.Next() {
+		t := &domain.Thread{}
+		err := rows.Scan(
+			&t.ID, &t.AuthorID, &t.Title, &t.Content, &t.Category, &t.IsResolved, &t.CreatedAt,
+			&t.AuthorName, &t.AuthorAvatarKey, &t.AuthorRole, &t.CohortName, &t.ReplyCount,
+			&t.LikeCount, &t.IsLiked,
+		)
+		if err != nil {
+			return nil, err
+		}
+		threads = append(threads, t)
+	}
+	if threads == nil {
+		threads = []*domain.Thread{}
+	}
+	return threads, nil
+}
+
+func (r *AcademyRepository) GetThreadByID(ctx context.Context, currentStudentID uuid.UUID, id uuid.UUID) (*domain.Thread, error) {
+	query := `
+		SELECT t.id, t.author_id, t.title, t.content, t.category, t.is_resolved, t.created_at,
+		       COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as author_name,
+		       s.avatar_s3_key, s.role as author_role, c.name as cohort_name,
+		       (SELECT COUNT(*) FROM replies WHERE thread_id = t.id) as reply_count,
+		       (SELECT COUNT(*) FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND reaction_type = 'like') as like_count,
+		       EXISTS(SELECT 1 FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND user_id = $1 AND reaction_type = 'like') as is_liked
+		FROM threads t
+		JOIN students s ON t.author_id = s.id
+		JOIN cohorts c ON s.cohort_id = c.id
+		WHERE t.id = $2
+	`
+	t := &domain.Thread{}
+	err := r.db.QueryRow(ctx, query, currentStudentID, id).Scan(
+		&t.ID, &t.AuthorID, &t.Title, &t.Content, &t.Category, &t.IsResolved, &t.CreatedAt,
+		&t.AuthorName, &t.AuthorAvatarKey, &t.AuthorRole, &t.CohortName, &t.ReplyCount,
+		&t.LikeCount, &t.IsLiked,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+func (r *AcademyRepository) UpdateThread(ctx context.Context, thread *domain.Thread) error {
+	query := `
+		UPDATE threads
+		SET title = $1, content = $2, category = $3
+		WHERE id = $4
+	`
+	_, err := r.db.Exec(ctx, query, thread.Title, thread.Content, thread.Category, thread.ID)
+	return err
+}
+
+
+func (r *AcademyRepository) CreateReply(ctx context.Context, reply *domain.Reply) error {
+	query := `
+		INSERT INTO replies (id, thread_id, author_id, content, is_instructor_endorsed, created_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`
+	_, err := r.db.Exec(ctx, query, reply.ID, reply.ThreadID, reply.AuthorID, reply.Content, reply.IsInstructorEndorsed, reply.CreatedAt)
+	return err
+}
+
+func (r *AcademyRepository) GetRepliesByThreadID(ctx context.Context, currentStudentID uuid.UUID, threadID uuid.UUID) ([]*domain.Reply, error) {
+	query := `
+		SELECT rp.id, rp.thread_id, rp.author_id, rp.content, rp.is_instructor_endorsed, rp.created_at,
+		       COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as author_name,
+		       s.avatar_s3_key, s.role as author_role, c.name as cohort_name,
+		       (SELECT COUNT(*) FROM reactions WHERE entity_type = 'reply' AND entity_id = rp.id AND reaction_type = 'like') as like_count,
+		       EXISTS(SELECT 1 FROM reactions WHERE entity_type = 'reply' AND entity_id = rp.id AND user_id = $1 AND reaction_type = 'like') as is_liked
+		FROM replies rp
+		JOIN students s ON rp.author_id = s.id
+		JOIN cohorts c ON s.cohort_id = c.id
+		WHERE rp.thread_id = $2
+		ORDER BY rp.created_at ASC
+	`
+	rows, err := r.db.Query(ctx, query, currentStudentID, threadID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var replies []*domain.Reply
+	for rows.Next() {
+		rp := &domain.Reply{}
+		err := rows.Scan(
+			&rp.ID, &rp.ThreadID, &rp.AuthorID, &rp.Content, &rp.IsInstructorEndorsed, &rp.CreatedAt,
+			&rp.AuthorName, &rp.AuthorAvatarKey, &rp.AuthorRole, &rp.CohortName,
+			&rp.LikeCount, &rp.IsLiked,
+		)
+		if err != nil {
+			return nil, err
+		}
+		replies = append(replies, rp)
+	}
+	if replies == nil {
+		replies = []*domain.Reply{}
+	}
+	return replies, nil
+}
+
+func (r *AcademyRepository) EndorseReply(ctx context.Context, replyID uuid.UUID) error {
+	query := `UPDATE replies SET is_instructor_endorsed = true WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, replyID)
+	return err
+}
+
+func (r *AcademyRepository) GetReplyByID(ctx context.Context, replyID uuid.UUID) (*domain.Reply, error) {
+	query := `
+		SELECT id, thread_id, author_id, content, is_instructor_endorsed, created_at
+		FROM replies WHERE id = $1
+	`
+	rp := &domain.Reply{}
+	err := r.db.QueryRow(ctx, query, replyID).Scan(&rp.ID, &rp.ThreadID, &rp.AuthorID, &rp.Content, &rp.IsInstructorEndorsed, &rp.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return rp, nil
+}
+
+func (r *AcademyRepository) UpdateReply(ctx context.Context, reply *domain.Reply) error {
+	query := `
+		UPDATE replies
+		SET content = $1
+		WHERE id = $2
+	`
+	_, err := r.db.Exec(ctx, query, reply.Content, reply.ID)
+	return err
+}
+
+func (r *AcademyRepository) ToggleLike(ctx context.Context, entityType string, studentID uuid.UUID, entityID uuid.UUID) (bool, int, error) {
+	// Check if like exists
+	var exists bool
+	err := r.db.QueryRow(ctx, 
+		`SELECT EXISTS(SELECT 1 FROM reactions WHERE entity_type = $1 AND entity_id = $2 AND user_id = $3 AND reaction_type = 'like')`, 
+		entityType, entityID, studentID).Scan(&exists)
+	if err != nil {
+		return false, 0, err
+	}
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return false, 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	if exists {
+		// Unlike: delete row
+		_, err = tx.Exec(ctx, 
+			`DELETE FROM reactions WHERE entity_type = $1 AND entity_id = $2 AND user_id = $3 AND reaction_type = 'like'`, 
+			entityType, entityID, studentID)
+		if err != nil {
+			return false, 0, err
+		}
+	} else {
+		// Like: insert row
+		_, err = tx.Exec(ctx, 
+			`INSERT INTO reactions (id, entity_type, entity_id, user_id, reaction_type) VALUES ($1, $2, $3, $4, 'like')`, 
+			uuid.New(), entityType, entityID, studentID)
+		if err != nil {
+			return false, 0, err
+		}
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return false, 0, err
+	}
+
+	// Get updated like count
+	var likeCount int
+	err = r.db.QueryRow(ctx, 
+		`SELECT COUNT(*) FROM reactions WHERE entity_type = $1 AND entity_id = $2 AND reaction_type = 'like'`, 
+		entityType, entityID).Scan(&likeCount)
+	if err != nil {
+		return false, 0, err
+	}
+
+	return !exists, likeCount, nil
+}
+

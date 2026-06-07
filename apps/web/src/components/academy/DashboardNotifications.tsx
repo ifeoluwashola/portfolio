@@ -10,7 +10,8 @@ import {
   AtSign,
   CheckCheck,
   Zap,
-  ArrowRight
+  ArrowRight,
+  Heart
 } from "lucide-react";
 import { getUnreadNotifications, markNotificationRead, markAllNotificationsRead } from "@/app/academy/actions";
 
@@ -37,6 +38,8 @@ function getNotifIcon(type: string) {
       return <CheckCircle className="w-4 h-4 text-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.3)]" />;
     case "mention":
       return <AtSign className="w-4 h-4 text-purple-400 shadow-[0_0_10px_rgba(192,132,252,0.3)]" />;
+    case "like":
+      return <Heart className="w-4 h-4 text-rose-500 fill-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.3)]" />;
     default:
       return <Bell className="w-4 h-4 text-muted-foreground" />;
   }
