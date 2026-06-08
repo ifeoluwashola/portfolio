@@ -270,10 +270,12 @@ func main() {
 	mux.HandleFunc("POST /api/v1/threads", authMW.RequireStudentAuth(academyHandler.HandleCreateThread))
 	mux.HandleFunc("GET /api/v1/threads/{id}", authMW.RequireStudentAuth(academyHandler.HandleGetThread))
 	mux.HandleFunc("PATCH /api/v1/threads/{id}", authMW.RequireStudentAuth(academyHandler.HandleUpdateThread))
-	mux.HandleFunc("POST /api/v1/threads/{id}/like", authMW.RequireStudentAuth(academyHandler.HandleToggleThreadLike))
+	mux.HandleFunc("DELETE /api/v1/threads/{id}", authMW.RequireStudentAuth(academyHandler.HandleDeleteThread))
+	mux.HandleFunc("POST /api/v1/threads/{id}/reactions", authMW.RequireStudentAuth(academyHandler.HandleToggleThreadReaction))
 	mux.HandleFunc("POST /api/v1/threads/{id}/replies", authMW.RequireStudentAuth(academyHandler.HandleCreateReply))
-	mux.HandleFunc("POST /api/v1/replies/{id}/like", authMW.RequireStudentAuth(academyHandler.HandleToggleReplyLike))
+	mux.HandleFunc("POST /api/v1/replies/{id}/reactions", authMW.RequireStudentAuth(academyHandler.HandleToggleReplyReaction))
 	mux.HandleFunc("PATCH /api/v1/replies/{id}", authMW.RequireStudentAuth(academyHandler.HandleUpdateReply))
+	mux.HandleFunc("DELETE /api/v1/replies/{id}", authMW.RequireStudentAuth(academyHandler.HandleDeleteReply))
 	mux.HandleFunc("PUT /api/v1/replies/{id}/endorse", authMW.RequireStudentAuth(academyHandler.HandleEndorseReply))
 
 

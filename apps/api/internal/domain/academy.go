@@ -108,9 +108,10 @@ type Thread struct {
 	CohortName      string  `json:"cohort_name,omitempty"`
 
 	// Aggregated Counts
-	ReplyCount int  `json:"reply_count"`
-	LikeCount  int  `json:"like_count"`
-	IsLiked    bool `json:"is_liked"`
+	ReplyCount     int            `json:"reply_count"`
+	ReactionCounts map[string]int `json:"reaction_counts"`
+	UserReactions  []string       `json:"user_reactions"`
+	MediaUrls      []string       `json:"media_urls"`
 }
 
 type Reply struct {
@@ -128,8 +129,9 @@ type Reply struct {
 	CohortName      string  `json:"cohort_name,omitempty"`
 
 	// Aggregated Counts
-	LikeCount int  `json:"like_count"`
-	IsLiked   bool `json:"is_liked"`
+	ReactionCounts map[string]int `json:"reaction_counts"`
+	UserReactions  []string       `json:"user_reactions"`
+	MediaUrls      []string       `json:"media_urls"`
 }
 
 type Reaction struct {
@@ -142,13 +144,15 @@ type Reaction struct {
 }
 
 type CreateThreadRequest struct {
-	Title    string `json:"title"`
-	Content  string `json:"content"`
-	Category string `json:"category"` // Learning, Question, Debugging
+	Title     string   `json:"title"`
+	Content   string   `json:"content"`
+	Category  string   `json:"category"` // Learning, Question, Debugging
+	MediaUrls []string `json:"media_urls"`
 }
 
 type CreateReplyRequest struct {
-	Content string `json:"content"`
+	Content   string   `json:"content"`
+	MediaUrls []string `json:"media_urls"`
 }
 
 // ─── Notifications ─────────────────────────────────────────────────────────────
@@ -285,12 +289,14 @@ type AcademyRepository interface {
 	GetThreads(ctx context.Context, currentStudentID uuid.UUID, category, search string, limit, offset int) ([]*Thread, error)
 	GetThreadByID(ctx context.Context, currentStudentID uuid.UUID, id uuid.UUID) (*Thread, error)
 	UpdateThread(ctx context.Context, thread *Thread) error
+	DeleteThread(ctx context.Context, threadID uuid.UUID) error
 	CreateReply(ctx context.Context, reply *Reply) error
 	GetRepliesByThreadID(ctx context.Context, currentStudentID uuid.UUID, threadID uuid.UUID) ([]*Reply, error)
 	EndorseReply(ctx context.Context, replyID uuid.UUID) error
 	GetReplyByID(ctx context.Context, replyID uuid.UUID) (*Reply, error)
 	UpdateReply(ctx context.Context, reply *Reply) error
-	ToggleLike(ctx context.Context, entityType string, studentID uuid.UUID, entityID uuid.UUID) (bool, int, error)
+	DeleteReply(ctx context.Context, replyID uuid.UUID) error
+	ToggleReaction(ctx context.Context, entityType string, entityID uuid.UUID, studentID uuid.UUID, reactionType string) (bool, map[string]int, error)
 }
 
 type AcademyService interface {
@@ -388,13 +394,14 @@ type AcademyService interface {
 	GetThreads(ctx context.Context, studentID uuid.UUID, category, search string, limit, offset int) ([]*Thread, error)
 	GetThreadByID(ctx context.Context, studentID uuid.UUID, id uuid.UUID) (*Thread, []*Reply, error)
 	UpdateThread(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID, title, content, category string) (*Thread, error)
+	DeleteThread(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID) error
 	CreateReply(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID, req *CreateReplyRequest) (*Reply, error)
 	EndorseReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) error
 	UpdateReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID, content string) (*Reply, error)
-	ToggleThreadLike(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID) (bool, int, error)
-	ToggleReplyLike(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) (bool, int, error)
+	DeleteReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) error
+	ToggleThreadReaction(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID, reactionType string) (bool, map[string]int, error)
+	ToggleReplyReaction(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID, reactionType string) (bool, map[string]int, error)
 }
-
 // BillingHubResponse is the aggregate returned by the billing hub endpoint.
 // It bundles billing state + full payment ledger in one round-trip.
 type BillingHubResponse struct {

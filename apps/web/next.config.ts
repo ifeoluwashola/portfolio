@@ -16,7 +16,7 @@ const nextConfig: NextConfig = {
         headers: [
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self' https://www.kyberncloud.com https://kyberncloud.com http://localhost:3000; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://va.vercel-scripts.com https://apis.google.com https://meet.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: https:; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://drive.google.com https://accounts.google.com https://*.amazonaws.com; connect-src 'self' http://localhost:8080 https://*.vercel-analytics.com https://vitals.vercel-insights.com https://*.google.com https://api.paystack.co https://api.resend.com https://api.github.com https://api.kyberncloud.com https://*.amazonaws.com;",
+            value: "default-src 'self' https://www.kyberncloud.com https://kyberncloud.com http://localhost:3000; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://va.vercel-scripts.com https://apis.google.com https://meet.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; media-src 'self' https:; font-src 'self' https://fonts.gstatic.com; frame-src 'self' https://drive.google.com https://accounts.google.com https://*.amazonaws.com; connect-src 'self' http://localhost:8080 https://*.vercel-analytics.com https://vitals.vercel-insights.com https://*.google.com https://api.paystack.co https://api.resend.com https://api.github.com https://api.kyberncloud.com https://*.amazonaws.com;",
           },
           {
             key: 'X-Frame-Options',
