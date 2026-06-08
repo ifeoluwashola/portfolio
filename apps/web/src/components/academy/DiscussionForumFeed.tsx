@@ -131,6 +131,7 @@ export function DiscussionForumFeed() {
 
   // Emoji picker state
   const [openEmojiPickerId, setOpenEmojiPickerId] = useState<string | null>(null);
+  const [fullscreenMediaUrl, setFullscreenMediaUrl] = useState<string | null>(null);
 
   const fetchThreads = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -503,20 +504,31 @@ export function DiscussionForumFeed() {
 
                           {/* Media Preview in Feed */}
                           {thread.media_urls && thread.media_urls.length > 0 && (
-                            <div className="flex items-center gap-2 mt-2">
+                            <div className="flex flex-wrap items-center gap-3 mt-4">
                               {thread.media_urls.slice(0, 3).map((key) => {
                                 const url = mediaDownloadUrls[key];
-                                if (!url) return <div key={key} className="w-10 h-10 bg-slate-900 rounded-lg animate-pulse" />;
+                                if (!url) return <div key={key} className="h-32 w-32 bg-slate-900 rounded-xl animate-pulse border border-white/5" />;
                                 if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
-                                  return <img key={key} src={url} alt="Attachment" className="w-10 h-10 object-cover rounded-lg border border-white/10" />;
+                                  return (
+                                    <img 
+                                      key={key} 
+                                      src={url} 
+                                      alt="Attachment" 
+                                      className="h-32 sm:h-48 w-auto object-contain bg-slate-950 rounded-xl border border-white/10 cursor-zoom-in" 
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        setFullscreenMediaUrl(url);
+                                      }}
+                                    />
+                                  );
                                 } else if (key.match(/\.(mp4|mov|webm)$/i)) {
-                                  return <div key={key} className="w-10 h-10 bg-slate-900 rounded-lg border border-white/10 flex items-center justify-center"><FileIcon className="w-4 h-4 text-emerald-400" /></div>;
+                                  return <div key={key} className="h-32 w-48 bg-slate-950 rounded-xl border border-white/10 flex flex-col items-center justify-center gap-2"><FileIcon className="w-6 h-6 text-emerald-400" /><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Video</span></div>;
                                 } else {
-                                  return <div key={key} className="w-10 h-10 bg-slate-900 rounded-lg border border-white/10 flex items-center justify-center"><FileIcon className="w-4 h-4 text-yellow-400" /></div>;
+                                  return <div key={key} className="h-32 w-48 bg-slate-950 rounded-xl border border-white/10 flex flex-col items-center justify-center gap-2"><FileIcon className="w-6 h-6 text-yellow-400" /><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">File</span></div>;
                                 }
                               })}
                               {thread.media_urls.length > 3 && (
-                                <div className="text-[10px] text-slate-500 font-bold">+{thread.media_urls.length - 3} more</div>
+                                <div className="flex items-center justify-center h-32 px-6 bg-slate-950 rounded-xl border border-white/10 text-xs text-slate-500 font-bold">+{thread.media_urls.length - 3} more</div>
                               )}
                             </div>
                           )}
@@ -819,6 +831,26 @@ export function DiscussionForumFeed() {
         </div>
       ) : null}
       </div>
+      {/* Fullscreen Media Modal */}
+      {fullscreenMediaUrl && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setFullscreenMediaUrl(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white"
+            onClick={() => setFullscreenMediaUrl(null)}
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img 
+            src={fullscreenMediaUrl} 
+            alt="Fullscreen preview" 
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </>
   );
 }
