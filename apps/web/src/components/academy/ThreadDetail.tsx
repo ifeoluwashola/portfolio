@@ -403,9 +403,6 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
         onConfirm={alertConfig.onConfirm}
       />
       <div className={`font-mono ${isDrawer ? "space-y-6 p-4 pb-32" : "space-y-8 max-w-5xl mx-auto px-4 pb-16"}`}>
-      {/* Stylesheet for Highlight.js code blocks */}
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
-
       {/* Back to feed */}
       {!isDrawer && (
         <div>
@@ -557,7 +554,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
 
             {/* Thread Content in Markdown */}
             <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-slate-300 leading-relaxed
-              prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:hidden prose-code:after:hidden
+              [&_code:not(pre_code)]:text-yellow-400 [&_code:not(pre_code)]:bg-yellow-400/10 [&_code:not(pre_code)]:px-1.5 [&_code:not(pre_code)]:py-0.5 [&_code:not(pre_code)]:rounded [&_code:not(pre_code)]:text-xs [&_code:not(pre_code)]:font-mono prose-code:before:hidden prose-code:after:hidden
               prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:max-w-[calc(100vw-4rem)] md:prose-pre:max-w-full prose-pre:overflow-x-auto
               prose-headings:text-white prose-headings:font-bold prose-headings:uppercase
             ">
@@ -759,7 +756,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
 
                 {/* Reply Content in Markdown */}
                 <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-slate-300 leading-relaxed
-                  prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:hidden prose-code:after:hidden
+                  [&_code:not(pre_code)]:text-yellow-400 [&_code:not(pre_code)]:bg-yellow-400/10 [&_code:not(pre_code)]:px-1.5 [&_code:not(pre_code)]:py-0.5 [&_code:not(pre_code)]:rounded [&_code:not(pre_code)]:text-xs [&_code:not(pre_code)]:font-mono prose-code:before:hidden prose-code:after:hidden
                   prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:max-w-[calc(100vw-4rem)] md:prose-pre:max-w-full prose-pre:overflow-x-auto
                   prose-headings:text-white prose-headings:font-bold prose-headings:uppercase
                 ">
