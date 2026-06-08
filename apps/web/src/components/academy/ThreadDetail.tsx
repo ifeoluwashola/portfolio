@@ -101,6 +101,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
   // Avatars & Media cache
   const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
   const [mediaDownloadUrls, setMediaDownloadUrls] = useState<Record<string, string>>({});
+  const [fullscreenMediaUrl, setFullscreenMediaUrl] = useState<string | null>(null);
 
   const fetchData = async () => {
     try {
@@ -577,7 +578,13 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                       );
                     } else if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
                       return (
-                        <img key={key} src={downloadUrl} alt="Attachment" className="max-h-64 rounded-xl border border-white/10 object-contain" />
+                        <img 
+                          key={key} 
+                          src={downloadUrl} 
+                          alt="Attachment" 
+                          className="max-h-64 rounded-xl border border-white/10 object-contain cursor-zoom-in hover:opacity-90 transition-opacity" 
+                          onClick={() => setFullscreenMediaUrl(downloadUrl)}
+                        />
                       );
                     } else {
                       return (
@@ -779,7 +786,13 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                           );
                         } else if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
                           return (
-                            <img key={key} src={downloadUrl} alt="Attachment" className="max-h-64 rounded-xl border border-white/10 object-contain" />
+                            <img 
+                              key={key} 
+                              src={downloadUrl} 
+                              alt="Attachment" 
+                              className="max-h-64 rounded-xl border border-white/10 object-contain cursor-zoom-in hover:opacity-90 transition-opacity" 
+                              onClick={() => setFullscreenMediaUrl(downloadUrl)}
+                            />
                           );
                         } else {
                           return (
@@ -966,6 +979,26 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
           </button>
         </div>
       </form>
+      {/* Fullscreen Media Modal */}
+      {fullscreenMediaUrl && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setFullscreenMediaUrl(null)}
+        >
+          <button 
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white"
+            onClick={() => setFullscreenMediaUrl(null)}
+          >
+            <X className="w-6 h-6" />
+          </button>
+          <img 
+            src={fullscreenMediaUrl} 
+            alt="Fullscreen preview" 
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
     </>
   );
