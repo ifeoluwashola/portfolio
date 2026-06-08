@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -1604,10 +1605,14 @@ func (r *AcademyRepository) GetStudentsByCohort(ctx context.Context, cohortID in
 
 func (r *AcademyRepository) CreateThread(ctx context.Context, thread *domain.Thread) error {
 	query := `
-		INSERT INTO threads (id, author_id, title, content, category, is_resolved, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO threads (id, author_id, title, content, category, is_resolved, created_at, media_urls)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 	`
-	_, err := r.db.Exec(ctx, query, thread.ID, thread.AuthorID, thread.Title, thread.Content, thread.Category, thread.IsResolved, thread.CreatedAt)
+	mediaUrlsJSON, _ := json.Marshal(thread.MediaUrls)
+	if thread.MediaUrls == nil {
+		mediaUrlsJSON = []byte("[]")
+	}
+	_, err := r.db.Exec(ctx, query, thread.ID, thread.AuthorID, thread.Title, thread.Content, thread.Category, thread.IsResolved, thread.CreatedAt, mediaUrlsJSON)
 	return err
 }
 
@@ -1618,12 +1623,12 @@ func (r *AcademyRepository) GetThreads(ctx context.Context, currentStudentID uui
 	argIndex := 2
 
 	query = `
-		SELECT t.id, t.author_id, t.title, t.content, t.category, t.is_resolved, t.created_at,
+		SELECT t.id, t.author_id, t.title, t.content, t.category, t.is_resolved, t.created_at, t.media_urls,
 		       COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as author_name,
 		       s.avatar_s3_key, s.role as author_role, c.name as cohort_name,
 		       (SELECT COUNT(*) FROM replies WHERE thread_id = t.id) as reply_count,
-		       (SELECT COUNT(*) FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND reaction_type = 'like') as like_count,
-		       EXISTS(SELECT 1 FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND user_id = $1 AND reaction_type = 'like') as is_liked
+		       (SELECT COALESCE(json_object_agg(reaction_type, count), '{}'::json) FROM (SELECT reaction_type, COUNT(*) as count FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id GROUP BY reaction_type) sub) as reaction_counts,
+		       (SELECT COALESCE(json_agg(reaction_type), '[]'::json) FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND user_id = $1) as user_reactions
 		FROM threads t
 		JOIN students s ON t.author_id = s.id
 		JOIN cohorts c ON s.cohort_id = c.id
@@ -1654,14 +1659,23 @@ func (r *AcademyRepository) GetThreads(ctx context.Context, currentStudentID uui
 	var threads []*domain.Thread
 	for rows.Next() {
 		t := &domain.Thread{}
+		var mediaUrlsJSON []byte
+		var reactionCountsJSON []byte
+		var userReactionsJSON []byte
+
 		err := rows.Scan(
-			&t.ID, &t.AuthorID, &t.Title, &t.Content, &t.Category, &t.IsResolved, &t.CreatedAt,
+			&t.ID, &t.AuthorID, &t.Title, &t.Content, &t.Category, &t.IsResolved, &t.CreatedAt, &mediaUrlsJSON,
 			&t.AuthorName, &t.AuthorAvatarKey, &t.AuthorRole, &t.CohortName, &t.ReplyCount,
-			&t.LikeCount, &t.IsLiked,
+			&reactionCountsJSON, &userReactionsJSON,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		_ = json.Unmarshal(mediaUrlsJSON, &t.MediaUrls)
+		_ = json.Unmarshal(reactionCountsJSON, &t.ReactionCounts)
+		_ = json.Unmarshal(userReactionsJSON, &t.UserReactions)
+
 		threads = append(threads, t)
 	}
 	if threads == nil {
@@ -1672,26 +1686,35 @@ func (r *AcademyRepository) GetThreads(ctx context.Context, currentStudentID uui
 
 func (r *AcademyRepository) GetThreadByID(ctx context.Context, currentStudentID uuid.UUID, id uuid.UUID) (*domain.Thread, error) {
 	query := `
-		SELECT t.id, t.author_id, t.title, t.content, t.category, t.is_resolved, t.created_at,
+		SELECT t.id, t.author_id, t.title, t.content, t.category, t.is_resolved, t.created_at, t.media_urls,
 		       COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as author_name,
 		       s.avatar_s3_key, s.role as author_role, c.name as cohort_name,
 		       (SELECT COUNT(*) FROM replies WHERE thread_id = t.id) as reply_count,
-		       (SELECT COUNT(*) FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND reaction_type = 'like') as like_count,
-		       EXISTS(SELECT 1 FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND user_id = $1 AND reaction_type = 'like') as is_liked
+		       (SELECT COALESCE(json_object_agg(reaction_type, count), '{}'::json) FROM (SELECT reaction_type, COUNT(*) as count FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id GROUP BY reaction_type) sub) as reaction_counts,
+		       (SELECT COALESCE(json_agg(reaction_type), '[]'::json) FROM reactions WHERE entity_type = 'thread' AND entity_id = t.id AND user_id = $1) as user_reactions
 		FROM threads t
 		JOIN students s ON t.author_id = s.id
 		JOIN cohorts c ON s.cohort_id = c.id
 		WHERE t.id = $2
 	`
 	t := &domain.Thread{}
+	var mediaUrlsJSON []byte
+	var reactionCountsJSON []byte
+	var userReactionsJSON []byte
+
 	err := r.db.QueryRow(ctx, query, currentStudentID, id).Scan(
-		&t.ID, &t.AuthorID, &t.Title, &t.Content, &t.Category, &t.IsResolved, &t.CreatedAt,
+		&t.ID, &t.AuthorID, &t.Title, &t.Content, &t.Category, &t.IsResolved, &t.CreatedAt, &mediaUrlsJSON,
 		&t.AuthorName, &t.AuthorAvatarKey, &t.AuthorRole, &t.CohortName, &t.ReplyCount,
-		&t.LikeCount, &t.IsLiked,
+		&reactionCountsJSON, &userReactionsJSON,
 	)
 	if err != nil {
 		return nil, err
 	}
+
+	_ = json.Unmarshal(mediaUrlsJSON, &t.MediaUrls)
+	_ = json.Unmarshal(reactionCountsJSON, &t.ReactionCounts)
+	_ = json.Unmarshal(userReactionsJSON, &t.UserReactions)
+
 	return t, nil
 }
 
@@ -1705,23 +1728,33 @@ func (r *AcademyRepository) UpdateThread(ctx context.Context, thread *domain.Thr
 	return err
 }
 
+func (r *AcademyRepository) DeleteThread(ctx context.Context, threadID uuid.UUID) error {
+	query := `DELETE FROM threads WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, threadID)
+	return err
+}
+
 
 func (r *AcademyRepository) CreateReply(ctx context.Context, reply *domain.Reply) error {
 	query := `
-		INSERT INTO replies (id, thread_id, author_id, content, is_instructor_endorsed, created_at)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		INSERT INTO replies (id, thread_id, author_id, content, is_instructor_endorsed, created_at, media_urls)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 	`
-	_, err := r.db.Exec(ctx, query, reply.ID, reply.ThreadID, reply.AuthorID, reply.Content, reply.IsInstructorEndorsed, reply.CreatedAt)
+	mediaUrlsJSON, _ := json.Marshal(reply.MediaUrls)
+	if reply.MediaUrls == nil {
+		mediaUrlsJSON = []byte("[]")
+	}
+	_, err := r.db.Exec(ctx, query, reply.ID, reply.ThreadID, reply.AuthorID, reply.Content, reply.IsInstructorEndorsed, reply.CreatedAt, mediaUrlsJSON)
 	return err
 }
 
 func (r *AcademyRepository) GetRepliesByThreadID(ctx context.Context, currentStudentID uuid.UUID, threadID uuid.UUID) ([]*domain.Reply, error) {
 	query := `
-		SELECT rp.id, rp.thread_id, rp.author_id, rp.content, rp.is_instructor_endorsed, rp.created_at,
+		SELECT rp.id, rp.thread_id, rp.author_id, rp.content, rp.is_instructor_endorsed, rp.created_at, rp.media_urls,
 		       COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as author_name,
 		       s.avatar_s3_key, s.role as author_role, c.name as cohort_name,
-		       (SELECT COUNT(*) FROM reactions WHERE entity_type = 'reply' AND entity_id = rp.id AND reaction_type = 'like') as like_count,
-		       EXISTS(SELECT 1 FROM reactions WHERE entity_type = 'reply' AND entity_id = rp.id AND user_id = $1 AND reaction_type = 'like') as is_liked
+		       (SELECT COALESCE(json_object_agg(reaction_type, count), '{}'::json) FROM (SELECT reaction_type, COUNT(*) as count FROM reactions WHERE entity_type = 'reply' AND entity_id = rp.id GROUP BY reaction_type) sub) as reaction_counts,
+		       (SELECT COALESCE(json_agg(reaction_type), '[]'::json) FROM reactions WHERE entity_type = 'reply' AND entity_id = rp.id AND user_id = $1) as user_reactions
 		FROM replies rp
 		JOIN students s ON rp.author_id = s.id
 		JOIN cohorts c ON s.cohort_id = c.id
@@ -1737,14 +1770,23 @@ func (r *AcademyRepository) GetRepliesByThreadID(ctx context.Context, currentStu
 	var replies []*domain.Reply
 	for rows.Next() {
 		rp := &domain.Reply{}
+		var mediaUrlsJSON []byte
+		var reactionCountsJSON []byte
+		var userReactionsJSON []byte
+
 		err := rows.Scan(
-			&rp.ID, &rp.ThreadID, &rp.AuthorID, &rp.Content, &rp.IsInstructorEndorsed, &rp.CreatedAt,
+			&rp.ID, &rp.ThreadID, &rp.AuthorID, &rp.Content, &rp.IsInstructorEndorsed, &rp.CreatedAt, &mediaUrlsJSON,
 			&rp.AuthorName, &rp.AuthorAvatarKey, &rp.AuthorRole, &rp.CohortName,
-			&rp.LikeCount, &rp.IsLiked,
+			&reactionCountsJSON, &userReactionsJSON,
 		)
 		if err != nil {
 			return nil, err
 		}
+
+		_ = json.Unmarshal(mediaUrlsJSON, &rp.MediaUrls)
+		_ = json.Unmarshal(reactionCountsJSON, &rp.ReactionCounts)
+		_ = json.Unmarshal(userReactionsJSON, &rp.UserReactions)
+
 		replies = append(replies, rp)
 	}
 	if replies == nil {
@@ -1782,54 +1824,65 @@ func (r *AcademyRepository) UpdateReply(ctx context.Context, reply *domain.Reply
 	return err
 }
 
-func (r *AcademyRepository) ToggleLike(ctx context.Context, entityType string, studentID uuid.UUID, entityID uuid.UUID) (bool, int, error) {
-	// Check if like exists
+func (r *AcademyRepository) DeleteReply(ctx context.Context, replyID uuid.UUID) error {
+	query := `DELETE FROM replies WHERE id = $1`
+	_, err := r.db.Exec(ctx, query, replyID)
+	return err
+}
+
+func (r *AcademyRepository) ToggleReaction(ctx context.Context, entityType string, entityID uuid.UUID, studentID uuid.UUID, reactionType string) (bool, map[string]int, error) {
+	// Check if reaction exists
 	var exists bool
 	err := r.db.QueryRow(ctx, 
-		`SELECT EXISTS(SELECT 1 FROM reactions WHERE entity_type = $1 AND entity_id = $2 AND user_id = $3 AND reaction_type = 'like')`, 
-		entityType, entityID, studentID).Scan(&exists)
+		`SELECT EXISTS(SELECT 1 FROM reactions WHERE entity_type = $1 AND entity_id = $2 AND user_id = $3 AND reaction_type = $4)`, 
+		entityType, entityID, studentID, reactionType).Scan(&exists)
 	if err != nil {
-		return false, 0, err
+		return false, nil, err
 	}
 
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
-		return false, 0, err
+		return false, nil, err
 	}
 	defer tx.Rollback(ctx)
 
 	if exists {
 		// Unlike: delete row
 		_, err = tx.Exec(ctx, 
-			`DELETE FROM reactions WHERE entity_type = $1 AND entity_id = $2 AND user_id = $3 AND reaction_type = 'like'`, 
-			entityType, entityID, studentID)
+			`DELETE FROM reactions WHERE entity_type = $1 AND entity_id = $2 AND user_id = $3 AND reaction_type = $4`, 
+			entityType, entityID, studentID, reactionType)
 		if err != nil {
-			return false, 0, err
+			return false, nil, err
 		}
 	} else {
 		// Like: insert row
 		_, err = tx.Exec(ctx, 
-			`INSERT INTO reactions (id, entity_type, entity_id, user_id, reaction_type) VALUES ($1, $2, $3, $4, 'like')`, 
-			uuid.New(), entityType, entityID, studentID)
+			`INSERT INTO reactions (id, entity_type, entity_id, user_id, reaction_type) VALUES ($1, $2, $3, $4, $5)`, 
+			uuid.New(), entityType, entityID, studentID, reactionType)
 		if err != nil {
-			return false, 0, err
+			return false, nil, err
 		}
 	}
 
 	err = tx.Commit(ctx)
 	if err != nil {
-		return false, 0, err
+		return false, nil, err
 	}
 
-	// Get updated like count
-	var likeCount int
+	// Get updated reaction counts
+	var reactionCountsJSON []byte
 	err = r.db.QueryRow(ctx, 
-		`SELECT COUNT(*) FROM reactions WHERE entity_type = $1 AND entity_id = $2 AND reaction_type = 'like'`, 
-		entityType, entityID).Scan(&likeCount)
+		`SELECT COALESCE(json_object_agg(reaction_type, count), '{}'::json) FROM (SELECT reaction_type, COUNT(*) as count FROM reactions WHERE entity_type = $1 AND entity_id = $2 GROUP BY reaction_type) sub`, 
+		entityType, entityID).Scan(&reactionCountsJSON)
 	if err != nil {
-		return false, 0, err
+		return false, nil, err
 	}
 
-	return !exists, likeCount, nil
+	var reactionCounts map[string]int
+	if err := json.Unmarshal(reactionCountsJSON, &reactionCounts); err != nil {
+		return false, nil, err
+	}
+
+	return !exists, reactionCounts, nil
 }
 

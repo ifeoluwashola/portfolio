@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useTransition, useRef } from "react";
 import { useSearchParams, useRouter, usePathname } from "next/navigation";
-import { MessageSquare, Search, Send, User, Loader2, BookOpen, Terminal, X, CornerDownRight, Heart, Pencil } from "lucide-react";
-import { getThreads, createThread, getPublicAvatarUrl, getStudentProfile, updateThread, toggleThreadLike } from "../../app/academy/actions";
+import { MessageSquare, Search, Send, User, Loader2, BookOpen, Terminal, X, CornerDownRight, Heart, Pencil, Paperclip, FileIcon, Trash2 } from "lucide-react";
+import { getThreads, createThread, getPublicAvatarUrl, getStudentProfile, updateThread, toggleThreadReaction, getUploadUrl, getDownloadUrl, deleteThread } from "../../app/academy/actions";
 import { ThreadDetail } from "./ThreadDetail";
 import { MentionTextArea } from "./MentionTextArea";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
+import { AlertModal } from "../AlertModal";
 
 
 interface Thread {
@@ -23,9 +24,12 @@ interface Thread {
   author_role: string;
   cohort_name: string;
   reply_count: number;
-  like_count: number;
-  is_liked: boolean;
+  reaction_counts: Record<string, number>;
+  user_reactions: string[];
+  media_urls?: string[];
 }
+
+const CURATED_EMOJIS = ["👍", "❤️", "😂", "🚀", "👀", "🔥"];
 
 export function DiscussionForumFeed() {
   const router = useRouter();
@@ -43,18 +47,50 @@ export function DiscussionForumFeed() {
 
   const composerRef = useRef<HTMLTextAreaElement>(null);
 
-  const handleToggleLike = async (id: string) => {
+  const handleToggleReaction = async (id: string, reactionType: string) => {
     try {
-      const res = await toggleThreadLike(id);
-      if (res.success && res.data) {
-        setThreads((prev) =>
-          prev.map((t) =>
-            t.id === id ? { ...t, is_liked: res.data.liked, like_count: res.data.like_count } : t
-          )
-        );
+      const res = await toggleThreadReaction(id, reactionType);
+      if (res.error || !res.data) {
+        console.error(res.error || "Failed to toggle reaction");
+        return;
+      }
+      
+      setThreads((prev) =>
+        prev.map((t) => {
+          if (t.id === id) {
+            const newCounts = res.data!.reaction_counts;
+            const isLiked = res.data!.liked;
+            let newUserReactions = [...(t.user_reactions || [])];
+            if (isLiked && !newUserReactions.includes(reactionType)) {
+              newUserReactions.push(reactionType);
+            } else if (!isLiked) {
+              newUserReactions = newUserReactions.filter(r => r !== reactionType);
+            }
+            return { ...t, reaction_counts: newCounts, user_reactions: newUserReactions };
+          }
+          return t;
+        })
+      );
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDeleteThread = async (threadId: string) => {
+    setIsDeletingThread(true);
+    try {
+      const res = await deleteThread(threadId);
+      if (res.error) {
+        setAlertConfig({ isOpen: true, title: "Delete Failed", message: res.error, type: "error" });
+      } else {
+        setAlertConfig({ isOpen: true, title: "Thread Deleted", message: "Thread has been successfully deleted.", type: "success" });
+        fetchThreads();
       }
     } catch (err) {
       console.error(err);
+      setAlertConfig({ isOpen: true, title: "Error", message: "An unexpected error occurred.", type: "error" });
+    } finally {
+      setIsDeletingThread(false);
     }
   };
 
@@ -66,6 +102,17 @@ export function DiscussionForumFeed() {
   const [isPending, startTransition] = useTransition();
   const [formError, setFormError] = useState("");
   const [isComposeExpanded, setIsComposeExpanded] = useState(false);
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean; 
+    title: string; 
+    message: string; 
+    type: 'error'|'warning'|'success';
+    onConfirm?: () => void;
+  }>({ isOpen: false, title: "", message: "", type: "error" });
+  const [isDeletingThread, setIsDeletingThread] = useState(false);
 
   // Editing state
   const [editingThreadId, setEditingThreadId] = useState<string | null>(null);
@@ -77,9 +124,13 @@ export function DiscussionForumFeed() {
 
   const [currentUserProfile, setCurrentUserProfile] = useState<{ id: string; role: string } | null>(null);
 
-  // Avatars cache
+  // Avatars & Media cache
   const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
+  const [mediaDownloadUrls, setMediaDownloadUrls] = useState<Record<string, string>>({});
   const messageEndRef = useRef<HTMLDivElement>(null);
+
+  // Emoji picker state
+  const [openEmojiPickerId, setOpenEmojiPickerId] = useState<string | null>(null);
 
   const fetchThreads = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -96,6 +147,17 @@ export function DiscussionForumFeed() {
             if (url) {
               setAvatarUrls((prev) => ({ ...prev, [t.author_avatar_key!]: url }));
             }
+          }
+
+          if (t.media_urls && t.media_urls.length > 0) {
+            t.media_urls.forEach(async (mediaKey: string) => {
+              if (!mediaDownloadUrls[mediaKey]) {
+                const url = await getDownloadUrl(mediaKey);
+                if (url) {
+                  setMediaDownloadUrls((prev) => ({ ...prev, [mediaKey]: url }));
+                }
+              }
+            });
           }
         });
       }
@@ -197,17 +259,57 @@ export function DiscussionForumFeed() {
     }
 
     startTransition(async () => {
-      const res = await createThread(newTitle, newContent, newCategory);
+      const res = await createThread(newTitle, newContent, newCategory, mediaUrls);
       if (res.error) {
         setFormError(res.error);
       } else {
         setNewTitle("");
         setNewContent("");
+        setMediaUrls([]);
         setIsComposeExpanded(false);
         setPage(0);
         fetchThreads(false);
       }
     });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 20 * 1024 * 1024 : 10 * 1024 * 1024;
+    
+    if (file.size > maxSize) {
+      setAlertConfig({ isOpen: true, title: "File Too Large", message: `Maximum size is ${isVideo ? '20MB' : '10MB'}.`, type: "error" });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const res = await getUploadUrl(file.name, "thread_media");
+      if (res.error || !res.data) throw new Error(res.error || "Failed to get upload URL");
+      
+      const { upload_url, file_key } = res.data;
+
+      const uploadRes = await fetch(upload_url, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      if (!uploadRes.ok) throw new Error("Failed to upload file");
+
+      setMediaUrls(prev => [...prev, file_key]);
+    } catch (error) {
+      console.error(error);
+      setAlertConfig({ isOpen: true, title: "Upload Failed", message: "Error uploading file. Please try again.", type: "error" });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const getCategoryIcon = (cat: string) => {
@@ -224,7 +326,16 @@ export function DiscussionForumFeed() {
   const categories = ["All", "Learning", "Question", "Debugging"];
 
   return (
-    <div className="flex flex-col lg:flex-row h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] w-full border border-white/5 lg:rounded-3xl overflow-hidden bg-slate-950">
+    <>
+      <AlertModal 
+        isOpen={alertConfig.isOpen} 
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))} 
+        title={alertConfig.title} 
+        message={alertConfig.message} 
+        type={alertConfig.type}
+        onConfirm={alertConfig.onConfirm}
+      />
+      <div className="flex flex-col lg:flex-row h-[calc(100dvh-8rem)] lg:h-[calc(100vh-8rem)] w-full border border-white/5 lg:rounded-3xl overflow-hidden bg-slate-950">
       
       {/* LEFT/CENTER PANE: Message Stream */}
       <div className={`flex flex-col h-full flex-1 min-w-0 transition-all duration-300 ${
@@ -277,7 +388,7 @@ export function DiscussionForumFeed() {
         </div>
 
         {/* Chat Message Stream */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/5">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-6 space-y-6 scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/5">
           {loading ? (
             <div className="flex flex-col items-center justify-center h-full text-yellow-400 font-mono animate-pulse uppercase tracking-widest text-xs gap-2">
               <Loader2 className="w-5 h-5 animate-spin" /> Synchronizing discussion feed...
@@ -383,15 +494,35 @@ export function DiscussionForumFeed() {
                           </h4>
 
                           {/* Content preview */}
-                          <div className="prose prose-invert prose-xs max-w-none text-xs text-slate-300 leading-relaxed font-mono
+                          <div className="prose prose-invert prose-xs max-w-none w-full min-w-0 break-words text-xs text-slate-300 leading-relaxed font-mono
                             prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden
-                            prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto
+                            prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:max-w-[calc(100vw-4rem)] md:prose-pre:max-w-full prose-pre:overflow-x-auto
                           ">
                             <ReactMarkdown rehypePlugins={[rehypeHighlight]} components={markdownComponents}>{preprocessMentions(thread.content)}</ReactMarkdown>
                           </div>
 
+                          {/* Media Preview in Feed */}
+                          {thread.media_urls && thread.media_urls.length > 0 && (
+                            <div className="flex items-center gap-2 mt-2">
+                              {thread.media_urls.slice(0, 3).map((key) => {
+                                const url = mediaDownloadUrls[key];
+                                if (!url) return <div key={key} className="w-10 h-10 bg-slate-900 rounded-lg animate-pulse" />;
+                                if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
+                                  return <img key={key} src={url} alt="Attachment" className="w-10 h-10 object-cover rounded-lg border border-white/10" />;
+                                } else if (key.match(/\.(mp4|mov|webm)$/i)) {
+                                  return <div key={key} className="w-10 h-10 bg-slate-900 rounded-lg border border-white/10 flex items-center justify-center"><FileIcon className="w-4 h-4 text-emerald-400" /></div>;
+                                } else {
+                                  return <div key={key} className="w-10 h-10 bg-slate-900 rounded-lg border border-white/10 flex items-center justify-center"><FileIcon className="w-4 h-4 text-yellow-400" /></div>;
+                                }
+                              })}
+                              {thread.media_urls.length > 3 && (
+                                <div className="text-[10px] text-slate-500 font-bold">+{thread.media_urls.length - 3} more</div>
+                              )}
+                            </div>
+                          )}
+
                           {/* Message Footer Actions */}
-                          <div className="flex items-center gap-4 pt-1.5">
+                          <div className="flex items-center gap-4 pt-1.5 flex-wrap">
                             <span className="inline-flex items-center gap-1 text-[9px] font-bold text-yellow-400/80 bg-yellow-400/5 px-2 py-0.5 rounded border border-yellow-400/10">
                               {getCategoryIcon(thread.category)}
                               {thread.category}
@@ -405,27 +536,86 @@ export function DiscussionForumFeed() {
                               {thread.reply_count > 0 ? thread.reply_count : ""}
                             </button>
 
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleToggleLike(thread.id);
-                              }}
-                              className={`flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider transition-colors ${
-                                thread.is_liked
-                                  ? "text-rose-500 hover:text-rose-400"
-                                  : "text-slate-500 hover:text-white"
-                              }`}
-                            >
-                              <Heart className={`w-3.5 h-3.5 ${thread.is_liked ? "fill-rose-500" : ""}`} />
-                              {thread.like_count > 0 ? thread.like_count : ""}
-                            </button>
+                            <div className="flex items-center gap-1">
+                              {CURATED_EMOJIS.map(emoji => {
+                                const count = thread.reaction_counts?.[emoji] || 0;
+                                const hasReacted = thread.user_reactions?.includes(emoji);
+                                if (count === 0) return null;
+                                return (
+                                  <button
+                                    key={emoji}
+                                    onClick={(e) => { e.stopPropagation(); handleToggleReaction(thread.id, emoji); }}
+                                    className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-colors ${
+                                      hasReacted
+                                        ? "bg-yellow-400/20 text-yellow-400 border border-yellow-400/30"
+                                        : "bg-slate-900/50 text-slate-400 border border-white/5 hover:border-white/20 hover:bg-white/5"
+                                    }`}
+                                  >
+                                    <span>{emoji}</span>
+                                    <span>{count}</span>
+                                  </button>
+                                );
+                              })}
+                              
+                              <div className="relative">
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setOpenEmojiPickerId(openEmojiPickerId === thread.id ? null : thread.id); }}
+                                  className="flex items-center justify-center px-1.5 py-0.5 rounded-md bg-slate-900 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                                >
+                                  <span className="text-[10px] font-bold uppercase text-slate-500">+</span>
+                                </button>
+                                {openEmojiPickerId === thread.id && (
+                                  <div className="absolute right-0 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto bottom-full mb-1 bg-slate-900 border border-white/10 rounded-xl p-1.5 shadow-2xl grid grid-cols-3 sm:flex sm:flex-row gap-1 animate-in fade-in zoom-in-95 duration-200 z-[100] w-max">
+                                    {CURATED_EMOJIS.map(emoji => (
+                                      <button
+                                        key={emoji}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleToggleReaction(thread.id, emoji);
+                                          setOpenEmojiPickerId(null);
+                                        }}
+                                        className="text-base hover:bg-white/10 p-1 rounded-md transition-colors flex items-center justify-center w-7 h-7"
+                                      >
+                                        {emoji}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
 
                             {currentUserProfile && currentUserProfile.id === thread.author_id && (
                               <button
-                                onClick={() => handleEditThread(thread)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditThread(thread);
+                                }}
                                 className="text-[10px] font-bold text-slate-500 hover:text-yellow-400 uppercase tracking-wider transition-colors"
                               >
                                 <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+
+                            {currentUserProfile && (currentUserProfile.id === thread.author_id || currentUserProfile.role === "instructor" || currentUserProfile.role === "admin") && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setAlertConfig({
+                                    isOpen: true,
+                                    title: "Delete Thread?",
+                                    message: "Are you sure you want to delete this thread? This action cannot be undone.",
+                                    type: "warning",
+                                    onConfirm: () => {
+                                      handleDeleteThread(thread.id);
+                                      setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                                    }
+                                  });
+                                }}
+                                disabled={isDeletingThread}
+                                className="text-[10px] font-bold text-slate-500 hover:text-red-400 uppercase tracking-wider transition-colors"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
                               </button>
                             )}
                           </div>
@@ -523,40 +713,83 @@ export function DiscussionForumFeed() {
             ) : null}
 
             {/* Main Message textarea */}
-            <div className="flex items-end gap-3">
-              <MentionTextArea
-                inputRef={composerRef}
-                value={newContent}
-                onChange={setNewContent}
-                onFocus={() => setIsComposeExpanded(true)}
-                placeholder="Share your learning experience, what you're learning, or ask a question (use @ to mention someone)..."
-                className="flex-1 bg-transparent border-none text-xs text-white placeholder-slate-500 focus:outline-none resize-none font-mono py-1.5 scrollbar-hide"
-                rows={isComposeExpanded ? 4 : 1}
-              />
+            <div className="flex flex-col gap-2">
+              <div className="flex items-end gap-3">
+                <MentionTextArea
+                  inputRef={composerRef}
+                  value={newContent}
+                  onChange={setNewContent}
+                  onFocus={() => setIsComposeExpanded(true)}
+                  placeholder="Share your learning experience, what you're learning, or ask a question (use @ to mention someone)..."
+                  className="flex-1 bg-transparent border-none text-xs text-white placeholder-slate-500 focus:outline-none resize-none font-mono py-1.5 scrollbar-hide"
+                  rows={isComposeExpanded ? 4 : 1}
+                />
 
-              <div className="flex items-center gap-2 flex-shrink-0">
-                {isComposeExpanded && (
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  {isComposeExpanded && (
+                    <>
+                      <input
+                        type="file"
+                        ref={fileInputRef}
+                        className="hidden"
+                        onChange={handleFileUpload}
+                        accept="image/*,video/*,application/pdf"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isUploading}
+                        className="w-8 h-8 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/20 transition-all disabled:opacity-50"
+                      >
+                        {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Paperclip className="w-3.5 h-3.5" />}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsComposeExpanded(false);
+                          setNewTitle("");
+                          setNewContent("");
+                          setNewCategory("Question");
+                          setMediaUrls([]);
+                        }}
+                        className="w-8 h-8 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/20 transition-all"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </>
+                  )}
                   <button
-                    type="button"
-                    onClick={() => {
-                      setIsComposeExpanded(false);
-                      setNewTitle("");
-                      setNewContent("");
-                      setFormError("");
-                    }}
-                    className="p-2 text-slate-500 hover:text-white rounded-xl hover:bg-white/5 transition-colors"
+                    type="submit"
+                    disabled={isPending || !newTitle.trim() || !newContent.trim() || isUploading}
+                    className="w-8 h-8 rounded-xl bg-yellow-400/10 text-yellow-400 border border-yellow-400/20 flex items-center justify-center hover:bg-yellow-400/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
-                    <X className="w-4 h-4" />
+                    {isPending ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" />
+                    )}
                   </button>
-                )}
-                <button
-                  type="submit"
-                  disabled={isPending}
-                  className="p-2 bg-yellow-400 hover:bg-yellow-300 text-slate-950 rounded-xl transition-all shadow-md flex items-center justify-center"
-                >
-                  {isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                </button>
+                </div>
               </div>
+
+              {/* Media Attachments Preview */}
+              {mediaUrls.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
+                  {mediaUrls.map((url, idx) => (
+                    <div key={idx} className="relative group flex items-center gap-2 bg-slate-900 border border-white/10 rounded-lg px-2 py-1">
+                      <FileIcon className="w-3 h-3 text-yellow-400" />
+                      <span className="text-[10px] text-slate-300 font-mono truncate max-w-[100px]">Attached</span>
+                      <button
+                        type="button"
+                        onClick={() => setMediaUrls(prev => prev.filter((_, i) => i !== idx))}
+                        className="w-4 h-4 bg-slate-800 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </form>
         </div>
@@ -585,7 +818,7 @@ export function DiscussionForumFeed() {
           </div>
         </div>
       ) : null}
-
-    </div>
+      </div>
+    </>
   );
 }

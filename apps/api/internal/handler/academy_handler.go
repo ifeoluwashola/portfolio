@@ -1908,6 +1908,43 @@ func (h *AcademyHandler) HandleEndorseReply(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(map[string]string{"status": "success", "message": "Reply verified successfully"})
 }
 
+func (h *AcademyHandler) HandleDeleteReply(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	replyIDStr := r.PathValue("id")
+	replyID, err := uuid.Parse(replyIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid reply ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	err = h.svc.DeleteReply(r.Context(), studentID, replyID)
+	if err != nil {
+		if strings.Contains(err.Error(), "unauthorized") {
+			RespondWithError(w, r, http.StatusForbidden, err.Error(), err)
+		} else {
+			RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *AcademyHandler) HandleUpdateThread(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPatch {
 		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
@@ -1956,6 +1993,43 @@ func (h *AcademyHandler) HandleUpdateThread(w http.ResponseWriter, r *http.Reque
 	json.NewEncoder(w).Encode(thread)
 }
 
+func (h *AcademyHandler) HandleDeleteThread(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodDelete {
+		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
+		return
+	}
+
+	threadIDStr := r.PathValue("id")
+	threadID, err := uuid.Parse(threadIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid thread ID", nil)
+		return
+	}
+
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student session", nil)
+		return
+	}
+
+	err = h.svc.DeleteThread(r.Context(), studentID, threadID)
+	if err != nil {
+		if strings.Contains(err.Error(), "unauthorized") {
+			RespondWithError(w, r, http.StatusForbidden, err.Error(), err)
+		} else {
+			RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func (h *AcademyHandler) HandleUpdateReply(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPatch {
 		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
@@ -2002,7 +2076,7 @@ func (h *AcademyHandler) HandleUpdateReply(w http.ResponseWriter, r *http.Reques
 	json.NewEncoder(w).Encode(reply)
 }
 
-func (h *AcademyHandler) HandleToggleThreadLike(w http.ResponseWriter, r *http.Request) {
+func (h *AcademyHandler) HandleToggleThreadReaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
@@ -2026,7 +2100,19 @@ func (h *AcademyHandler) HandleToggleThreadLike(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	liked, likeCount, err := h.svc.ToggleThreadLike(r.Context(), studentID, threadID)
+	var req struct {
+		ReactionType string `json:"reaction_type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
+		return
+	}
+	if req.ReactionType == "" {
+		RespondWithError(w, r, http.StatusBadRequest, "Reaction type is required", nil)
+		return
+	}
+
+	liked, counts, err := h.svc.ToggleThreadReaction(r.Context(), studentID, threadID, req.ReactionType)
 	if err != nil {
 		RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
 		return
@@ -2034,12 +2120,12 @@ func (h *AcademyHandler) HandleToggleThreadLike(w http.ResponseWriter, r *http.R
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"liked":      liked,
-		"like_count": likeCount,
+		"liked":           liked,
+		"reaction_counts": counts,
 	})
 }
 
-func (h *AcademyHandler) HandleToggleReplyLike(w http.ResponseWriter, r *http.Request) {
+func (h *AcademyHandler) HandleToggleReplyReaction(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		RespondWithError(w, r, http.StatusMethodNotAllowed, "Method not allowed", nil)
 		return
@@ -2063,7 +2149,19 @@ func (h *AcademyHandler) HandleToggleReplyLike(w http.ResponseWriter, r *http.Re
 		return
 	}
 
-	liked, likeCount, err := h.svc.ToggleReplyLike(r.Context(), studentID, replyID)
+	var req struct {
+		ReactionType string `json:"reaction_type"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", nil)
+		return
+	}
+	if req.ReactionType == "" {
+		RespondWithError(w, r, http.StatusBadRequest, "Reaction type is required", nil)
+		return
+	}
+
+	liked, counts, err := h.svc.ToggleReplyReaction(r.Context(), studentID, replyID, req.ReactionType)
 	if err != nil {
 		RespondWithError(w, r, http.StatusBadRequest, err.Error(), err)
 		return
@@ -2071,8 +2169,8 @@ func (h *AcademyHandler) HandleToggleReplyLike(w http.ResponseWriter, r *http.Re
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"liked":      liked,
-		"like_count": likeCount,
+		"liked":           liked,
+		"reaction_counts": counts,
 	})
 }
 

@@ -2,11 +2,14 @@
 
 import { useEffect, useState, useTransition, useRef } from "react";
 import Link from "next/link";
-import { ArrowLeft, CheckCircle2, User, Loader2, Send, CornerDownRight, Check, Heart, Pencil } from "lucide-react";
+import { ArrowLeft, CheckCircle2, User, Loader2, Send, CornerDownRight, Check, Heart, Pencil, Paperclip, FileIcon, X, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
-import { getThread, createReply, endorseReply, getStudentProfile, getPublicAvatarUrl, updateReply, updateThread, toggleThreadLike, toggleReplyLike } from "../../app/academy/actions";
+import { getThread, createReply, endorseReply, getStudentProfile, getPublicAvatarUrl, updateReply, updateThread, toggleThreadReaction, toggleReplyReaction, getUploadUrl, getDownloadUrl, deleteReply } from "../../app/academy/actions";
 import { MentionTextArea } from "./MentionTextArea";
+import { AlertModal } from "../AlertModal";
+
+const CURATED_EMOJIS = ["👍", "❤️", "😂", "🚀", "👀", "🔥"];
 
 // Import highlight.js style via Next.js link or fallback to inline stylesheet injection
 interface Author {
@@ -30,8 +33,9 @@ interface Thread {
   author_avatar_key?: string;
   author_role: string;
   cohort_name: string;
-  like_count: number;
-  is_liked: boolean;
+  reaction_counts: Record<string, number>;
+  user_reactions: string[];
+  media_urls?: string[];
 }
 
 interface Reply {
@@ -45,8 +49,9 @@ interface Reply {
   author_avatar_key?: string;
   author_role: string;
   cohort_name: string;
-  like_count: number;
-  is_liked: boolean;
+  reaction_counts: Record<string, number>;
+  user_reactions: string[];
+  media_urls?: string[];
 }
 
 export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string; isDrawer?: boolean }) {
@@ -74,12 +79,28 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const [isEditThreadPending, startEditThreadTransition] = useTransition();
 
-  // Composer Ref
+  // Composer Ref & Media
   const composerRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mediaUrls, setMediaUrls] = useState<string[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    isOpen: boolean; 
+    title: string; 
+    message: string; 
+    type: 'error'|'warning'|'success';
+    onConfirm?: () => void;
+  }>({ isOpen: false, title: "", message: "", type: "error" });
+  const [isDeletingReply, setIsDeletingReply] = useState(false);
 
 
-  // Avatars cache
+  // Emoji picker state
+  const [isThreadEmojiPickerOpen, setIsThreadEmojiPickerOpen] = useState(false);
+  const [openReplyEmojiPickerId, setOpenReplyEmojiPickerId] = useState<string | null>(null);
+
+  // Avatars & Media cache
   const [avatarUrls, setAvatarUrls] = useState<Record<string, string>>({});
+  const [mediaDownloadUrls, setMediaDownloadUrls] = useState<Record<string, string>>({});
 
   const fetchData = async () => {
     try {
@@ -88,7 +109,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
         setThread(threadRes.data.thread);
         setReplies(threadRes.data.replies || []);
 
-        // Retrieve avatar urls
+        // Retrieve avatar and media urls
         const allKeyedItems = [threadRes.data.thread, ...(threadRes.data.replies || [])];
         allKeyedItems.forEach(async (item) => {
           const key = item.author_avatar_key;
@@ -97,6 +118,17 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
             if (url) {
               setAvatarUrls((prev) => ({ ...prev, [key]: url }));
             }
+          }
+
+          if (item.media_urls && item.media_urls.length > 0) {
+            item.media_urls.forEach(async (mediaKey: string) => {
+              if (!mediaDownloadUrls[mediaKey]) {
+                const url = await getDownloadUrl(mediaKey);
+                if (url) {
+                  setMediaDownloadUrls((prev) => ({ ...prev, [mediaKey]: url }));
+                }
+              }
+            });
           }
         });
       }
@@ -126,21 +158,61 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
     }
 
     startTransition(async () => {
-      const res = await createReply(threadId, replyContent);
+      const res = await createReply(threadId, replyContent, mediaUrls);
       if (res.error) {
         setFormError(res.error);
       } else {
         setReplyContent("");
+        setMediaUrls([]);
         fetchData();
       }
     });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const isVideo = file.type.startsWith('video/');
+    const maxSize = isVideo ? 20 * 1024 * 1024 : 10 * 1024 * 1024;
+    
+    if (file.size > maxSize) {
+      setAlertConfig({ isOpen: true, title: "File Too Large", message: `Maximum size is ${isVideo ? '20MB' : '10MB'}.`, type: "error" });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const res = await getUploadUrl(file.name, "thread_media");
+      if (res.error || !res.data) throw new Error(res.error || "Failed to get upload URL");
+      
+      const { upload_url, file_key } = res.data;
+
+      const uploadRes = await fetch(upload_url, {
+        method: "PUT",
+        body: file,
+        headers: {
+          "Content-Type": file.type,
+        },
+      });
+
+      if (!uploadRes.ok) throw new Error("Failed to upload file");
+
+      setMediaUrls(prev => [...prev, file_key]);
+    } catch (error) {
+      console.error(error);
+      setAlertConfig({ isOpen: true, title: "Upload Failed", message: "Error uploading file. Please try again.", type: "error" });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
   };
 
   const handleEndorseReply = async (replyId: string) => {
     try {
       const res = await endorseReply(replyId);
       if (res.error) {
-        alert(res.error);
+        setAlertConfig({ isOpen: true, title: "Endorse Failed", message: res.error, type: "error" });
       } else {
         fetchData();
       }
@@ -149,28 +221,73 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
     }
   };
 
-  const handleToggleThreadLike = async () => {
+  const handleDeleteReply = async (replyId: string) => {
+    setIsDeletingReply(true);
+    try {
+      const res = await deleteReply(replyId);
+      if (res.error) {
+        setAlertConfig({ isOpen: true, title: "Delete Failed", message: res.error, type: "error" });
+      } else {
+        setAlertConfig({ isOpen: true, title: "Reply Deleted", message: "Reply has been successfully deleted.", type: "success" });
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+      setAlertConfig({ isOpen: true, title: "Error", message: "An unexpected error occurred.", type: "error" });
+    } finally {
+      setIsDeletingReply(false);
+    }
+  };
+
+  const handleToggleThreadReaction = async (reactionType: string) => {
     if (!thread) return;
     try {
-      const res = await toggleThreadLike(thread.id);
+      const res = await toggleThreadReaction(thread.id, reactionType);
       if (res.error || !res.data) {
-        console.error(res.error || "Failed to toggle like");
+        console.error(res.error || "Failed to toggle reaction");
         return;
       }
-      setThread({ ...thread, is_liked: res.data.liked, like_count: res.data.like_count });
+      
+      const newCounts = res.data.reaction_counts;
+      const isLiked = res.data.liked;
+      
+      // Update user_reactions locally
+      let newUserReactions = [...(thread.user_reactions || [])];
+      if (isLiked && !newUserReactions.includes(reactionType)) {
+        newUserReactions.push(reactionType);
+      } else if (!isLiked) {
+        newUserReactions = newUserReactions.filter(r => r !== reactionType);
+      }
+
+      setThread({ ...thread, reaction_counts: newCounts, user_reactions: newUserReactions });
     } catch (err) {
       console.error(err);
     }
   };
 
-  const handleToggleReplyLike = async (replyId: string) => {
+  const handleToggleReplyReaction = async (replyId: string, reactionType: string) => {
     try {
-      const res = await toggleReplyLike(replyId);
+      const res = await toggleReplyReaction(replyId, reactionType);
       if (res.error || !res.data) {
-        console.error(res.error || "Failed to toggle like");
+        console.error(res.error || "Failed to toggle reaction");
         return;
       }
-      setReplies(replies.map(r => r.id === replyId ? { ...r, is_liked: res.data.liked, like_count: res.data.like_count } : r));
+      
+      const newCounts = res.data.reaction_counts;
+      const isLiked = res.data.liked;
+      
+      setReplies(replies.map(r => {
+        if (r.id === replyId) {
+          let newUserReactions = [...(r.user_reactions || [])];
+          if (isLiked && !newUserReactions.includes(reactionType)) {
+            newUserReactions.push(reactionType);
+          } else if (!isLiked) {
+            newUserReactions = newUserReactions.filter(type => type !== reactionType);
+          }
+          return { ...r, reaction_counts: newCounts, user_reactions: newUserReactions };
+        }
+        return r;
+      }));
     } catch (err) {
       console.error(err);
     }
@@ -276,7 +393,16 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
   }
 
   return (
-    <div className={`font-mono ${isDrawer ? "space-y-6 p-4 pb-32" : "space-y-8 max-w-5xl mx-auto px-4 pb-16"}`}>
+    <>
+      <AlertModal 
+        isOpen={alertConfig.isOpen} 
+        onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))} 
+        title={alertConfig.title} 
+        message={alertConfig.message} 
+        type={alertConfig.type}
+        onConfirm={alertConfig.onConfirm}
+      />
+      <div className={`font-mono ${isDrawer ? "space-y-6 p-4 pb-32" : "space-y-8 max-w-5xl mx-auto px-4 pb-16"}`}>
       {/* Stylesheet for Highlight.js code blocks */}
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
 
@@ -430,9 +556,9 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
             </div>
 
             {/* Thread Content in Markdown */}
-            <div className="prose prose-invert prose-sm max-w-none text-slate-300 leading-relaxed
+            <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-slate-300 leading-relaxed
               prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:hidden prose-code:after:hidden
-              prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto
+              prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:max-w-[calc(100vw-4rem)] md:prose-pre:max-w-full prose-pre:overflow-x-auto
               prose-headings:text-white prose-headings:font-bold prose-headings:uppercase
             ">
               <ReactMarkdown rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
@@ -440,19 +566,85 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
               </ReactMarkdown>
             </div>
 
+            {/* Media Attachments */}
+            {thread.media_urls && thread.media_urls.length > 0 && (
+              <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/5">
+                <div className="flex flex-wrap gap-4">
+                  {thread.media_urls.map((key) => {
+                    const downloadUrl = mediaDownloadUrls[key];
+                    if (!downloadUrl) return <div key={key} className="w-24 h-24 bg-slate-900 rounded-xl animate-pulse" />;
+                    
+                    if (key.match(/\.(mp4|mov|webm)$/i)) {
+                      return (
+                        <video key={key} src={downloadUrl} controls className="max-h-64 rounded-xl border border-white/10" />
+                      );
+                    } else if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
+                      return (
+                        <img key={key} src={downloadUrl} alt="Attachment" className="max-h-64 rounded-xl border border-white/10 object-contain" />
+                      );
+                    } else {
+                      return (
+                        <a key={key} href={downloadUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-slate-900 border border-white/10 p-3 rounded-xl hover:bg-white/5 transition-colors">
+                          <FileIcon className="w-5 h-5 text-yellow-400" />
+                          <span className="text-xs font-mono text-slate-300 truncate max-w-[200px]">{key.split('-').pop()}</span>
+                        </a>
+                      );
+                    }
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* Thread Actions */}
-            <div className="flex items-center gap-4 pt-4 border-t border-white/5">
-              <button
-                onClick={handleToggleThreadLike}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-colors ${
-                  thread.is_liked
-                    ? "bg-red-500/10 text-red-500 border border-red-500/20"
-                    : "bg-slate-900/50 text-slate-400 hover:text-red-400 border border-white/5 hover:border-red-400/30 hover:bg-red-500/5"
-                }`}
-              >
-                <Heart className={`w-4 h-4 ${thread.is_liked ? "fill-current" : ""}`} />
-                {thread.like_count > 0 ? <span>{thread.like_count}</span> : null}
-              </button>
+            <div className="flex items-center gap-2 pt-4 border-t border-white/5 flex-wrap">
+              {CURATED_EMOJIS.map(emoji => {
+                const count = thread.reaction_counts?.[emoji] || 0;
+                const hasReacted = thread.user_reactions?.includes(emoji);
+                if (count === 0) return null;
+                return (
+                  <button
+                    key={emoji}
+                    onClick={() => handleToggleThreadReaction(emoji)}
+                    className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-bold transition-colors ${
+                      hasReacted
+                        ? "bg-yellow-400/20 text-yellow-400 border border-yellow-400/30"
+                        : "bg-slate-900/50 text-slate-400 border border-white/5 hover:border-white/20 hover:bg-white/5"
+                    }`}
+                  >
+                    <span>{emoji}</span>
+                    <span>{count}</span>
+                  </button>
+                );
+              })}
+              
+              {/* Emoji Picker Popover */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsThreadEmojiPickerOpen(!isThreadEmojiPickerOpen)}
+                  className="flex items-center justify-center px-2 py-1 rounded-xl bg-slate-900 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all gap-1"
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center">
+                    <span className="text-sm mr-1">+</span> React
+                  </span>
+                </button>
+                {isThreadEmojiPickerOpen && (
+                  <div className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-2 bg-slate-900 border border-white/10 rounded-xl p-1.5 shadow-2xl grid grid-cols-3 sm:flex sm:flex-row gap-1 animate-in fade-in zoom-in-95 duration-200 z-[100] w-max">
+                    {CURATED_EMOJIS.map(emoji => (
+                      <button
+                        key={emoji}
+                        onClick={() => {
+                          handleToggleThreadReaction(emoji);
+                          setIsThreadEmojiPickerOpen(false);
+                        }}
+                        className="text-base hover:bg-white/10 p-1 rounded-md transition-colors flex items-center justify-center w-7 h-7"
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}
@@ -566,9 +758,9 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                 </div>
 
                 {/* Reply Content in Markdown */}
-                <div className="prose prose-invert prose-sm max-w-none text-slate-300 leading-relaxed
+                <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-slate-300 leading-relaxed
                   prose-code:text-yellow-400 prose-code:bg-yellow-400/10 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-xs prose-code:font-mono prose-code:before:hidden prose-code:after:hidden
-                  prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:overflow-x-auto
+                  prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:max-w-[calc(100vw-4rem)] md:prose-pre:max-w-full prose-pre:overflow-x-auto
                   prose-headings:text-white prose-headings:font-bold prose-headings:uppercase
                 ">
                   <ReactMarkdown rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
@@ -576,20 +768,84 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                   </ReactMarkdown>
                 </div>
 
+                {/* Media Attachments */}
+                {reply.media_urls && reply.media_urls.length > 0 && (
+                  <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-white/5">
+                    <div className="flex flex-wrap gap-4">
+                      {reply.media_urls.map((key) => {
+                        const downloadUrl = mediaDownloadUrls[key];
+                        if (!downloadUrl) return <div key={key} className="w-24 h-24 bg-slate-900 rounded-xl animate-pulse" />;
+                        
+                        if (key.match(/\.(mp4|mov|webm)$/i)) {
+                          return (
+                            <video key={key} src={downloadUrl} controls className="max-h-64 rounded-xl border border-white/10" />
+                          );
+                        } else if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
+                          return (
+                            <img key={key} src={downloadUrl} alt="Attachment" className="max-h-64 rounded-xl border border-white/10 object-contain" />
+                          );
+                        } else {
+                          return (
+                            <a key={key} href={downloadUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-slate-900 border border-white/10 p-3 rounded-xl hover:bg-white/5 transition-colors">
+                              <FileIcon className="w-5 h-5 text-yellow-400" />
+                              <span className="text-xs font-mono text-slate-300 truncate max-w-[200px]">{key.split('-').pop()}</span>
+                            </a>
+                          );
+                        }
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Endorsement and Editing Actions */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-2 border-t border-white/5 gap-3">
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => handleToggleReplyLike(reply.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1 border rounded-xl text-[10px] font-bold uppercase transition-colors ${
-                        reply.is_liked
-                          ? "bg-red-500/10 text-red-500 border-red-500/20"
-                          : "bg-slate-900/50 text-slate-400 hover:text-red-400 border-white/5 hover:border-red-400/30 hover:bg-red-500/5"
-                      }`}
-                    >
-                      <Heart className={`w-3.5 h-3.5 ${reply.is_liked ? "fill-current" : ""}`} />
-                      {reply.like_count > 0 ? <span>{reply.like_count}</span> : null}
-                    </button>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {CURATED_EMOJIS.map(emoji => {
+                      const count = reply.reaction_counts?.[emoji] || 0;
+                      const hasReacted = reply.user_reactions?.includes(emoji);
+                      if (count === 0) return null;
+                      return (
+                        <button
+                          key={emoji}
+                          onClick={() => handleToggleReplyReaction(reply.id, emoji)}
+                          className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-bold transition-colors ${
+                            hasReacted
+                              ? "bg-yellow-400/20 text-yellow-400 border border-yellow-400/30"
+                              : "bg-slate-900/50 text-slate-400 border border-white/5 hover:border-white/20 hover:bg-white/5"
+                          }`}
+                        >
+                          <span>{emoji}</span>
+                          <span>{count}</span>
+                        </button>
+                      );
+                    })}
+                    
+                    {/* Emoji Picker Popover */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setOpenReplyEmojiPickerId(openReplyEmojiPickerId === reply.id ? null : reply.id)}
+                        className="flex items-center justify-center px-1.5 py-0.5 rounded-lg bg-slate-900 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all"
+                      >
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">+</span>
+                      </button>
+                      {openReplyEmojiPickerId === reply.id && (
+                        <div className="absolute left-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-2 bg-slate-900 border border-white/10 rounded-xl p-1.5 shadow-2xl grid grid-cols-3 sm:flex sm:flex-row gap-1 animate-in fade-in zoom-in-95 duration-200 z-[100] w-max">
+                          {CURATED_EMOJIS.map(emoji => (
+                            <button
+                              key={emoji}
+                              onClick={() => {
+                                handleToggleReplyReaction(reply.id, emoji);
+                                setOpenReplyEmojiPickerId(null);
+                              }}
+                              className="text-base hover:bg-white/10 p-1 rounded-md transition-colors flex items-center justify-center w-7 h-7"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     {currentUserProfile && currentUserProfile.id === reply.author_id ? (
@@ -598,6 +854,27 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                         className="text-[10px] font-bold text-slate-500 hover:text-yellow-400 uppercase tracking-wider transition-colors"
                       >
                         <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    ) : null}
+                    
+                    {currentUserProfile && (currentUserProfile.id === reply.author_id || currentUserProfile.role === "instructor" || currentUserProfile.role === "admin") ? (
+                      <button
+                        onClick={() => {
+                          setAlertConfig({
+                            isOpen: true,
+                            title: "Delete Reply?",
+                            message: "Are you sure you want to delete this reply? This action cannot be undone.",
+                            type: "warning",
+                            onConfirm: () => {
+                              handleDeleteReply(reply.id);
+                              setAlertConfig(prev => ({ ...prev, isOpen: false }));
+                            }
+                          });
+                        }}
+                        disabled={isDeletingReply}
+                        className="text-[10px] font-bold text-slate-500 hover:text-red-400 uppercase tracking-wider transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     ) : null}
 
@@ -640,9 +917,48 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
             className="w-full bg-slate-950 border border-white/10 rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-400/40 transition-colors resize-none"
             rows={5}
           />
+          
+          {/* Media Attachments Preview */}
+          {mediaUrls.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {mediaUrls.map((url, idx) => (
+                <div key={idx} className="relative group flex items-center gap-2 bg-slate-900 border border-white/10 rounded-lg px-2 py-1">
+                  <FileIcon className="w-3 h-3 text-yellow-400" />
+                  <span className="text-[10px] text-slate-300 font-mono truncate max-w-[150px]">Attached</span>
+                  <button
+                    type="button"
+                    onClick={() => setMediaUrls(prev => prev.filter((_, i) => i !== idx))}
+                    className="w-4 h-4 bg-slate-800 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center">
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileUpload}
+              accept="image/*,video/*,application/pdf"
+            />
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
+              disabled={isUploading}
+              className="w-9 h-9 rounded-xl bg-slate-900 border border-white/5 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/20 transition-all disabled:opacity-50"
+            >
+              {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+            </button>
+          </div>
           <button
             type="submit"
             disabled={isPending}
@@ -654,5 +970,6 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
         </div>
       </form>
     </div>
+    </>
   );
 }

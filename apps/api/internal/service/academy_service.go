@@ -1722,6 +1722,8 @@ func (s *academyService) GeneratePresignedUploadURL(ctx context.Context, student
 	var fileKey string
 	if uploadType == "avatar" {
 		fileKey = fmt.Sprintf("avatars/%s/%s", studentID.String(), filename)
+	} else if uploadType == "thread_media" {
+		fileKey = fmt.Sprintf("threads/media/%s/%s-%s", studentID.String(), uuid.New().String(), filename)
 	} else {
 		fileKey = fmt.Sprintf("assignments/%s/%s-%s", studentID.String(), uuid.New().String(), filename)
 	}
@@ -1880,6 +1882,7 @@ func (s *academyService) CreateThread(ctx context.Context, studentID uuid.UUID, 
 		Title:      req.Title,
 		Content:    req.Content,
 		Category:   req.Category,
+		MediaUrls:  req.MediaUrls,
 		IsResolved: false,
 		CreatedAt:  time.Now(),
 	}
@@ -2015,6 +2018,7 @@ func (s *academyService) CreateReply(ctx context.Context, studentID uuid.UUID, t
 		ThreadID:             threadID,
 		AuthorID:             studentID,
 		Content:              req.Content,
+		MediaUrls:            req.MediaUrls,
 		IsInstructorEndorsed: false,
 		CreatedAt:            time.Now(),
 	}
@@ -2164,6 +2168,24 @@ func (s *academyService) UpdateThread(ctx context.Context, studentID uuid.UUID, 
 	return thread, nil
 }
 
+func (s *academyService) DeleteThread(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID) error {
+	thread, err := s.repo.GetThreadByID(ctx, studentID, threadID)
+	if err != nil {
+		return errors.New("thread not found")
+	}
+
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return errors.New("unauthorized: student not found")
+	}
+
+	if thread.AuthorID != studentID && student.Role != "instructor" && student.Role != "admin" {
+		return errors.New("unauthorized: you do not have permission to delete this thread")
+	}
+
+	return s.repo.DeleteThread(ctx, threadID)
+}
+
 func (s *academyService) UpdateReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID, content string) (*domain.Reply, error) {
 	if content == "" {
 		return nil, errors.New("reply content cannot be empty")
@@ -2194,13 +2216,30 @@ func (s *academyService) UpdateReply(ctx context.Context, studentID uuid.UUID, r
 		reply.AuthorAvatarKey = student.AvatarS3Key
 		reply.AuthorRole = student.Role
 
-		cohort, err := s.repo.GetCohortByID(ctx, student.CohortID)
-		if err == nil {
+		if cohort, err := s.repo.GetCohortByID(ctx, student.CohortID); err == nil {
 			reply.CohortName = cohort.Name
 		}
 	}
 
 	return reply, nil
+}
+
+func (s *academyService) DeleteReply(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) error {
+	reply, err := s.repo.GetReplyByID(ctx, replyID)
+	if err != nil {
+		return errors.New("reply not found")
+	}
+
+	student, err := s.repo.GetStudentByID(ctx, studentID)
+	if err != nil {
+		return errors.New("unauthorized: student not found")
+	}
+
+	if reply.AuthorID != studentID && student.Role != "instructor" && student.Role != "admin" {
+		return errors.New("unauthorized: you do not have permission to delete this reply")
+	}
+
+	return s.repo.DeleteReply(ctx, replyID)
 }
 
 func extractMentions(content string) []string {
@@ -2220,15 +2259,15 @@ func extractMentions(content string) []string {
 	return usernames
 }
 
-func (s *academyService) ToggleThreadLike(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID) (bool, int, error) {
+func (s *academyService) ToggleThreadReaction(ctx context.Context, studentID uuid.UUID, threadID uuid.UUID, reactionType string) (bool, map[string]int, error) {
 	thread, err := s.repo.GetThreadByID(ctx, studentID, threadID)
 	if err != nil {
-		return false, 0, errors.New("thread not found")
+		return false, nil, errors.New("thread not found")
 	}
 
-	liked, likeCount, err := s.repo.ToggleLike(ctx, "thread", studentID, threadID)
+	liked, counts, err := s.repo.ToggleReaction(ctx, "thread", threadID, studentID, reactionType)
 	if err != nil {
-		return false, 0, err
+		return false, nil, err
 	}
 
 	// Trigger in-app notification if liked and the liker is not the author of the thread
@@ -2241,12 +2280,12 @@ func (s *academyService) ToggleThreadLike(ctx context.Context, studentID uuid.UU
 				if student.DisplayName != nil && *student.DisplayName != "" {
 					likerName = *student.DisplayName
 				}
-				msg := fmt.Sprintf("%s liked your thread: %s", likerName, thread.Title)
+				msg := fmt.Sprintf("%s reacted to your thread: %s", likerName, thread.Title)
 				notif := &domain.Notification{
 					ID:           uuid.New(),
 					UserID:       thread.AuthorID.String(),
 					ActorID:      aws.String(studentID.String()),
-					Type:         "like",
+					Type:         "reaction",
 					Message:      msg,
 					ReferenceURL: &refURL,
 					IsRead:       false,
@@ -2257,18 +2296,18 @@ func (s *academyService) ToggleThreadLike(ctx context.Context, studentID uuid.UU
 		}
 	}
 
-	return liked, likeCount, nil
+	return liked, counts, nil
 }
 
-func (s *academyService) ToggleReplyLike(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID) (bool, int, error) {
+func (s *academyService) ToggleReplyReaction(ctx context.Context, studentID uuid.UUID, replyID uuid.UUID, reactionType string) (bool, map[string]int, error) {
 	reply, err := s.repo.GetReplyByID(ctx, replyID)
 	if err != nil {
-		return false, 0, errors.New("reply not found")
+		return false, nil, errors.New("reply not found")
 	}
 
-	liked, likeCount, err := s.repo.ToggleLike(ctx, "reply", studentID, replyID)
+	liked, counts, err := s.repo.ToggleReaction(ctx, "reply", replyID, studentID, reactionType)
 	if err != nil {
-		return false, 0, err
+		return false, nil, err
 	}
 
 	// Trigger in-app notification if liked and the liker is not the author of the reply
@@ -2281,12 +2320,12 @@ func (s *academyService) ToggleReplyLike(ctx context.Context, studentID uuid.UUI
 				if student.DisplayName != nil && *student.DisplayName != "" {
 					likerName = *student.DisplayName
 				}
-				msg := fmt.Sprintf("%s liked your reply", likerName)
+				msg := fmt.Sprintf("%s reacted to your reply", likerName)
 				notif := &domain.Notification{
 					ID:           uuid.New(),
 					UserID:       reply.AuthorID.String(),
 					ActorID:      aws.String(studentID.String()),
-					Type:         "like",
+					Type:         "reaction",
 					Message:      msg,
 					ReferenceURL: &refURL,
 					IsRead:       false,
@@ -2297,7 +2336,7 @@ func (s *academyService) ToggleReplyLike(ctx context.Context, studentID uuid.UUI
 		}
 	}
 
-	return liked, likeCount, nil
+	return liked, counts, nil
 }
 
 

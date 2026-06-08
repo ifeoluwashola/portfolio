@@ -779,10 +779,10 @@ export async function getThreads(category: string, search: string, limit = 10, o
   return { data: result.data || [] };
 }
 
-export async function createThread(title: string, content: string, category: string) {
+export async function createThread(title: string, content: string, category: string, mediaUrls: string[] = []) {
   const result = await academyFetch("/v1/threads", {
     method: "POST",
-    body: JSON.stringify({ title, content, category }),
+    body: JSON.stringify({ title, content, category, media_urls: mediaUrls }),
   });
   if (result.error) return { error: result.error };
   return { success: true, data: result.data };
@@ -794,10 +794,10 @@ export async function getThread(id: string) {
   return { data: result.data };
 }
 
-export async function createReply(threadId: string, content: string) {
+export async function createReply(threadId: string, content: string, mediaUrls: string[] = []) {
   const result = await academyFetch(`/v1/threads/${threadId}/replies`, {
     method: "POST",
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, media_urls: mediaUrls }),
   });
   if (result.error) return { error: result.error };
   return { success: true, data: result.data };
@@ -820,6 +820,14 @@ export async function updateThread(threadId: string, title: string, content: str
   return { success: true, data: result.data };
 }
 
+export async function deleteThread(threadId: string) {
+  const result = await academyFetch(`/v1/threads/${threadId}`, {
+    method: "DELETE",
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
 export async function updateReply(replyId: string, content: string) {
   const result = await academyFetch(`/v1/replies/${replyId}`, {
     method: "PATCH",
@@ -829,20 +837,42 @@ export async function updateReply(replyId: string, content: string) {
   return { success: true, data: result.data };
 }
 
-export async function toggleThreadLike(threadId: string) {
-  const result = await academyFetch(`/v1/threads/${threadId}/like`, {
+export async function deleteReply(replyId: string) {
+  const result = await academyFetch(`/v1/replies/${replyId}`, {
+    method: "DELETE",
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
+export async function toggleThreadReaction(threadId: string, reactionType: string) {
+  const result = await academyFetch(`/v1/threads/${threadId}/reactions`, {
     method: "POST",
+    body: JSON.stringify({ reaction_type: reactionType }),
   });
   if (result.error) return { error: result.error };
   return { success: true, data: result.data };
 }
 
-export async function toggleReplyLike(replyId: string) {
-  const result = await academyFetch(`/v1/replies/${replyId}/like`, {
+export async function toggleReplyReaction(replyId: string, reactionType: string) {
+  const result = await academyFetch(`/v1/replies/${replyId}/reactions`, {
     method: "POST",
+    body: JSON.stringify({ reaction_type: reactionType }),
   });
   if (result.error) return { error: result.error };
   return { success: true, data: result.data };
+}
+
+export async function getUploadUrl(filename: string, type: string) {
+  const result = await academyFetch(`/v1/media/upload-url?filename=${encodeURIComponent(filename)}&type=${encodeURIComponent(type)}`);
+  if (result.error) return { error: result.error };
+  return { data: result.data };
+}
+
+export async function getDownloadUrl(fileKey: string) {
+  const result = await academyFetch(`/v1/media/download-url?key=${encodeURIComponent(fileKey)}`);
+  if (result.error) return null;
+  return result.data?.download_url;
 }
 
 
