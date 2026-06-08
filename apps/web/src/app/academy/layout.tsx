@@ -14,10 +14,13 @@ export default function AcademyLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-background text-foreground selection:bg-yellow-500/30 font-mono pb-40 transition-colors duration-300">
-      <main className="flex-1 overflow-x-hidden">
+    <>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css" />
+      <div className="min-h-screen bg-background text-foreground selection:bg-yellow-500/30 font-mono pb-40 transition-colors duration-300">
+        <main className="flex-1 overflow-x-hidden">
         {children}
       </main>
     </div>
+    </>
   );
 }
