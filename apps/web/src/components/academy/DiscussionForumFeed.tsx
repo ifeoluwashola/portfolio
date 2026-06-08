@@ -293,6 +293,9 @@ export function DiscussionForumFeed() {
       
       const { upload_url, file_key } = res.data;
 
+      const objectUrl = URL.createObjectURL(file);
+      setMediaDownloadUrls(prev => ({ ...prev, [file_key]: objectUrl }));
+
       const uploadRes = await fetch(upload_url, {
         method: "PUT",
         body: file,
@@ -788,13 +791,32 @@ export function DiscussionForumFeed() {
               {mediaUrls.length > 0 && (
                 <div className="flex flex-wrap gap-2 pt-2 border-t border-white/5">
                   {mediaUrls.map((url, idx) => (
-                    <div key={idx} className="relative group flex items-center gap-2 bg-slate-900 border border-white/10 rounded-lg px-2 py-1">
-                      <FileIcon className="w-3 h-3 text-yellow-400" />
-                      <span className="text-[10px] text-slate-300 font-mono truncate max-w-[100px]">Attached</span>
+                    <div key={idx} className="relative group">
+                      {url.match(/\.(png|jpe?g|gif|webp)$/i) && mediaDownloadUrls[url] ? (
+                        <img 
+                          src={mediaDownloadUrls[url]} 
+                          alt="Attachment preview" 
+                          className="h-16 w-16 object-cover rounded-lg border border-white/10 cursor-zoom-in"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setFullscreenMediaUrl(mediaDownloadUrls[url]);
+                          }}
+                        />
+                      ) : url.match(/\.(mp4|mov|webm)$/i) ? (
+                        <div className="h-16 w-16 bg-slate-900 rounded-lg border border-white/10 flex flex-col items-center justify-center gap-1">
+                          <FileIcon className="w-5 h-5 text-emerald-400" />
+                          <span className="text-[8px] text-slate-500 font-bold uppercase">Video</span>
+                        </div>
+                      ) : (
+                        <div className="h-16 w-16 bg-slate-900 rounded-lg border border-white/10 flex flex-col items-center justify-center gap-1">
+                          <FileIcon className="w-5 h-5 text-yellow-400" />
+                          <span className="text-[8px] text-slate-500 font-bold uppercase truncate max-w-[50px]">{url.split('-').pop()}</span>
+                        </div>
+                      )}
                       <button
                         type="button"
                         onClick={() => setMediaUrls(prev => prev.filter((_, i) => i !== idx))}
-                        className="w-4 h-4 bg-slate-800 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity z-10"
                       >
                         <X className="w-2.5 h-2.5" />
                       </button>
