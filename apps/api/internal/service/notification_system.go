@@ -16,6 +16,7 @@ import (
 type NotificationSystem interface {
 	NotifyUser(ctx context.Context, actorID *string, targetUserID string, notifType string, message string, referenceURL *string) error
 	NotifyCohort(ctx context.Context, actorID *string, cohortID int, notifType string, message string, referenceURL *string) error
+	NotifyAllActiveStudents(ctx context.Context, actorID *string, notifType string, message string, referenceURL *string) error
 }
 
 type notificationSystem struct {
@@ -96,6 +97,64 @@ func (s *notificationSystem) NotifyCohort(ctx context.Context, actorID *string, 
 			msgText := fmt.Sprintf("🔔 *%s*\n\n%s%s", notifType, message, link)
 			// A background context since the parent ctx might cancel before this finishes
 			_ = s.telegramSvc.SendCohortMessage(context.Background(), cohortID, msgText)
+		}()
+	}
+
+	return s.repo.BulkCreateNotifications(ctx, notifications)
+}
+
+func (s *notificationSystem) NotifyAllActiveStudents(ctx context.Context, actorID *string, notifType string, message string, referenceURL *string) error {
+	students, err := s.repo.GetAllStudents(ctx)
+	if err != nil {
+		return err
+	}
+
+	var notifications []*domain.Notification
+	now := time.Now()
+	cohortIDs := make(map[int]bool)
+
+	for _, st := range students {
+		if st.Status == "active" {
+			notifications = append(notifications, &domain.Notification{
+				ID:           uuid.New(),
+				UserID:       st.ID.String(),
+				ActorID:      actorID,
+				Type:         notifType,
+				Message:      message,
+				ReferenceURL: referenceURL,
+				IsRead:       false,
+				CreatedAt:    now,
+			})
+			cohortIDs[st.CohortID] = true
+		}
+	}
+
+	if len(notifications) == 0 {
+		return nil
+	}
+
+	// Trigger telegram message asynchronously to all cohorts that have active students
+	if s.telegramSvc != nil {
+		go func() {
+			var link string
+			if referenceURL != nil {
+				frontendURL := s.cfg.FrontendURL
+				if frontendURL == "" {
+					frontendURL = "https://kyberncloud.com"
+				}
+				fullURL := strings.TrimSuffix(frontendURL, "/")
+				if !strings.HasPrefix(*referenceURL, "/") {
+					fullURL += "/"
+				}
+				fullURL += *referenceURL
+				link = "\n\n🔗 " + fullURL
+			}
+			msgText := fmt.Sprintf("🚨 *%s*\n\n%s%s", notifType, message, link)
+			
+			for cohortID := range cohortIDs {
+				// We run these sequentially in the background routine to avoid spamming the Telegram API concurrently
+				_ = s.telegramSvc.SendCohortMessage(context.Background(), cohortID, msgText)
+			}
 		}()
 	}
 

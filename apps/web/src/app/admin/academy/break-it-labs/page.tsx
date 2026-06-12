@@ -13,6 +13,8 @@ import {
   Edit3,
   X
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import { AlertModal } from "@/components/AlertModal";
 
 interface SubmissionComment {
   id: number;
@@ -51,6 +53,7 @@ export default function AdminLabsPage() {
   const [selectedLab, setSelectedLab] = useState<BreakItLab | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewingSubmissions, setViewingSubmissions] = useState<number | null>(null);
+  const [deletingLabId, setDeletingLabId] = useState<number | null>(null);
 
 
 
@@ -109,11 +112,15 @@ export default function AdminLabsPage() {
     }
   };
 
-  const handleDeleteLab = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this lab? All submissions will be lost.")) return;
+  const handleDeleteLab = (id: number) => {
+    setDeletingLabId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingLabId) return;
 
     try {
-      const res = await fetch(`/api/admin/proxy/v1/admin/labs/${id}`, {
+      const res = await fetch(`/api/admin/proxy/v1/admin/labs/${deletingLabId}`, {
         method: "DELETE",
       });
 
@@ -121,6 +128,8 @@ export default function AdminLabsPage() {
       fetchLabs();
     } catch (err: unknown) {
       if (err instanceof Error) alert(err.message);
+    } finally {
+      setDeletingLabId(null);
     }
   };
 
@@ -201,7 +210,9 @@ export default function AdminLabsPage() {
                     {lab.status}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{lab.scenario}</p>
+                <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-muted-foreground leading-relaxed mt-2">
+                  <ReactMarkdown>{lab.scenario}</ReactMarkdown>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button 
@@ -297,8 +308,10 @@ export default function AdminLabsPage() {
                         <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                           <Terminal className="w-3 h-3" /> Proposed Solution_
                         </div>
-                        <div className="bg-background border border-border/50 rounded-xl p-6 font-mono text-[11px] overflow-x-auto text-emerald-400 leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
-                          {sub.proposed_fix}
+                        <div className="bg-background border border-border/50 rounded-xl p-6 overflow-x-auto max-h-[400px] overflow-y-auto">
+                          <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-emerald-400 leading-relaxed">
+                            <ReactMarkdown>{sub.proposed_fix}</ReactMarkdown>
+                          </div>
                         </div>
                       </div>
                       
@@ -422,6 +435,18 @@ export default function AdminLabsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <AlertModal
+        isOpen={deletingLabId !== null}
+        onClose={() => setDeletingLabId(null)}
+        title="Delete Break-It Lab"
+        message="Are you sure you want to delete this lab? All submissions will be permanently lost. This action cannot be undone."
+        type="error"
+        showCancel={true}
+        confirmText="Confirm Delete_"
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

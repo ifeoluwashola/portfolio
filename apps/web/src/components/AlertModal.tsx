@@ -9,6 +9,8 @@ interface AlertModalProps {
   message: string;
   type?: 'error' | 'warning' | 'success';
   onConfirm?: () => void;
+  confirmText?: string;
+  showCancel?: boolean;
 }
 
 export const AlertModal: React.FC<AlertModalProps> = ({ 
@@ -17,7 +19,9 @@ export const AlertModal: React.FC<AlertModalProps> = ({
   title, 
   message, 
   type = 'warning',
-  onConfirm 
+  onConfirm,
+  confirmText = 'Acknowledge_',
+  showCancel = false
 }) => {
   if (!isOpen) return null;
 
@@ -65,17 +69,25 @@ export const AlertModal: React.FC<AlertModalProps> = ({
           <h3 className="text-xl font-bold text-foreground uppercase tracking-tight mb-2">
             {title}
           </h3>
-          <p className="text-sm text-muted-foreground leading-relaxed font-mono">
+          <p className="text-sm text-muted-foreground leading-relaxed font-mono whitespace-pre-wrap">
             {message}
           </p>
         </div>
 
         <div className="p-6 bg-muted/30 flex justify-end gap-3">
+          {showCancel && (
+            <button
+              onClick={onClose}
+              className="px-6 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Cancel
+            </button>
+          )}
           <button
             onClick={onConfirm || onClose}
             className={`px-8 py-3 rounded-xl font-bold text-[10px] uppercase tracking-widest transition-all ${currentTheme.button}`}
           >
-            Acknowledge_
+            {confirmText}
           </button>
         </div>
       </div>
