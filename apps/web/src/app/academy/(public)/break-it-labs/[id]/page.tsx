@@ -223,9 +223,11 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
               <div className="absolute top-4 right-4 text-[9px] font-bold text-muted-foreground/50 bg-card/50 px-2 py-1 rounded border border-border uppercase group-hover:text-red-500 transition-colors z-10">
                 Read-Only
               </div>
-              <pre className="bg-card/50 border border-border rounded-2xl p-6 text-xs text-red-500 dark:text-red-300 overflow-x-auto leading-relaxed scrollbar-hide">
-                <code>{lab.broken_code}</code>
-              </pre>
+              <div className="bg-card/50 border border-border rounded-2xl p-6">
+                <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words leading-relaxed text-red-500 dark:text-red-300">
+                  <ReactMarkdown>{lab.broken_code}</ReactMarkdown>
+                </div>
+              </div>
             </div>
           </section>
 

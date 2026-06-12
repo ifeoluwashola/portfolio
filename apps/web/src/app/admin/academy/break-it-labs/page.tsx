@@ -236,9 +236,9 @@ export default function AdminLabsPage() {
                     <Code className="w-3 h-3" />
                     Current Broken State
                   </div>
-                  <pre className="text-[11px] font-mono whitespace-pre-wrap text-muted-foreground scrollbar-hide max-h-[200px] overflow-y-auto">
-                    {lab.broken_code}
-                  </pre>
+                  <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-red-400/80 leading-relaxed max-h-[200px] overflow-y-auto scrollbar-hide">
+                    <ReactMarkdown>{lab.broken_code}</ReactMarkdown>
+                  </div>
                </div>
 
                <div className="bg-emerald-500/5 rounded-lg p-4 border border-emerald-500/10">
@@ -246,9 +246,9 @@ export default function AdminLabsPage() {
                     <CheckCircle2 className="w-3 h-3" />
                     Reference Solution
                   </div>
-                  <pre className="text-[11px] font-mono whitespace-pre-wrap text-emerald-500/80 scrollbar-hide max-h-[200px] overflow-y-auto">
-                    {lab.solution_code || "No solution provided_"}
-                  </pre>
+                  <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-emerald-400/80 leading-relaxed max-h-[200px] overflow-y-auto scrollbar-hide">
+                    <ReactMarkdown>{lab.solution_code || "No solution provided_"}</ReactMarkdown>
+                  </div>
                </div>
             </div>
             
