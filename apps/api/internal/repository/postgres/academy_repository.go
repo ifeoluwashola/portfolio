@@ -507,9 +507,8 @@ func (r *AcademyRepository) GetLabByID(ctx context.Context, id int) (*domain.Bre
 }
 
 func (r *AcademyRepository) CreateLab(ctx context.Context, lab *domain.BreakItLab) error {
-	query := `INSERT INTO break_it_labs (title, scenario, broken_code, solution_code, status) VALUES ($1, $2, $3, $4, $5)`
-	_, err := r.db.Exec(ctx, query, lab.Title, lab.Scenario, lab.BrokenCode, lab.SolutionCode, lab.Status)
-	return err
+	query := `INSERT INTO break_it_labs (title, scenario, broken_code, solution_code, status) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	return r.db.QueryRow(ctx, query, lab.Title, lab.Scenario, lab.BrokenCode, lab.SolutionCode, lab.Status).Scan(&lab.ID)
 }
 
 func (r *AcademyRepository) UpdateLab(ctx context.Context, lab *domain.BreakItLab) error {

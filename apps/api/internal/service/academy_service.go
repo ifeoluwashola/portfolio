@@ -843,7 +843,21 @@ func (s *academyService) GetLab(ctx context.Context, id int) (*domain.BreakItLab
 }
 
 func (s *academyService) AdminCreateLab(ctx context.Context, lab *domain.BreakItLab) error {
-	return s.repo.CreateLab(ctx, lab)
+	err := s.repo.CreateLab(ctx, lab)
+	if err != nil {
+		return err
+	}
+
+	// Trigger: Notify all active students about the new lab
+	if lab.Status == "active" {
+		go func() {
+			refURL := fmt.Sprintf("/academy/break-it-labs/%d", lab.ID)
+			msg := fmt.Sprintf("A new Break-It Lab \"%s\" has been deployed! Can you fix it?", lab.Title)
+			_ = s.notifSystem.NotifyAllActiveStudents(context.Background(), nil, "Break-It Lab", msg, &refURL)
+		}()
+	}
+
+	return nil
 }
 
 func (s *academyService) AdminUpdateLab(ctx context.Context, lab *domain.BreakItLab) error {

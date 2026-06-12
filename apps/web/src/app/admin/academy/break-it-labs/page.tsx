@@ -14,6 +14,7 @@ import {
   X
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { AlertModal } from "@/components/AlertModal";
 
 interface SubmissionComment {
   id: number;
@@ -52,6 +53,7 @@ export default function AdminLabsPage() {
   const [selectedLab, setSelectedLab] = useState<BreakItLab | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewingSubmissions, setViewingSubmissions] = useState<number | null>(null);
+  const [deletingLabId, setDeletingLabId] = useState<number | null>(null);
 
 
 
@@ -110,11 +112,15 @@ export default function AdminLabsPage() {
     }
   };
 
-  const handleDeleteLab = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this lab? All submissions will be lost.")) return;
+  const handleDeleteLab = (id: number) => {
+    setDeletingLabId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deletingLabId) return;
 
     try {
-      const res = await fetch(`/api/admin/proxy/v1/admin/labs/${id}`, {
+      const res = await fetch(`/api/admin/proxy/v1/admin/labs/${deletingLabId}`, {
         method: "DELETE",
       });
 
@@ -122,6 +128,8 @@ export default function AdminLabsPage() {
       fetchLabs();
     } catch (err: unknown) {
       if (err instanceof Error) alert(err.message);
+    } finally {
+      setDeletingLabId(null);
     }
   };
 
@@ -427,6 +435,18 @@ export default function AdminLabsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <AlertModal
+        isOpen={deletingLabId !== null}
+        onClose={() => setDeletingLabId(null)}
+        title="Delete Break-It Lab"
+        message="Are you sure you want to delete this lab? All submissions will be permanently lost. This action cannot be undone."
+        type="error"
+        showCancel={true}
+        confirmText="Confirm Delete_"
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }
