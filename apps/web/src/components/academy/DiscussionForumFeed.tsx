@@ -541,14 +541,16 @@ export function DiscussionForumFeed() {
                                 } else if (key.match(/\.pdf$/i)) {
                                   return (
                                     <div key={key} className="relative w-full max-w-2xl h-[500px] bg-slate-950 rounded-xl border border-white/10 overflow-hidden group">
-                                      <iframe src={`${url}#view=FitH`} className="w-full h-full border-none bg-white" title="PDF Preview" />
-                                      <button 
-                                        onClick={(e) => { e.stopPropagation(); setFullscreenMediaUrl(url); }}
+                                      <iframe src={`${url}#toolbar=0&navpanes=0&view=FitH`} className="w-full h-full border-none bg-white" title="PDF Preview" />
+                                      <a 
+                                        href={url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
                                         className="absolute top-3 right-3 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 flex items-center gap-2 shadow-xl"
                                       >
                                         <FileIcon className="w-4 h-4 text-red-400" />
-                                        <span className="text-[10px] font-bold uppercase tracking-widest">Fullscreen</span>
-                                      </button>
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">Open in New Tab</span>
+                                      </a>
                                     </div>
                                   );
                                 } else {
@@ -895,20 +897,12 @@ export function DiscussionForumFeed() {
           >
             <X className="w-6 h-6" />
           </button>
-          {fullscreenMediaUrl.includes('.pdf') || fullscreenMediaUrl.toLowerCase().includes('.pdf') ? (
-            <iframe 
-              src={fullscreenMediaUrl} 
-              className="w-full h-full max-w-6xl rounded-lg shadow-2xl bg-white"
-              onClick={(e) => e.stopPropagation()}
-            />
-          ) : (
-            <img 
-              src={fullscreenMediaUrl} 
-              alt="Fullscreen preview" 
-              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-              onClick={(e) => e.stopPropagation()}
-            />
-          )}
+          <img 
+            src={fullscreenMediaUrl} 
+            alt="Fullscreen preview" 
+            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </>
