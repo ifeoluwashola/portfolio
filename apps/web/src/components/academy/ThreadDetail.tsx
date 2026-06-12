@@ -757,7 +757,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                 }`}
               >
                 {/* Verified solution checkmark badge */}
-                {isEndorsed && (
+                {isEndorsed && (thread?.category === 'question' || thread?.category === 'debugging') && (
                   <div className="absolute top-4 right-4 flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-lg">
                     <Check className="w-3.5 h-3.5 text-emerald-500" />
                     <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Verified Solution</span>
@@ -947,7 +947,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                       </button>
                     ) : null}
 
-                    {currentUserProfile?.role === "instructor" && !isEndorsed && !isInstructor && (
+                    {currentUserProfile?.role === "instructor" && !isEndorsed && !isInstructor && (thread?.category === 'question' || thread?.category === 'debugging') && !thread?.is_resolved && (
                       <button
                         onClick={() => handleEndorseReply(reply.id)}
                         className="flex items-center gap-1.5 px-3 py-1.5 border border-emerald-500/30 text-emerald-500 hover:bg-emerald-500/10 rounded-xl text-[9px] font-bold uppercase tracking-widest transition-all"
