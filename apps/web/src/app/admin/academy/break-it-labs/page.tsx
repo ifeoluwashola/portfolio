@@ -13,6 +13,7 @@ import {
   Edit3,
   X
 } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface SubmissionComment {
   id: number;
@@ -201,7 +202,9 @@ export default function AdminLabsPage() {
                     {lab.status}
                   </span>
                 </div>
-                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{lab.scenario}</p>
+                <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-muted-foreground leading-relaxed mt-2">
+                  <ReactMarkdown>{lab.scenario}</ReactMarkdown>
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <button 
@@ -297,8 +300,10 @@ export default function AdminLabsPage() {
                         <div className="flex items-center gap-2 mb-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                           <Terminal className="w-3 h-3" /> Proposed Solution_
                         </div>
-                        <div className="bg-background border border-border/50 rounded-xl p-6 font-mono text-[11px] overflow-x-auto text-emerald-400 leading-relaxed whitespace-pre-wrap max-h-[400px] overflow-y-auto">
-                          {sub.proposed_fix}
+                        <div className="bg-background border border-border/50 rounded-xl p-6 overflow-x-auto max-h-[400px] overflow-y-auto">
+                          <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-emerald-400 leading-relaxed">
+                            <ReactMarkdown>{sub.proposed_fix}</ReactMarkdown>
+                          </div>
                         </div>
                       </div>
                       
