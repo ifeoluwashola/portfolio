@@ -577,17 +577,43 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                     
                     if (key.match(/\.(mp4|mov|webm)$/i)) {
                       return (
-                        <video key={key} src={downloadUrl} controls className="max-h-64 rounded-xl border border-white/10" />
+                        <div key={key} className="relative w-full max-w-2xl bg-slate-950 rounded-xl border border-white/10 overflow-hidden group" onClick={(e) => e.stopPropagation()}>
+                          <video src={downloadUrl} controls className="w-full max-h-[500px] object-contain bg-black" />
+                        </div>
                       );
                     } else if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
                       return (
-                        <img 
-                          key={key} 
-                          src={downloadUrl} 
-                          alt="Attachment" 
-                          className="max-h-64 rounded-xl border border-white/10 object-contain cursor-zoom-in hover:opacity-90 transition-opacity" 
-                          onClick={() => setFullscreenMediaUrl(downloadUrl)}
-                        />
+                        <div key={key} className="relative w-full max-w-2xl bg-slate-950 rounded-xl border border-white/10 overflow-hidden group">
+                          <img 
+                            src={downloadUrl} 
+                            alt="Attachment" 
+                            className="w-full max-h-[500px] object-contain cursor-zoom-in" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFullscreenMediaUrl(downloadUrl);
+                            }}
+                          />
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setFullscreenMediaUrl(downloadUrl); }}
+                            className="absolute top-3 right-3 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 flex items-center gap-2 shadow-xl"
+                          >
+                            <FileIcon className="w-4 h-4 text-emerald-400" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Fullscreen</span>
+                          </button>
+                        </div>
+                      );
+                    } else if (key.match(/\.pdf$/i)) {
+                      return (
+                        <div key={key} className="relative w-full max-w-2xl h-[500px] bg-slate-950 rounded-xl border border-white/10 overflow-hidden group">
+                          <iframe src={`${downloadUrl}#view=FitH`} className="w-full h-full border-none bg-white" title="PDF Preview" />
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); setFullscreenMediaUrl(downloadUrl); }}
+                            className="absolute top-3 right-3 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 flex items-center gap-2 shadow-xl"
+                          >
+                            <FileIcon className="w-4 h-4 text-red-400" />
+                            <span className="text-[10px] font-bold uppercase tracking-widest">Fullscreen</span>
+                          </button>
+                        </div>
                       );
                     } else {
                       return (
@@ -785,17 +811,43 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                         
                         if (key.match(/\.(mp4|mov|webm)$/i)) {
                           return (
-                            <video key={key} src={downloadUrl} controls className="max-h-64 rounded-xl border border-white/10" />
+                            <div key={key} className="relative w-full max-w-2xl bg-slate-950 rounded-xl border border-white/10 overflow-hidden group" onClick={(e) => e.stopPropagation()}>
+                              <video src={downloadUrl} controls className="w-full max-h-[500px] object-contain bg-black" />
+                            </div>
                           );
                         } else if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
                           return (
-                            <img 
-                              key={key} 
-                              src={downloadUrl} 
-                              alt="Attachment" 
-                              className="max-h-64 rounded-xl border border-white/10 object-contain cursor-zoom-in hover:opacity-90 transition-opacity" 
-                              onClick={() => setFullscreenMediaUrl(downloadUrl)}
-                            />
+                            <div key={key} className="relative w-full max-w-2xl bg-slate-950 rounded-xl border border-white/10 overflow-hidden group">
+                              <img 
+                                src={downloadUrl} 
+                                alt="Attachment" 
+                                className="w-full max-h-[500px] object-contain cursor-zoom-in" 
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFullscreenMediaUrl(downloadUrl);
+                                }}
+                              />
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMediaUrl(downloadUrl); }}
+                                className="absolute top-3 right-3 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 flex items-center gap-2 shadow-xl"
+                              >
+                                <FileIcon className="w-4 h-4 text-emerald-400" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Fullscreen</span>
+                              </button>
+                            </div>
+                          );
+                        } else if (key.match(/\.pdf$/i)) {
+                          return (
+                            <div key={key} className="relative w-full max-w-2xl h-[500px] bg-slate-950 rounded-xl border border-white/10 overflow-hidden group">
+                              <iframe src={`${downloadUrl}#view=FitH`} className="w-full h-full border-none bg-white" title="PDF Preview" />
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); setFullscreenMediaUrl(downloadUrl); }}
+                                className="absolute top-3 right-3 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 flex items-center gap-2 shadow-xl"
+                              >
+                                <FileIcon className="w-4 h-4 text-red-400" />
+                                <span className="text-[10px] font-bold uppercase tracking-widest">Fullscreen</span>
+                              </button>
+                            </div>
                           );
                         } else {
                           return (
@@ -1008,17 +1060,25 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
           onClick={() => setFullscreenMediaUrl(null)}
         >
           <button 
-            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white"
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white z-50"
             onClick={() => setFullscreenMediaUrl(null)}
           >
             <X className="w-6 h-6" />
           </button>
-          <img 
-            src={fullscreenMediaUrl} 
-            alt="Fullscreen preview" 
-            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {fullscreenMediaUrl.includes('.pdf') || fullscreenMediaUrl.toLowerCase().includes('.pdf') ? (
+            <iframe 
+              src={fullscreenMediaUrl} 
+              className="w-full h-full max-w-6xl rounded-lg shadow-2xl bg-white"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img 
+              src={fullscreenMediaUrl} 
+              alt="Fullscreen preview" 
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
         </div>
       )}
     </div>

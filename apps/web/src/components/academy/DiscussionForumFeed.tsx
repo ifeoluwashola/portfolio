@@ -513,21 +513,51 @@ export function DiscussionForumFeed() {
                                 if (!url) return <div key={key} className="h-32 w-32 bg-slate-900 rounded-xl animate-pulse border border-white/5" />;
                                 if (key.match(/\.(png|jpe?g|gif|webp)$/i)) {
                                   return (
-                                    <img 
-                                      key={key} 
-                                      src={url} 
-                                      alt="Attachment" 
-                                      className="h-32 sm:h-48 w-auto object-contain bg-slate-950 rounded-xl border border-white/10 cursor-zoom-in" 
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setFullscreenMediaUrl(url);
-                                      }}
-                                    />
+                                    <div key={key} className="relative w-full max-w-2xl bg-slate-950 rounded-xl border border-white/10 overflow-hidden group">
+                                      <img 
+                                        src={url} 
+                                        alt="Attachment" 
+                                        className="w-full max-h-[500px] object-contain cursor-zoom-in" 
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setFullscreenMediaUrl(url);
+                                        }}
+                                      />
+                                      <button 
+                                        onClick={(e) => { e.stopPropagation(); setFullscreenMediaUrl(url); }}
+                                        className="absolute top-3 right-3 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 flex items-center gap-2 shadow-xl"
+                                      >
+                                        <FileIcon className="w-4 h-4 text-emerald-400" />
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">Fullscreen</span>
+                                      </button>
+                                    </div>
                                   );
                                 } else if (key.match(/\.(mp4|mov|webm)$/i)) {
-                                  return <div key={key} className="h-32 w-48 bg-slate-950 rounded-xl border border-white/10 flex flex-col items-center justify-center gap-2"><FileIcon className="w-6 h-6 text-emerald-400" /><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Video</span></div>;
+                                  return (
+                                    <div key={key} className="relative w-full max-w-2xl bg-slate-950 rounded-xl border border-white/10 overflow-hidden group" onClick={(e) => e.stopPropagation()}>
+                                      <video src={url} controls className="w-full max-h-[500px] object-contain bg-black" />
+                                    </div>
+                                  );
+                                } else if (key.match(/\.pdf$/i)) {
+                                  return (
+                                    <div key={key} className="relative w-full max-w-2xl h-[500px] bg-slate-950 rounded-xl border border-white/10 overflow-hidden group">
+                                      <iframe src={`${url}#view=FitH`} className="w-full h-full border-none bg-white" title="PDF Preview" />
+                                      <button 
+                                        onClick={(e) => { e.stopPropagation(); setFullscreenMediaUrl(url); }}
+                                        className="absolute top-3 right-3 px-3 py-1.5 bg-slate-900/90 hover:bg-slate-800 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm border border-white/10 flex items-center gap-2 shadow-xl"
+                                      >
+                                        <FileIcon className="w-4 h-4 text-red-400" />
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">Fullscreen</span>
+                                      </button>
+                                    </div>
+                                  );
                                 } else {
-                                  return <div key={key} className="h-32 w-48 bg-slate-950 rounded-xl border border-white/10 flex flex-col items-center justify-center gap-2"><FileIcon className="w-6 h-6 text-yellow-400" /><span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">File</span></div>;
+                                  return (
+                                    <a key={key} href={url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="h-32 w-48 bg-slate-950 rounded-xl border border-white/10 flex flex-col items-center justify-center gap-2 hover:bg-slate-900 transition-colors">
+                                      <FileIcon className="w-6 h-6 text-yellow-400" />
+                                      <span className="text-[10px] text-slate-500 font-bold uppercase tracking-widest text-center px-2 truncate w-full">{key.split('-').pop()}</span>
+                                    </a>
+                                  );
                                 }
                               })}
                               {thread.media_urls.length > 3 && (
@@ -860,17 +890,25 @@ export function DiscussionForumFeed() {
           onClick={() => setFullscreenMediaUrl(null)}
         >
           <button 
-            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white"
+            className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-colors text-white z-50"
             onClick={() => setFullscreenMediaUrl(null)}
           >
             <X className="w-6 h-6" />
           </button>
-          <img 
-            src={fullscreenMediaUrl} 
-            alt="Fullscreen preview" 
-            className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          />
+          {fullscreenMediaUrl.includes('.pdf') || fullscreenMediaUrl.toLowerCase().includes('.pdf') ? (
+            <iframe 
+              src={fullscreenMediaUrl} 
+              className="w-full h-full max-w-6xl rounded-lg shadow-2xl bg-white"
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <img 
+              src={fullscreenMediaUrl} 
+              alt="Fullscreen preview" 
+              className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
         </div>
       )}
     </>
