@@ -6,7 +6,6 @@ import { KybernNexusNavbar } from "@/components/KybernNexusNavbar";
 import { KybernNexusFooter } from "@/components/KybernNexusFooter";
 
 export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
-  const [currentSlide, setCurrentSlide] = useState(0);
   const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", company: "", role: "", message: "" });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStatus, setFormStatus] = useState<"idle" | "success" | "error">("idle");
@@ -21,7 +20,7 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
     setIsSubmitting(true);
     setFormStatus("idle");
     setErrorMessage("");
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
     try {
       const res = await fetch(`${apiBase}/v1/contact`, {
         method: "POST",
@@ -39,97 +38,72 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
     }
   };
 
-  const slides = [
-    {
-      image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80",
-      title: "Kybern Nexus",
-      subtitle: "Your Central Hub for Technological Innovation.",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800",
-      title: "Engineering Reality",
-      subtitle: "From Smart Devices to Global Systems.",
-    },
-    {
-      image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800",
-      title: "Forging Elite Talent",
-      subtitle: "Enter the Live Ops Bridge.",
-    },
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 8000);
-    return () => clearInterval(timer);
-  }, [slides.length]);
-
   return (
     <div className="min-h-screen bg-kn-bg text-kn-body font-sans selection:bg-kn-accent/30 selection:text-kn-heading">
       {/* 1. Global Navbar */}
       <KybernNexusNavbar />
 
-      {/* 2. Interactive Hero Slider */}
-      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-kn-bg">
-        {slides.map((slide, index) => (
-          <div
-            key={index}
-            className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-              index === currentSlide ? "opacity-100" : "opacity-0"
-            }`}
-          >
-            <div className="absolute inset-0 bg-[var(--kn-overlay)] z-10" />
-            <img
-              src={slide.image}
-              alt="Hero Background"
-              className="absolute inset-0 w-full h-full object-cover"
-            />
-          </div>
-        ))}
+      {/* 2. Hero Section */}
+      <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-kn-bg pt-20">
+        <div className="absolute inset-0 z-0 opacity-20">
+          <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=1600&q=80" alt="Hero Background" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-kn-bg" />
+        </div>
 
-        <div className="relative z-20 text-center px-4 max-w-5xl mx-auto mt-20 w-full">
+        <div className="relative z-20 text-center px-4 max-w-5xl mx-auto w-full">
           <div className="inline-block mb-6 px-4 py-1.5 rounded-full border border-kn-accent/30 bg-kn-accent-bg text-kn-accent text-sm font-semibold tracking-wide uppercase">
-            Kybern Nexus Ltd
+            Cloud Engineering · DevOps Consulting · Technical Education
           </div>
-          <div className="h-48 md:h-64 flex items-center justify-center relative w-full">
-            {slides.map((slide, index) => (
-              <div
-                key={index}
-                className={`absolute w-full left-0 text-center flex flex-col items-center justify-center transition-all duration-[1500ms] ease-out ${
-                  index === currentSlide ? "opacity-100 translate-y-0" : "opacity-0 translate-y-12 pointer-events-none"
-                }`}
-              >
-                <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold text-kn-heading leading-tight tracking-tight mb-4 drop-shadow-2xl">
-                  {slide.title}
-                </h1>
-                <p className="text-xl md:text-2xl lg:text-3xl font-medium text-kn-body max-w-3xl drop-shadow-lg">
-                  {slide.subtitle}
-                </p>
-              </div>
-            ))}
+          <div className="flex flex-col items-center justify-center">
+            <h1 className="text-5xl md:text-6xl lg:text-7xl font-extrabold leading-tight tracking-tight mb-6 drop-shadow-2xl">
+              <span className="bg-clip-text text-transparent bg-gradient-to-r from-kn-heading via-kn-heading to-kn-accent">
+                We build the infrastructure modern businesses run on.
+              </span>
+            </h1>
+            <p className="text-xl md:text-2xl font-medium text-kn-body max-w-3xl drop-shadow-lg leading-relaxed">
+              From cloud cost audits to production-grade DevOps consulting, to the engineering education your team actually needs — Kybern Nexus is where serious engineering happens.
+            </p>
           </div>
-          <div className="mt-8 flex justify-center gap-4">
-            <Link href="/consulting" className="bg-kn-accent hover:brightness-110 text-kn-bg px-5 py-3 md:px-8 md:py-4 rounded-md text-sm md:text-lg font-bold transition-all shadow-[0_0_20px_var(--kn-accent-glow)] flex items-center gap-2">
-              Explore Consulting <ArrowRight className="w-4 h-4 md:w-5 md:h-5" />
+          <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+            <Link href="/consulting" className="bg-kn-accent hover:brightness-110 text-kn-bg px-6 py-4 rounded-md text-base md:text-lg font-bold transition-all shadow-[0_0_20px_var(--kn-accent-glow)] flex items-center justify-center gap-2">
+              Explore Consulting <ArrowRight className="w-5 h-5" />
             </Link>
-            <Link href="/academy" className="bg-kn-card hover:brightness-95 dark:hover:brightness-125 text-kn-heading border border-kn-border px-5 py-3 md:px-8 md:py-4 rounded-md text-sm md:text-lg font-bold transition-all">
-              Join Academy
+            <Link href="/academy" className="bg-kn-card hover:brightness-95 dark:hover:brightness-125 text-kn-heading border border-kn-border px-6 py-4 rounded-md text-base md:text-lg font-bold transition-all flex items-center justify-center">
+              Browse the Academy <ArrowRight className="w-5 h-5 ml-2" />
             </Link>
           </div>
         </div>
+      </section>
 
-        {/* Slider Navigation Dots */}
-        <div className="absolute bottom-10 left-0 right-0 z-20 flex justify-center space-x-3">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                index === currentSlide ? "bg-kn-accent w-8" : "bg-kn-heading/30 hover:bg-kn-heading/50"
-              }`}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
+      {/* 2.5. Social Proof / Stats */}
+      <section className="py-20 bg-kn-bg border-t border-kn-border relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-kn-accent/5 to-transparent pointer-events-none" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-extrabold text-kn-heading">Trusted by engineering teams across industries.</h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="bg-kn-card border border-kn-border p-8 rounded-2xl text-center shadow-lg hover:border-kn-accent/50 transition-colors">
+              <p className="text-5xl font-black text-kn-accent mb-4">100+</p>
+              <p className="text-lg font-bold text-kn-heading mb-2">Projects Deployed</p>
+              <p className="text-sm text-kn-muted leading-relaxed">Across startups, scale-ups, and enterprise teams on AWS, GCP, and Azure.</p>
+            </div>
+            <div className="bg-kn-card border border-kn-border p-8 rounded-2xl text-center shadow-lg hover:border-kn-accent/50 transition-colors">
+              <p className="text-5xl font-black text-kn-accent mb-4">45%</p>
+              <p className="text-lg font-bold text-kn-heading mb-2">Cost Reduction</p>
+              <p className="text-sm text-kn-muted leading-relaxed">Typical average result within 60 days of our first infrastructure audit.</p>
+            </div>
+            <div className="bg-kn-card border border-kn-border p-8 rounded-2xl text-center shadow-lg hover:border-kn-accent/50 transition-colors">
+              <p className="text-5xl font-black text-kn-accent mb-4">50+</p>
+              <p className="text-lg font-bold text-kn-heading mb-2">Engineers Trained</p>
+              <p className="text-sm text-kn-muted leading-relaxed">Through the Kybern Academy — some on staff, others at client sites.</p>
+            </div>
+            <div className="bg-kn-card border border-kn-border p-8 rounded-2xl text-center shadow-lg hover:border-kn-accent/50 transition-colors">
+              <p className="text-5xl font-black text-kn-accent mb-4">3</p>
+              <p className="text-lg font-bold text-kn-heading mb-2">Cloud Platforms</p>
+              <p className="text-sm text-kn-muted leading-relaxed">AWS &middot; GCP &middot; Azure. Active production experience on all three.</p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -138,11 +112,11 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
         <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-kn-accent/30 to-transparent" />
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-kn-accent font-bold tracking-widest uppercase text-sm mb-2">Our Ecosystem</h2>
-            <p className="text-3xl md:text-5xl font-extrabold text-kn-heading">Engineering Reality.</p>
+            <h2 className="text-kn-accent font-bold tracking-widest uppercase text-sm mb-2">WHAT WE DO</h2>
+            <p className="text-3xl md:text-5xl font-extrabold text-kn-heading">Four ways to work with us. One standard of engineering.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {/* Card 1 */}
             <div className="bg-kn-card border border-kn-border rounded-xl overflow-hidden hover:border-kn-accent/50 transition-all group shadow-xl">
               <div className="aspect-video relative overflow-hidden">
@@ -150,9 +124,9 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
                 <div className="absolute inset-0 bg-gradient-to-t from-kn-card to-transparent" />
               </div>
               <div className="p-8">
-                <h3 className="text-xl font-bold text-kn-heading mb-3">Software &amp; IT Consultancy</h3>
+                <h3 className="text-xl font-bold text-kn-heading mb-3">Software &amp; Cloud Consulting</h3>
                 <p className="text-kn-muted mb-6 leading-relaxed">
-                  Architecting resilient, scalable enterprise software and cloud-native infrastructure.
+                  We audit, redesign, and automate infrastructure for engineering teams who need to move faster and spend smarter. Senior-led. Outcome-focused.
                 </p>
                 <Link href="/consulting#contact" className="text-kn-accent font-semibold flex items-center gap-2 hover:gap-3 transition-all">
                   Consult With Us <ArrowRight className="w-4 h-4" />
@@ -169,7 +143,7 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
               <div className="p-8">
                 <h3 className="text-xl font-bold text-kn-heading mb-3">Kybern Academy</h3>
                 <p className="text-kn-muted mb-6 leading-relaxed">
-                  Forging the next generation of Cloud Engineers through rigorous, production-grade simulations.
+                  Production-grade cloud engineering training built around real systems — not toy examples. For engineers who want to go from knowing the theory to running it in production.
                 </p>
                 <Link href="/academy" className="text-kn-accent font-semibold flex items-center gap-2 hover:gap-3 transition-all">
                   Enter the Academy <ArrowRight className="w-4 h-4" />
@@ -178,6 +152,23 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
             </div>
 
             {/* Card 3 */}
+            <div className="bg-kn-card border border-kn-border rounded-xl overflow-hidden hover:border-kn-accent/50 transition-all group shadow-xl">
+              <div className="aspect-video relative overflow-hidden">
+                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80" alt="Staff Augmentation" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-t from-kn-card to-transparent" />
+              </div>
+              <div className="p-8">
+                <h3 className="text-xl font-bold text-kn-heading mb-3">Staff Augmentation</h3>
+                <p className="text-kn-muted mb-6 leading-relaxed">
+                  Embed pre-vetted cloud engineers trained specifically on enterprise infrastructure via the Kybern Academy directly into your daily operations.
+                </p>
+                <Link href="/consulting#contact" className="text-kn-accent font-semibold flex items-center gap-2 hover:gap-3 transition-all">
+                  Request Talent <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 4 */}
             <div className="bg-kn-card border border-kn-border rounded-xl overflow-hidden hover:border-kn-accent/50 transition-all group shadow-xl">
               <div className="aspect-video relative overflow-hidden">
                 <img src="https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=80" alt="IoT" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -202,18 +193,18 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div>
-              <h2 className="text-kn-accent font-bold tracking-widest uppercase text-sm mb-2">Vision &amp; Mission</h2>
-              <h3 className="text-3xl md:text-5xl font-extrabold text-kn-heading mb-6">Engineering Reality.</h3>
+              <h2 className="text-kn-accent font-bold tracking-widest uppercase text-sm mb-2">HOW WE WORK</h2>
+              <h3 className="text-3xl md:text-5xl font-extrabold text-kn-heading mb-6">We close the gap between knowing and doing.</h3>
               <p className="text-lg text-kn-body leading-relaxed mb-8">
-                To bridge the gap between theoretical knowledge and production-grade engineering, while building the infrastructure that powers modern business.
+                Whether we're redesigning your cloud architecture or training your next senior engineer, the standard is the same: production-grade, documented, and built to last.
               </p>
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12 mb-8">
                 {[
-                  { title: "Radical Reliability", desc: "Systems that do not fail when it matters." },
-                  { title: "Build to Scale", desc: "Architectures designed for tomorrow's growth." },
-                  { title: "Continuous Mastery", desc: "Relentless pursuit of engineering excellence." },
-                  { title: "System Transparency", desc: "Clear, observable, and measurable operations." },
+                  { title: "Built to Fail Safely", desc: "Systems we build expect failure. Resilience isn't an afterthought — it's in the architecture from day one." },
+                  { title: "Engineered for Growth", desc: "We design for where you're going, not just where you are. Architectures that scale from your current stage to the next." },
+                  { title: "Relentless Automation", desc: "Manual processes are technical debt in disguise. We eliminate toil and replace it with reliable, repeatable automation." },
+                  { title: "Full Transparency", desc: "You always know what we built and why. Every system comes with documentation your team can actually use." },
                 ].map((value, i) => (
                   <div key={i} className="bg-kn-bg p-6 rounded-xl border border-kn-border shadow-lg">
                     <CheckCircle className="w-6 h-6 text-kn-accent mb-4" />
@@ -222,6 +213,9 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
                   </div>
                 ))}
               </div>
+              <Link href="/about" className="text-kn-accent font-bold flex items-center gap-2 hover:gap-3 transition-all mt-4">
+                Read our full story <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-kn-accent/20 to-transparent rounded-2xl transform translate-x-4 translate-y-4" />
@@ -230,15 +224,6 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
                 alt="Engineering Team" 
                 className="relative rounded-2xl shadow-2xl border border-kn-border z-10 w-full object-cover aspect-[4/5]"
               />
-              <div className="absolute -bottom-8 -left-8 bg-kn-bg p-6 rounded-xl border border-kn-border shadow-xl z-20 flex items-center gap-4">
-                <div className="w-12 h-12 bg-kn-accent-bg rounded-full flex items-center justify-center">
-                  <Code className="text-kn-accent w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-kn-heading font-bold">100+ Projects</p>
-                  <p className="text-sm text-kn-muted">Successfully Deployed</p>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -256,9 +241,9 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl text-center mb-16">
             <h2 className="text-kn-accent font-bold tracking-widest uppercase text-sm mb-2">Get In Touch</h2>
-            <p className="text-3xl md:text-5xl font-extrabold text-kn-heading">Let&apos;s Build Together</p>
+            <p className="text-3xl md:text-5xl font-extrabold text-kn-heading">Have a project? Let&apos;s talk.</p>
             <p className="mt-4 text-lg leading-8 text-kn-muted">
-              Have a project in mind or need expert consultation? Send us a message and we&apos;ll get back to you promptly.
+              Tell us what you&apos;re building — or what&apos;s broken — and we&apos;ll come back with a clear perspective on how to help.
             </p>
           </div>
 
@@ -290,13 +275,13 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
                     <input id="contact-company" name="company" value={formData.company} onChange={handleChange} placeholder="Acme Corp" className="w-full bg-kn-bg border border-kn-border rounded-lg px-4 py-3 text-kn-heading placeholder:text-kn-faded focus:outline-none focus:ring-2 focus:ring-kn-accent/50 focus:border-kn-accent/50 transition-all" />
                   </div>
                   <div className="space-y-2">
-                    <label htmlFor="contact-role" className="text-kn-heading text-sm font-medium">Role / Position</label>
+                    <label htmlFor="contact-role" className="text-kn-heading text-sm font-medium">Your Role</label>
                     <input id="contact-role" name="role" value={formData.role} onChange={handleChange} placeholder="CTO, Founder, etc." className="w-full bg-kn-bg border border-kn-border rounded-lg px-4 py-3 text-kn-heading placeholder:text-kn-faded focus:outline-none focus:ring-2 focus:ring-kn-accent/50 focus:border-kn-accent/50 transition-all" />
                   </div>
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="contact-message" className="text-kn-heading text-sm font-medium">How can we help you?</label>
+                  <label htmlFor="contact-message" className="text-kn-heading text-sm font-medium">What&apos;s your biggest infrastructure challenge right now?</label>
                   <textarea id="contact-message" name="message" value={formData.message} onChange={handleChange} required placeholder="Tell us about your project or challenge..." rows={5} className="w-full bg-kn-bg border border-kn-border rounded-lg px-4 py-3 text-kn-heading placeholder:text-kn-faded focus:outline-none focus:ring-2 focus:ring-kn-accent/50 focus:border-kn-accent/50 transition-all resize-y" />
                 </div>
 
@@ -318,6 +303,9 @@ export function LandingUI({ latestPosts }: { latestPosts: React.ReactNode }) {
                   <Send className="w-5 h-5" />
                   {isSubmitting ? "Sending..." : "Send Message"}
                 </button>
+                <p className="text-center text-sm font-medium text-kn-muted pt-2">
+                  We reply within one business day.
+                </p>
               </form>
             </div>
           </div>

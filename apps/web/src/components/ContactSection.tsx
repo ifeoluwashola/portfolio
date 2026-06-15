@@ -30,7 +30,7 @@ export function ContactSection() {
     setStatus("idle");
     setErrorMessage("");
 
-    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8081/api";
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
     try {
       const response = await fetch(`${apiBase}/v1/contact`, {
         method: "POST",
@@ -79,10 +79,10 @@ export function ContactSection() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center mb-16">
           <h2 className="text-3xl font-bold tracking-tight text-kn-heading sm:text-4xl">
-            Let&apos;s Optimize Your Cloud ROI
+            Let&apos;s talk about your infrastructure.
           </h2>
           <p className="mt-4 text-lg leading-8 text-kn-muted">
-            Whether you need a comprehensive infrastructure audit or wish to harden your deployment pipelines, we&apos;re ready to help you scale securely.
+            Whether you&apos;re burning runway on AWS, struggling with deployment bottlenecks, or need to migrate to Kubernetes—we can help.
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export function ContactSection() {
 
               <Button type="submit" disabled={isSubmitting} className="w-full bg-kn-accent hover:brightness-110 text-kn-bg font-semibold py-6 text-lg rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-70">
                 <Send className="w-5 h-5" />
-                {isSubmitting ? "Sending..." : "Book Consultation"}
+                {isSubmitting ? "Sending..." : "Book a Free Infrastructure Audit"}
               </Button>
             </form>
           </div>

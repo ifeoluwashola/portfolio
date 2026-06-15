@@ -7,16 +7,24 @@ export default function BlogIndex() {
   const posts = getConsultingPosts();
 
   return (
-    <div className="bg-transparent min-h-screen py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:mx-0 mb-10 border-b border-kn-border pb-6">
-          <h2 className="text-3xl font-extrabold tracking-tight text-kn-accent sm:text-4xl">
-            Kybern Nexus Lab
+    <div className="w-full">
+
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-16 overflow-hidden bg-kn-bg border-b border-kn-border">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-kn-accent/5 via-kn-bg to-kn-bg pointer-events-none"></div>
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-sm font-bold text-kn-accent tracking-widest uppercase mb-4">KYBERN NEXUS LAB</h1>
+          <h2 className="text-5xl md:text-6xl font-extrabold text-kn-heading tracking-tight mb-6">
+            Practical writing on <span className="text-kn-accent">cloud infrastructure</span> and <span className="text-kn-accent">DevOps engineering.</span>
           </h2>
-          <p className="mt-2 text-lg leading-8 text-kn-muted">
+          <p className="text-xl text-kn-muted leading-relaxed max-w-2xl mx-auto">
             Learn how to build scalable cloud architectures, optimize CI/CD pipelines, and lower infrastructure costs.
           </p>
         </div>
+      </section>
+
+      <div className="py-16 sm:py-24">
+        <div className="mx-auto max-w-7xl px-6 lg:px-8">
 
         <div className="grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 lg:mx-0 lg:max-w-none lg:grid-cols-3">
           {posts.map((post) => (
@@ -56,6 +64,7 @@ export default function BlogIndex() {
               </div>
             </article>
           ))}
+        </div>
         </div>
       </div>
     </div>

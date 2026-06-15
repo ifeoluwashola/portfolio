@@ -19,7 +19,7 @@ export function KybernNexusFooter() {
               </span>
             </Link>
             <p className="text-kn-muted max-w-sm">
-              The central hub for technological innovation, enterprise consulting, and world-class engineering education.
+              Cloud consulting, DevOps engineering, and production-grade technical education — built for teams that take infrastructure seriously.
             </p>
           </div>
           
@@ -27,8 +27,9 @@ export function KybernNexusFooter() {
             <h4 className="text-kn-heading font-bold mb-4 uppercase tracking-wider text-sm">Directory</h4>
             <ul className="space-y-3">
               <li><Link href="/consulting" className="text-kn-muted hover:text-kn-accent transition-colors">Software Consultancy</Link></li>
+              <li><Link href="/pricing" className="text-kn-muted hover:text-kn-accent transition-colors">Pricing</Link></li>
               <li><Link href="/academy" className="text-kn-muted hover:text-kn-accent transition-colors">Kybern Academy</Link></li>
-              <li><Link href="/#about" className="text-kn-muted hover:text-kn-accent transition-colors">About Us</Link></li>
+              <li><Link href="/about" className="text-kn-muted hover:text-kn-accent transition-colors">About Us</Link></li>
             </ul>
           </div>
 
@@ -36,8 +37,8 @@ export function KybernNexusFooter() {
             <h4 className="text-kn-heading font-bold mb-4 uppercase tracking-wider text-sm">Contact</h4>
             <ul className="space-y-3">
               <li>
-                <a href="mailto:hello@kybernnexus.com" className="text-kn-muted hover:text-kn-accent transition-colors flex items-center gap-2">
-                  <Mail className="w-4 h-4" /> hello@kybernnexus.com
+                <a href="mailto:kyberncloud@gmail.com" className="text-kn-muted hover:text-kn-accent transition-colors flex items-center gap-2">
+                  <Mail className="w-4 h-4" /> kyberncloud@gmail.com
                 </a>
               </li>
             </ul>

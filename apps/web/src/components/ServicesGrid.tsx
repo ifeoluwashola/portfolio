@@ -4,43 +4,43 @@ import { CloudCog, ShieldCheck, TrendingDown, CheckCircle2, Code2 } from "lucide
 export function ServicesGrid() {
   const services = [
     {
-      title: "Infrastructure Cost Audit",
-      description: "Comprehensive review focused on reducing AWS, Azure, and GCP spend without compromising performance or reliability.",
+      title: "Infrastructure Cost Audits",
+      description: "Stop guessing what drives your cloud bill. We map every dollar of your AWS/GCP/Azure spend to a specific service, identify waste, and implement rightsizing without impacting performance.",
       icon: TrendingDown,
       deliverables: [
-        "FinOps dashboards & alerting",
-        "Resource rightsizing & scheduling",
-        "Spot Instance optimization"
+        "Custom FinOps dashboards mapping cost to product features",
+        "Automated rightsizing recommendations",
+        "Immediate cost reduction (typically 20-40% on first pass)"
       ]
     },
     {
-      title: "CI/CD Pipeline Hardening",
-      description: "Automating secure deployment workflows to increase deployment speed while enforcing strict security standards. We transform flaky scripts into robust, automated pipelines.",
+      title: "CI/CD Pipeline Rebuilds",
+      description: "Releasing software shouldn't require a prayer and a weekend. We tear down fragile, manual deployment scripts and replace them with automated, secure, push-button pipelines.",
       icon: ShieldCheck,
       deliverables: [
-        "Reusable CI/CD templates",
-        "SAST/DAST integration",
-        "Automated secret management"
+        "Zero-downtime deployment strategies (Blue/Green, Canary)",
+        "Automated rollback mechanisms",
+        "Security scanning integrated directly into the pipeline"
       ]
     },
     {
-      title: "Kubernetes & Scaling",
-      description: "Designing scalable, fault-tolerant architectures utilizing Kubernetes and modern containerization strategies. Turn your infrastructure into an invisible workhorse.",
+      title: "Kubernetes Architecture & Migration",
+      description: "Moving to Kubernetes is easy. Running it efficiently in production is hard. We design fault-tolerant clusters that scale automatically and don't cost a fortune to maintain.",
       icon: CloudCog,
       deliverables: [
-        "Terraform state refactoring",
-        "GitOps workflows (ArgoCD/Flux)",
-        "Observable Grafana stacks"
+        "Production-grade EKS/GKE cluster design",
+        "GitOps workflows using ArgoCD or Flux",
+        "Automated pod and cluster autoscaling"
       ]
     },
     {
-      title: "Infrastructure as Code",
-      description: "Translating manual click-ops into robust, version-controlled code for complete reproducibility, accelerating deployment speed and limiting human error.",
+      title: "Infrastructure as Code (IaC)",
+      description: "No more undocumented click-ops. We codify your entire infrastructure using Terraform or Pulumi, making your environments reproducible, reviewable, and disaster-ready.",
       icon: Code2,
       deliverables: [
-        "Automated resource provisioning",
+        "Complete translation of manual infrastructure to code",
         "Configuration drift detection",
-        "Modular IaC architecture"
+        "Modular architecture for spinning up new environments in minutes"
       ]
     }
   ];
@@ -49,12 +49,12 @@ export function ServicesGrid() {
     <section id="services" className="py-24 sm:py-32 bg-kn-bg border-t border-kn-border">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:text-center mb-16 sm:mb-20">
-          <h2 className="text-base font-semibold leading-7 text-kn-accent tracking-widest uppercase">Deep-Dive Services</h2>
+          <h2 className="text-base font-semibold leading-7 text-kn-accent tracking-widest uppercase">WHAT WE DO</h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-kn-heading sm:text-4xl">
-            Targeted DevOps Solutions
+            Where we operate.
           </p>
           <p className="mt-6 text-lg leading-8 text-kn-muted">
-            Specialized engineering services to modernize your infrastructure, secure your deployments, and eliminate unneeded cloud expenses.
+            We don&apos;t do generic IT support. We solve specific, high-leverage infrastructure problems.
           </p>
         </div>
 

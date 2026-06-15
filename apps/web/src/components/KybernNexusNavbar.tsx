@@ -22,16 +22,15 @@ export function KybernNexusNavbar() {
             </Link>
           </div>
           
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Home</Link>
-            <Link href="/#ecosystem" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Services &amp; Products</Link>
-            <Link href="/#about" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">About Us</Link>
+            <Link href="/consulting" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Consulting</Link>
+            <Link href="/academy" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Academy</Link>
+            <Link href="/pricing" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Pricing</Link>
+            <Link href="/about" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">About</Link>
             <Link href="/blog" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Blog</Link>
-            <Link href="/#contact" className="text-sm font-medium text-kn-body hover:text-kn-accent transition-colors">Contact</Link>
             <ModeToggle />
             <Link href="/consulting#contact" className="bg-kn-accent hover:brightness-110 text-kn-bg px-5 py-2.5 rounded-md text-sm font-bold transition-all shadow-[0_0_15px_var(--kn-accent-glow)] hover:shadow-[0_0_25px_var(--kn-accent-glow)]">
-              Consult With Us
+              Work With Us →
             </Link>
           </div>
 
@@ -49,12 +48,12 @@ export function KybernNexusNavbar() {
       {isMenuOpen && (
         <div className="md:hidden bg-kn-bg border-b border-kn-border">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-            <Link href="/" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Home</Link>
-            <Link href="/#ecosystem" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Services &amp; Products</Link>
-            <Link href="/#about" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">About Us</Link>
+            <Link href="/consulting" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Services</Link>
+            <Link href="/academy" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Academy</Link>
+            <Link href="/pricing" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Pricing</Link>
+            <Link href="/about" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">About</Link>
             <Link href="/blog" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Blog</Link>
-            <Link href="/#contact" className="block px-3 py-2 text-base font-medium text-kn-body hover:text-kn-accent">Contact</Link>
-            <Link href="/consulting#contact" className="block px-3 py-2 text-base font-bold text-kn-accent">Consult With Us</Link>
+            <Link href="/consulting#contact" className="block px-3 py-2 text-base font-bold text-kn-accent">Work With Us →</Link>
           </div>
         </div>
       )}

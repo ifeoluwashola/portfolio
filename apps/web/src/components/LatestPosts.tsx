@@ -10,13 +10,13 @@ export function LatestPosts() {
   return (
     <section className="py-24 sm:py-32 bg-kn-bg border-t border-kn-border">
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="mx-auto max-w-2xl lg:text-center">
-          <h2 className="text-base font-bold tracking-widest uppercase leading-7 text-kn-accent">The Lab</h2>
-          <p className="mt-2 text-3xl font-extrabold tracking-tight text-kn-heading sm:text-4xl">
-            Latest Thoughts and Guides
+        <div className="mx-auto max-w-3xl lg:text-center">
+          <h2 className="text-sm font-bold tracking-widest uppercase leading-7 text-kn-accent">FROM THE TEAM</h2>
+          <p className="mt-2 text-3xl font-bold tracking-tight text-kn-heading sm:text-4xl">
+            Practical writing on cloud infrastructure and DevOps engineering.
           </p>
-          <p className="mt-6 text-lg leading-8 text-kn-muted">
-            Deep dives into DevOps Engineering, Cloud Engineering, Platform Engineering, and Site Reliability Engineering.
+          <p className="mt-6 text-lg leading-8 text-kn-muted font-medium">
+            No thought leadership. No sponsored content. Just what we actually know.
           </p>
         </div>
 
