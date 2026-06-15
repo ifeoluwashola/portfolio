@@ -20,9 +20,14 @@ export function OurEngineers() {
               Every engineer on a Kybern Nexus engagement has been trained on the same production-grade systems, the same documentation standards, and the same methodology you&apos;ll see in action from day one. No ramp-up time. No inconsistency.
             </p>
             
-            {/* <Link href="/about" className="inline-flex items-center gap-2 text-kn-accent font-semibold hover:gap-3 transition-all">
-              Meet the Team <ArrowRight className="w-5 h-5" />
-            </Link> */}
+            <div className="mt-8">
+              <Link 
+                href="/academy"
+                className="inline-flex items-center gap-2 text-kn-accent hover:brightness-110 font-bold transition-all text-lg group"
+              >
+                Explore Kybern Academy <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </div>
           </div>
           
           <div className="bg-kn-card border border-kn-border rounded-2xl p-8 shadow-xl relative z-10">

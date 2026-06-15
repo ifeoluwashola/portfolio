@@ -9,9 +9,7 @@ import { ProjectsGrid } from "@/components/ProjectsGrid";
 import { LatestPosts } from "@/components/LatestPosts";
 import { ContactSection } from "@/components/ContactSection";
 import { OurEngineers } from "@/components/OurEngineers";
-import { DayOnePlatform } from "@/components/DayOnePlatform";
 import { PricingSection } from "@/components/PricingSection";
-
 export const metadata: Metadata = {
   title: "Cloud & DevOps Consulting",
   description: "Infrastructure audits, CI/CD pipeline rebuilds, Kubernetes architecture, and IaC migration. Senior DevOps consulting for startups and scale-ups on AWS, GCP, and Azure.",
@@ -23,14 +21,13 @@ export default function ConsultingPage() {
       <HeroSection />
       <PainPointsSection />
       <FirmPhilosophy />
-      <OurEngineers />
-      <DayOnePlatform />
       <ServicesGrid />
+      <OurEngineers />
       <EngagementProcess />
+      <PricingSection />
       <EngineerTeaser />
       <ProjectsGrid />
       <LatestPosts />
-      <PricingSection />
       <ContactSection />
     </main>
   );
