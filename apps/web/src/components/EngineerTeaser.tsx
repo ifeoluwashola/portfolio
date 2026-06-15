@@ -20,16 +20,6 @@ export function EngineerTeaser() {
               <p>
                 We&apos;ve designed systems that handle millions of requests. We&apos;ve cut cloud bills by six figures. We&apos;ve shipped CI/CD pipelines that teams have run confidently for years without us.
               </p>
-              <ul className="mt-4 space-y-4">
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-red-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-kn-heading">What you don&apos;t get:</strong> a large agency with rotating consultants who spend the first month getting up to speed on your system.</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0 mt-0.5" />
-                  <span><strong className="text-kn-heading">What you do get:</strong> a focused, senior engineer who treats your infrastructure like their own.</span>
-                </li>
-              </ul>
             </div>
             
             <div className="mt-6">

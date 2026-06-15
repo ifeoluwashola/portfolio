@@ -58,44 +58,28 @@ export function ServicesGrid() {
           </p>
         </div>
 
-        <div className="space-y-16 sm:space-y-24">
-          {services.map((service, index) => {
-            const isEven = index % 2 === 0;
-            return (
-              <div key={service.title} className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
-                <div className={`w-full lg:w-1/2 ${isEven ? "lg:order-1" : "lg:order-2"}`}>
-                  <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-xl bg-kn-accent-bg ring-1 ring-kn-border">
-                    <service.icon className="h-8 w-8 text-kn-accent" aria-hidden="true" />
-                  </div>
-                  <h3 className="text-3xl font-bold tracking-tight text-kn-heading mb-4">{service.title}</h3>
-                  <p className="text-lg text-kn-muted mb-8 text-balance">
-                    {service.description}
-                  </p>
-                  
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-kn-heading uppercase tracking-widest text-sm mb-4">Key Deliverables</h4>
-                    {service.deliverables.map((deliverable) => (
-                      <div key={deliverable} className="flex items-center gap-3">
-                        <CheckCircle2 className="h-5 w-5 text-kn-accent" />
-                        <span className="text-kn-muted">{deliverable}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                
-                <div className={`w-full lg:w-1/2 ${isEven ? "lg:order-2" : "lg:order-1"}`}>
-                  <Card className="bg-kn-card backdrop-blur-sm border border-kn-border hover:border-kn-accent/30 transition-all duration-500 h-[300px] sm:h-[400px] flex items-center justify-center relative overflow-hidden group">
-                    <div className="absolute inset-0 bg-gradient-to-br from-kn-bg via-kn-bg/90 to-kn-accent/5 z-0"></div>
-                    
-                    {/* Abstract tech representation pattern */}
-                    <div className="absolute inset-0 z-0 opacity-10 dark:opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
-                    
-                    <service.icon className="h-32 w-32 md:h-48 md:w-48 text-kn-accent opacity-15 group-hover:scale-110 group-hover:opacity-25 transition-all duration-700 z-10" />
-                  </Card>
-                </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {services.map((service) => (
+            <div key={service.title} className="flex flex-col bg-kn-card rounded-2xl p-8 border border-kn-border hover:border-kn-accent/50 shadow-lg transition-all group">
+              <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-kn-accent-bg ring-1 ring-kn-border group-hover:scale-110 transition-transform">
+                <service.icon className="h-7 w-7 text-kn-accent" aria-hidden="true" />
               </div>
-            );
-          })}
+              <h3 className="text-xl font-bold tracking-tight text-kn-heading mb-4">{service.title}</h3>
+              <p className="text-sm text-kn-muted mb-8 flex-grow leading-relaxed">
+                {service.description}
+              </p>
+              
+              <div className="space-y-3 mt-auto pt-6 border-t border-kn-border/50">
+                <h4 className="font-semibold text-kn-heading uppercase tracking-widest text-[10px] mb-3">Key Deliverables</h4>
+                {service.deliverables.map((deliverable) => (
+                  <div key={deliverable} className="flex items-start gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-kn-accent mt-0.5 flex-shrink-0" />
+                    <span className="text-kn-muted text-xs leading-snug">{deliverable}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>

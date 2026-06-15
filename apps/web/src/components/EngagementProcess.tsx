@@ -50,39 +50,28 @@ export function EngagementProcess() {
           </p>
         </div>
 
-        <div className="relative mx-auto max-w-5xl">
-          {/* Vertical connecting line */}
-          <div className="absolute left-8 top-8 bottom-8 w-px bg-kn-border md:left-1/2 md:-ml-px"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 lg:gap-4 xl:gap-8 relative">
+          {/* Horizontal line connecting steps (hidden on md and below) */}
+          <div className="hidden lg:block absolute top-14 left-[10%] right-[10%] h-px bg-kn-border z-0"></div>
           
-          <div className="space-y-12 md:space-y-0">
-            {steps.map((step, index) => {
-              const isEven = index % 2 === 0;
-              return (
-                <div key={step.id} className={`relative flex flex-col md:flex-row items-center ${isEven ? 'md:flex-row-reverse' : ''} md:py-8`}>
-                  
-                  {/* Timeline Node */}
-                  <div className="absolute left-8 md:left-1/2 flex h-12 w-12 -ml-6 items-center justify-center rounded-full border border-kn-border bg-kn-card shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(0,0,0,0.5)] z-10 transition-transform duration-500 hover:scale-125">
-                    <step.icon className="h-5 w-5 text-kn-accent" aria-hidden="true" />
-                  </div>
+          {steps.map((step) => (
+            <div key={step.id} className="relative flex flex-col group pt-8 lg:pt-0">
+              
+              {/* Icon Node */}
+              <div className="flex h-12 w-12 items-center justify-center rounded-full border border-kn-border bg-kn-card shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(0,0,0,0.5)] z-10 mx-auto lg:mb-8 group-hover:scale-110 group-hover:border-kn-accent/50 transition-all duration-300">
+                <step.icon className="h-5 w-5 text-kn-accent" aria-hidden="true" />
+              </div>
 
-                  {/* Content Box */}
-                  <div className={`w-full md:w-1/2 pl-24 pr-0 md:px-16 py-4 ${isEven ? 'md:text-left' : 'md:text-right'}`}>
-                    <div className={`relative group p-8 rounded-2xl bg-kn-card backdrop-blur-sm border border-kn-border transition-all duration-300 hover:-translate-y-2 hover:shadow-xl`}>
-                      <div className="absolute inset-0 bg-gradient-to-br to-transparent opacity-0 group-hover:opacity-10 transition-opacity duration-500 rounded-2xl bg-kn-accent-bg"></div>
-                      
-                      <div className={`flex flex-col ${isEven ? 'md:items-start' : 'md:items-end'} items-start relative z-10`}>
-                        <span className="text-5xl font-black opacity-20 text-kn-accent mb-4 tracking-tighter">{step.id}.</span>
-                        <h3 className="text-xl font-bold text-kn-heading mb-3">{step.title}</h3>
-                        <p className="text-kn-muted leading-relaxed">
-                          {step.description}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+              {/* Content Box */}
+              <div className="flex flex-col flex-grow bg-kn-card p-6 rounded-2xl border border-kn-border group-hover:border-kn-accent/50 shadow-lg transition-all text-center mt-6 lg:mt-0">
+                <span className="text-3xl font-black opacity-20 text-kn-accent mb-2 tracking-tighter">{step.id}.</span>
+                <h3 className="text-lg font-bold text-kn-heading mb-3">{step.title}</h3>
+                <p className="text-sm text-kn-muted leading-relaxed">
+                  {step.description}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
