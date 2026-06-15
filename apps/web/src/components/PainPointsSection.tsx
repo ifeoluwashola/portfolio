@@ -12,13 +12,10 @@ export function PainPointsSection() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl lg:text-center">
           <h2 className="text-base font-semibold leading-7 text-kn-accent uppercase tracking-widest">
-            The Reality
+            SOUND FAMILIAR?
           </h2>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-kn-heading sm:text-4xl">
-            The Cost of Bad Infrastructure
-          </p>
-          <p className="mt-6 text-lg leading-8 text-kn-muted">
-            Inefficient systems aren&apos;t just an engineering problem—they directly impact your bottom line.
+          <p className="mt-2 text-3xl font-bold tracking-tight text-kn-heading sm:text-4xl max-w-3xl mx-auto">
+            The infrastructure debt cycle: scaling too fast, auditing too late.
           </p>
         </div>
 
@@ -32,12 +29,15 @@ export function PainPointsSection() {
                   <CircleDollarSign className="h-6 w-6 text-kn-accent" />
                 </div>
                 <CardTitle className="text-xl font-semibold text-kn-heading group-hover:text-kn-accent transition-colors">
-                  Bloated Cloud Runway
+                  01 Your cloud bill keeps climbing — but nothing is getting faster.
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative z-10">
                 <p className="text-kn-muted leading-relaxed">
-                  You are bleeding capital on unattached storage volumes, over-provisioned Kubernetes nodes, and staging environments running 24/7. Bad architecture drains your startup&apos;s runway.
+                  Idle resources, over-provisioned nodes, and staging environments running 24/7 silently eat your budget. Most teams don&apos;t notice until they model their runway.
+                  <br/><br/>
+                  <span className="italic">Average waste we find in first-time audits:</span> 30–40% of monthly spend.<br/>
+                  <span className="italic">Common culprits:</span> unattached volumes, oversized VMs, forgotten dev environments.
                 </p>
               </CardContent>
             </Card>
@@ -49,13 +49,16 @@ export function PainPointsSection() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-kn-accent-bg mb-4 ring-1 ring-kn-accent/30 group-hover:bg-kn-accent/15 transition-colors">
                   <ServerCrash className="h-6 w-6 text-kn-accent" />
                 </div>
-                <CardTitle className="text-xl font-semibold text-kn-heading group-hover:text-kn-accent transition-colors">
-                  Deployment Paralysis
+                <CardTitle className="text-xl font-semibold text-kn-heading group-hover:text-kn-accent transition-colors leading-tight">
+                  02 Releases take days. Your best engineers are losing patience.
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative z-10">
                 <p className="text-kn-muted leading-relaxed">
-                  When release cycles take days instead of minutes due to manual approvals and fragile deployment scripts, you lose your competitive edge and frustrate your best engineers.
+                  Manual approvals, fragile deployment scripts, and no automated rollback mean your team spends more time managing releases than building product. That&apos;s how you lose great engineers.
+                  <br/><br/>
+                  <span className="italic">Deployment cycles over 24 hours signal a pipeline problem, not a people problem.</span><br/>
+                  We&apos;ve cut release times from 3 days to 45 minutes without touching your codebase.
                 </p>
               </CardContent>
             </Card>
@@ -67,13 +70,16 @@ export function PainPointsSection() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-kn-accent-bg mb-4 ring-1 ring-kn-accent/30 group-hover:bg-kn-accent/15 transition-colors">
                   <ShieldAlert className="h-6 w-6 text-kn-accent" />
                 </div>
-                <CardTitle className="text-xl font-semibold text-kn-heading group-hover:text-kn-accent transition-colors">
-                  Hidden Security Vectors
+                <CardTitle className="text-xl font-semibold text-kn-heading group-hover:text-kn-accent transition-colors leading-tight">
+                  03 You know there are security gaps. You just haven&apos;t had time to fix them.
                 </CardTitle>
               </CardHeader>
               <CardContent className="relative z-10">
                 <p className="text-kn-muted leading-relaxed">
-                  Permissive IAM roles, hardcoded secrets, and unpatched container images leave your data exposed. A single breach costs infinitely more than a secure foundation.
+                  Permissive IAM roles, hardcoded secrets, unpatched containers — they accumulate quietly. A breach doesn&apos;t give you a warning. It gives you a bill and a PR crisis.
+                  <br/><br/>
+                  <span className="italic">One credential exposure can cost more than 12 months of proactive security work.</span><br/>
+                  We surface and close the gaps before they become incidents.
                 </p>
               </CardContent>
             </Card>

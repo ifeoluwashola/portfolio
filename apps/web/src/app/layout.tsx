@@ -25,11 +25,11 @@ export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
     default:
-      "Kybern Nexus | Software Consultancy, Cloud Engineering Academy & IoT Solutions",
+      "Kybern Nexus — Cloud Consulting, DevOps Training & IoT Solutions",
     template: "%s | Kybern Nexus",
   },
   description:
-    "Kybern Nexus engineers reality — from enterprise software and cloud-native infrastructure consulting, to production-grade cloud engineering training at Kybern Academy, to custom IoT and smart device solutions. We build, scale, and teach the systems that power modern business.",
+    "We help engineering teams cut cloud costs, automate deployments, and build infrastructure that scales. Senior-led consulting and production-grade training for high-growth teams.",
   keywords: [
     // Consultancy pillar
     "Software Consultancy",

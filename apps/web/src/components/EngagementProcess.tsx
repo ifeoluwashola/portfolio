@@ -4,26 +4,32 @@ export function EngagementProcess() {
   const steps = [
     {
       id: "01",
-      title: "Discovery & Alignment",
-      description: "Diagnose before we prescribe. We start by understanding your business objectives, current infrastructure, team capabilities, and budget constraints.",
+      title: "Discovery Call (Free, 45 minutes)",
+      description: "We listen first. You walk us through your current setup, your pain points, and your goals. We ask the questions your last consultant didn't. By the end, we both know whether we're a fit.",
       icon: Search,
     },
     {
       id: "02",
-      title: "Tailored Architecture Design",
-      description: "The right tool for the right stage. Whether you need lightweight serverless optimization or robust container orchestration, we design a custom blueprint that fits your specific runway.",
-      icon: Compass,
-    },
-    {
-      id: "03",
-      title: "Phased Execution & Automation",
-      description: "Zero-downtime implementation. We implement the architecture in safe, incremental phases, translating manual processes into reliable Infrastructure as Code.",
+      title: "Infrastructure Audit & Diagnosis",
+      description: "We go deep into your current environment using strictly read-only access—zero risk to your production workloads. We map your architecture, identify the gaps, and quantify the cost in dollars, time, and risk. You get a full findings report before we recommend anything.",
       icon: Cog,
     },
     {
+      id: "03",
+      title: "Custom Architecture Design",
+      description: "Based on what we found, we design a solution that fits your actual stage and budget. Not what works for a Series C company if you're Series A. The right tool for where you are now, built to grow with you.",
+      icon: Compass,
+    },
+    {
       id: "04",
+      title: "Phased Implementation",
+      description: "We build in safe, incremental phases with zero downtime. Each phase is reviewed, tested, and documented before we move to the next. No big-bang releases. No surprises.",
+      icon: Cog,
+    },
+    {
+      id: "05",
       title: "Handoff & Team Enablement",
-      description: "We don't build black boxes. We deliver comprehensive documentation and actively upskill your internal team so they confidently own the new infrastructure.",
+      description: "We leave you with complete documentation, runbooks, and a team that knows how to operate what we built. We also run a knowledge transfer session so your engineers are confident — not dependent on us.",
       icon: ArrowRightLeft,
     }
   ];
@@ -35,12 +41,12 @@ export function EngagementProcess() {
       
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl lg:text-center mb-16 sm:mb-24">
-          <h2 className="text-base font-semibold leading-7 text-kn-accent tracking-widest uppercase">How We Work</h2>
+          <h2 className="text-base font-semibold leading-7 text-kn-accent tracking-widest uppercase">HOW WE WORK</h2>
           <p className="mt-2 text-3xl font-bold tracking-tight text-kn-heading sm:text-4xl">
-            Our Engagement Methodology: Engineered for Your Business
+            We don&apos;t show up with a predetermined solution. We diagnose before we prescribe.
           </p>
           <p className="mt-6 text-lg leading-8 text-kn-muted">
-            We tailor solutions to your budget and goals rather than forcing specific technologies. Here is our proven roadmap to scaling your systems securely.
+            Here&apos;s what working with us looks like, from first call to final handoff.
           </p>
         </div>
 

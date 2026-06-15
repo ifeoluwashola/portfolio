@@ -34,25 +34,18 @@ export function HeroSection() {
           <div className="hidden sm:mb-8 sm:flex sm:justify-center">
             <div className="relative rounded-full px-4 py-1.5 text-sm leading-6 text-kn-muted ring-1 ring-kn-border hover:ring-kn-muted bg-kn-bg/50 backdrop-blur-sm transition-all shadow-sm">
               <span className="flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-kn-accent opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-kn-accent"></span>
-                </span>
-                Senior DevOps &amp; Cloud Engineer.{" "}
-                <Link href="#services" className="font-semibold text-kn-accent hover:brightness-110 transition-colors">
-                  View Consulting Services <span aria-hidden="true">&rarr;</span>
-                </Link>
+                Cloud &amp; DevOps Consulting for Engineering Teams
               </span>
             </div>
           </div>
           
           <h1 className="text-5xl tracking-tight text-kn-heading sm:text-7xl font-extrabold flex flex-col gap-2">
-            <span>Optimizing Cloud ROI</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-kn-accent/20 via-kn-accent/10 to-transparent animate-gradient-x">through DevOps.</span>
+            <span>Your cloud bill is telling you something.</span>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-kn-accent/60 via-kn-accent/40 to-kn-accent/20 animate-gradient-x">We help you listen.</span>
           </h1>
           
           <p className="mt-8 text-lg leading-8 text-kn-muted max-w-2xl mx-auto">
-            Helping companies scale reliably and reduce costs. Specializing in high-performance infrastructure, seamless CI/CD pipelines, and secure cloud environments.
+            We partner with engineering teams to cut cloud waste, harden deployments, and build systems that scale — without rebuilding everything from scratch.
           </p>
           
           <div className="mt-10 flex items-center justify-center gap-x-6">
@@ -61,13 +54,13 @@ export function HeroSection() {
               className={cn(buttonVariants({ size: "lg" }), "bg-kn-accent hover:brightness-110 text-kn-bg gap-2 font-semibold shadow-lg shadow-[var(--kn-accent-glow)] hover:shadow-[var(--kn-accent-glow)] transition-all h-12 px-8 cursor-pointer")}
             >
               <Terminal size={18} />
-              Book an Audit
+              Book a Free Infrastructure Audit
             </Link>
             <Link 
               href="#projects" 
               className={cn(buttonVariants({ size: "lg", variant: "outline" }), "gap-2 border-kn-border hover:bg-accent hover:text-accent-foreground h-12 px-8 bg-kn-bg/50 backdrop-blur-sm cursor-pointer")}
             >
-              View Portfolio <ArrowRight size={18} />
+              See Our Work <ArrowRight size={18} className="rotate-90" />
             </Link>
           </div>
         </div>
