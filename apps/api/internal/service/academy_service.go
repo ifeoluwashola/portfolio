@@ -1613,9 +1613,23 @@ func (s *academyService) ProcessManualPayment(ctx context.Context, req *domain.M
 	if newTotal >= billing.TotalDue {
 		_ = s.repo.SetBillingStatus(ctx, req.StudentID, "paid_in_full")
 		_ = s.repo.SetNextPaymentDue(ctx, req.StudentID, nil)
-	} else if billing.BillingStatus == "payment_locked" {
-		// Unlock account if they've made a payment (even partial manual for now)
+	} else {
 		_ = s.repo.SetBillingStatus(ctx, req.StudentID, "good_standing")
+
+		// cohort_start_date constraint: Installment clock should not start before the cohort begins.
+		// Set cohort start date (June 1, 2026)
+		cohortStartDate := time.Date(2026, 6, 1, 0, 0, 0, 0, time.UTC)
+		
+		var nextDue time.Time
+		if time.Now().Before(cohortStartDate) {
+			// Student paid early, clock starts from cohort start date
+			nextDue = cohortStartDate.Add(30 * 24 * time.Hour)
+		} else {
+			// Cohort has already started, clock starts from current timestamp
+			nextDue = time.Now().Add(30 * 24 * time.Hour)
+		}
+
+		_ = s.repo.SetNextPaymentDue(ctx, req.StudentID, &nextDue)
 	}
 
 	// 5. Success Email (Fire and forget)
