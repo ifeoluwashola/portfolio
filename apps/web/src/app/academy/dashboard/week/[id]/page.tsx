@@ -2,6 +2,7 @@
 
 import { useEffect, useState, use, useCallback, useRef } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { 
   PlayCircle, 
   Lock, 
@@ -468,8 +469,13 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                     dark:prose-li:text-muted-foreground prose-li:text-foreground/70 prose-li:text-sm
                     prose-ul:space-y-1
                     prose-a:text-yellow-500 prose-a:no-underline hover:prose-a:underline
+                    prose-table:w-full
+                    prose-thead:border-b prose-thead:border-yellow-500/30
+                    prose-th:text-yellow-500 prose-th:text-xs prose-th:font-bold prose-th:uppercase prose-th:tracking-wider prose-th:px-4 prose-th:py-2 prose-th:text-left
+                    prose-td:px-4 prose-td:py-2 prose-td:text-sm dark:prose-td:text-muted-foreground prose-td:text-foreground/70
+                    prose-tr:border-b prose-tr:border-border/50
                   ">
-                    <ReactMarkdown>{week.assignment_instructions}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{week.assignment_instructions}</ReactMarkdown>
                   </div>
                 </div>
               </div>
