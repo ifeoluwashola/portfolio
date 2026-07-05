@@ -97,6 +97,7 @@ func main() {
 	blogRepo := postgres.NewBlogRepository(dbPool)
 	academyRepo := postgres.NewAcademyRepository(dbPool)
 	auditRepo := postgres.NewAuditRepository(dbPool)
+	waitlistRepo := postgres.NewWaitlistRepository(dbPool)
 
 	// 5. Initialize Services
 	contactSvc := service.NewContactService(contactRepo)
@@ -104,11 +105,11 @@ func main() {
 	projectDataSvc := service.NewProjectDataService(projectDataRepo)
 	profileSvc := service.NewProfileService(profileRepo)
 	blogSvc := service.NewBlogService(blogRepo, academyRepo)
-
 	resendNotifier := notifications.NewResendNotifier(cfg)
 	authSvc := service.NewAuthService(userRepo, userRepo, cfg, tokenCache, resendNotifier)
 	academySvc := service.NewAcademyService(academyRepo, userRepo, cfg, tokenCache, resendNotifier)
 	auditSvc := service.NewAuditService(auditRepo)
+	waitlistSvc := service.NewWaitlistService(waitlistRepo, resendNotifier)
 
 	// Background Task: Cleanup old audit logs every 24 hours
 	go func() {
@@ -147,6 +148,7 @@ func main() {
 	blogHandler := handler.NewBlogHandler(blogSvc)
 	academyHandler := handler.NewAcademyHandler(academySvc, auditSvc)
 	monitoringHandler := handler.NewMonitoringHandler(auditSvc, logBuffer)
+	waitlistHandler := handler.NewWaitlistHandler(waitlistSvc)
 
 	// 8. Setup Rate Limiter
 	rl := middleware.NewRateLimiter(tokenCache)
@@ -168,6 +170,7 @@ func main() {
 
 	// === PUBLIC ROUTES ===
 	mux.HandleFunc("/api/v1/contact", contactHandler.HandleSubmitContact)
+	mux.HandleFunc("POST /api/v1/waitlist", waitlistHandler.HandleJoinWaitlist)
 	mux.HandleFunc("/api/v1/projects/guardrail/stats", projectHandler.HandleGetGuardrailStats)
 
 	// Admin Auth (public: login only — NO register endpoint)
@@ -324,6 +327,10 @@ func main() {
 	mux.HandleFunc("POST /api/v1/admin/students/{id}/disqualify", authMW.RequireAuth(academyHandler.HandleDisqualifyStudent))
 	mux.HandleFunc("PUT /api/v1/admin/students/{id}/status", authMW.RequireAuth(academyHandler.HandleUpdateStudentStatus))
 	mux.HandleFunc("GET /api/v1/admin/students/{id}/attendance", authMW.RequireAuth(academyHandler.HandleGetStudentAttendanceHistory))
+
+	// Waitlist (admin)
+	mux.HandleFunc("GET /api/v1/admin/waitlist", authMW.RequireAuth(waitlistHandler.HandleGetWaitlistLeads))
+	mux.HandleFunc("POST /api/v1/admin/waitlist/broadcast", authMW.RequireAuth(waitlistHandler.HandleBroadcastToWaitlist))
 
 	// Financial Command Center (admin)
 	mux.HandleFunc("GET /api/v1/admin/billing/overview", authMW.RequireAuth(academyHandler.HandleGetAdminBillingOverview))

@@ -4,39 +4,51 @@ import React, { useState } from "react";
 import { 
   Zap, 
   ChevronRight, 
-  CreditCard, 
   CheckCircle2, 
   ArrowLeft, 
   ShieldCheck, 
-  Laptop, 
-  MonitorCheck, 
   Terminal,
-  AlertCircle
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
-import { initializeApplication } from "../../actions";
 
 export default function RegisterPage() {
-  const [paymentPlan, setPaymentPlan] = useState<"full" | "installment">("full");
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setError('');
 
-    const formData = new FormData(e.currentTarget);
-    const res = await initializeApplication(formData, paymentPlan);
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080/api";
+    try {
+      const res = await fetch(`${apiBase}/v1/waitlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          email,
+          whatsapp_number: whatsappNumber,
+        }),
+      });
 
-    if (res.error) {
-      setError(res.error);
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to join waitlist');
+      }
+
+      setSuccess(true);
+    } catch (err: any) {
+      setError(err.message || 'An error occurred. Please try again.');
+    } finally {
       setLoading(false);
-      return;
-    }
-
-    if (res.authorization_url) {
-      window.location.href = res.authorization_url;
     }
   }
 
@@ -62,36 +74,35 @@ export default function RegisterPage() {
           {/* Left Column: Context */}
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-500 text-[10px] font-black uppercase tracking-widest mb-6">
-              <Zap className="w-3 h-3 fill-current" />
-              Cohort 1 Admission
+              <Zap className="w-3 h-3 fill-current animate-pulse" />
+              🟢 Cohort 1 In Session
             </div>
             
             <h1 className="text-4xl sm:text-5xl font-black text-foreground leading-tight mb-8">
-              Begin Your <br />
-              <span className="text-yellow-600 dark:text-yellow-500">Cloud Command.</span>
+              Join the Waitlist <br />
+              for <span className="text-yellow-600 dark:text-yellow-500">Cohort 2.</span>
             </h1>
 
             <p className="text-muted-foreground text-lg leading-relaxed mb-10">
-              Admission to Kybern Academy prioritises candidates demonstrating
-              high commitment to the 16-week immersive schedule.
+              Admission for Cohort 1 is currently locked as the program is underway. Secure your spot in the queue for Cohort 2 to receive priority notifications and early-bird enrollment access.
             </p>
 
             <div className="space-y-6">
               {[
                 { 
                   icon: <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-500" />, 
-                  title: "Secure Enrollment", 
-                  desc: "Your application triggers an instant Paystack secure gateway session." 
+                  title: "Priority Notification", 
+                  desc: "Waitlisted leads receive early access to applications before the general public." 
                 },
                 { 
                   icon: <Terminal className="w-5 h-5 text-cyan-600 dark:text-cyan-500" />, 
-                  title: "Provisioning", 
-                  desc: "Upon successful payment, your student credentials are provisioned in < 60s." 
+                  title: "Early Bird Pricing", 
+                  desc: "Gain eligibility for special discounts when Cohort 2 enrollment opens." 
                 },
                 { 
                   icon: <CheckCircle2 className="w-5 h-5 text-yellow-600 dark:text-yellow-500" />, 
-                  title: "The 16-Week Lock", 
-                  desc: "Includes 12 weeks of live training + 4 weeks of high-stakes capstone." 
+                  title: "Day-One Onboarding", 
+                  desc: "Guaranteed support and fast-tracked provisioning for accepted waitlist students." 
                 }
               ].map((item, idx) => (
                 <div key={idx} className="flex gap-4">
@@ -109,188 +120,96 @@ export default function RegisterPage() {
 
           {/* Right Column: Form */}
           <div className="bg-card border border-border rounded-3xl p-8 shadow-2xl relative overflow-hidden">
-            {/* Header */}
-            <div className="mb-8 pb-8 border-b border-border">
-               <h2 className="text-xl font-bold text-foreground mb-2">Student Registration</h2>
-               <p className="text-sm text-muted-foreground">Provide your technical background and select a plan.</p>
-            </div>
-
-            {error && (
-              <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-sm">
-                <AlertCircle className="w-5 h-5 flex-shrink-0" />
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Basic Info Group */}
-              <div className="grid grid-cols-2 gap-4">
+            {success ? (
+              <div className="py-12 text-center space-y-6">
+                <CheckCircle2 className="w-16 h-16 mx-auto text-yellow-500 animate-bounce" />
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">First Name</label>
-                  <input 
-                    name="first_name" required
-                    className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
-                    placeholder="John"
-                  />
+                  <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">You're on the list!</h2>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    We've registered your spot in the queue for Cohort 2. We'll reach out to you via <strong>{email}</strong> and WhatsApp (<strong>{whatsappNumber}</strong>) as soon as enrolling begins!
+                  </p>
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Last Name</label>
-                  <input 
-                    name="last_name" required
-                    className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
-                    placeholder="Doe"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
-                <input 
-                  type="email" name="email" required
-                  className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
-                  placeholder="john@example.com"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Experience Level</label>
-                  <select 
-                    name="experience_level"
-                    className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors appearance-none"
-                  >
-                    <option value="Absolute Beginner">Absolute Beginner</option>
-                    <option value="Basic IT Knowledge">Basic IT Knowledge</option>
-                    <option value="Intermediate / Developer">Intermediate / Developer</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Phone</label>
-                  <input 
-                    name="phone" required
-                    className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
-                    placeholder="+234..."
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Current Role / Student Status</label>
-                <input 
-                  name="current_role" required
-                  className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
-                  placeholder="e.g. Frontend Developer, Final Year Student..."
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Why do you want to join Kybern Academy?</label>
-                <textarea 
-                  name="goal" required
-                  className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors min-h-[80px]"
-                  placeholder="Briefly describe your professional goals..."
-                />
-              </div>
-
-              {/* Hardware / Readiness */}
-              <div className="space-y-6 pt-4 border-t border-border/50">
-                <div className="flex items-center justify-between gap-4 p-4 rounded-xl bg-card border border-border">
-                  <div className="flex items-center gap-3">
-                    <Laptop className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-sm text-foreground">I own a working laptop (8GB+ RAM)</span>
-                  </div>
-                  <input type="checkbox" name="has_laptop" required className="accent-yellow-600 dark:accent-yellow-500 w-5 h-5" />
-                </div>
-              </div>
-
-              {/* Payment Plan selection */}
-              <div className="space-y-4 pt-4 border-t border-border/50">
-                <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Select Investment Plan</label>
-                
-                <div 
-                  onClick={() => setPaymentPlan("full")}
-                  className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer group ${
-                    paymentPlan === "full" 
-                      ? "border-yellow-500 bg-yellow-500/10" 
-                      : "border-border hover:border-yellow-500/30 bg-background"
-                  }`}
+                <Link
+                  href="/academy"
+                  className="mt-6 inline-flex items-center justify-center w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold uppercase tracking-widest text-xs rounded-2xl transition-all"
                 >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-foreground font-bold mb-1">Full Tuition</p>
-                      <p className="text-xs text-muted-foreground">Single payment for complete 16-week access.</p>
-                    </div>
-                    <div className="text-right">
-                       <p className="text-xl font-black text-foreground font-mono">₦250k</p>
-                       <p className="text-[10px] text-yellow-600 dark:text-yellow-500 font-bold uppercase">Paid in Full</p>
-                    </div>
-                  </div>
-                  {paymentPlan === "full" && (
-                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-card">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
-                  )}
-                </div>
-
-                <div 
-                  onClick={() => setPaymentPlan("installment")}
-                  className={`relative p-4 rounded-2xl border-2 transition-all cursor-pointer group ${
-                    paymentPlan === "installment" 
-                      ? "border-yellow-500 bg-yellow-500/10" 
-                      : "border-border hover:border-yellow-500/30 bg-background"
-                  }`}
-                >
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <p className="text-foreground font-bold mb-1">Flexible Ledger</p>
-                      <p className="text-xs text-muted-foreground">₦100k now, balance spread over 3 payments.</p>
-                    </div>
-                    <div className="text-right">
-                       <p className="text-xl font-black text-foreground font-mono">₦100k</p>
-                       <p className="text-[10px] text-muted-foreground font-bold uppercase">Deposit</p>
-                    </div>
-                  </div>
-                  {paymentPlan === "installment" && (
-                    <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 bg-yellow-500 text-slate-950 rounded-full p-1 border-4 border-card">
-                      <CheckCircle2 className="w-4 h-4" />
-                    </div>
-                  )}
-                </div>
+                  Return to Academy Page
+                </Link>
               </div>
+            ) : (
+              <>
+                {/* Header */}
+                <div className="mb-8 pb-8 border-b border-border">
+                   <h2 className="text-xl font-bold text-foreground mb-2">Cohort 2 Waitlist</h2>
+                   <p className="text-sm text-muted-foreground">Provide your contact details to secure your priority spot.</p>
+                </div>
 
-              <button 
-                type="submit"
-                disabled={loading}
-                className={`group w-full flex items-center justify-center gap-3 py-5 rounded-2xl font-black uppercase tracking-widest transition-all duration-200 ${
-                  loading 
-                    ? "bg-muted text-muted-foreground cursor-not-allowed"
-                    : "bg-yellow-500 text-slate-950 hover:bg-yellow-400 shadow-[0_4px_20px_rgba(234,179,8,0.15)] hover:shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:scale-[1.01] active:scale-[0.99]"
-                }`}
-              >
-                {loading ? (
-                  <>
-                    <div className="w-5 h-5 border-2 border-slate-950/20 border-t-slate-950 animate-spin rounded-full" />
-                    Processing Secure Link...
-                  </>
-                ) : (
-                  <>
-                    Apply & Initialize Payment
-                    <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                  </>
+                {error && (
+                  <div className="mb-8 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-sm">
+                    {error}
+                  </div>
                 )}
-              </button>
 
-              <div className="flex items-center justify-center gap-6 text-[10px] text-muted-foreground uppercase font-black tracking-widest mt-6">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="w-3 h-3" />
-                  Secured by Paystack
-                </div>
-                <div className="flex items-center gap-2">
-                  <MonitorCheck className="w-3 h-3" />
-                  Instant Provisioning
-                </div>
-              </div>
-            </form>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Full Name</label>
+                    <input 
+                      required
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
+                      placeholder="Jane Doe"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Address</label>
+                    <input 
+                      type="email"
+                      required
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
+                      placeholder="jane@example.com"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">WhatsApp Number</label>
+                    <input 
+                      type="tel"
+                      required
+                      value={whatsappNumber}
+                      onChange={(e) => setWhatsappNumber(e.target.value)}
+                      className="w-full bg-background border border-border focus:border-yellow-500/50 outline-none rounded-xl px-4 py-3 text-foreground transition-colors"
+                      placeholder="+234..."
+                    />
+                  </div>
+
+                  <button 
+                    type="submit"
+                    disabled={loading}
+                    className={`group w-full flex items-center justify-center gap-3 py-5 rounded-2xl font-black uppercase tracking-widest transition-all duration-200 ${
+                      loading 
+                        ? "bg-muted text-muted-foreground cursor-not-allowed"
+                        : "bg-yellow-500 text-slate-950 hover:bg-yellow-400 shadow-[0_4px_20px_rgba(234,179,8,0.15)] hover:shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:scale-[1.01] active:scale-[0.99]"
+                    }`}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Securing Spot...
+                      </>
+                    ) : (
+                      <>
+                        Join Cohort 2 Waitlist
+                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </button>
+                </form>
+              </>
+            )}
           </div>
         </div>
       </main>

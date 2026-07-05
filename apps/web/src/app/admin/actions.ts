@@ -395,3 +395,18 @@ export async function broadcastEmail(cohortId: string, subject: string, body: st
   if (result.error) return { error: result.error, status: result.status };
   return { success: true };
 }
+
+export async function getWaitlist(limit = 100, offset = 0) {
+  const result = await adminFetch(`/v1/admin/waitlist?limit=${limit}&offset=${offset}`);
+  if (result.error) return { error: result.error, status: result.status };
+  return { data: result.data, status: result.status };
+}
+
+export async function broadcastWaitlist(subject: string, body: string) {
+  const result = await adminFetch("/v1/admin/waitlist/broadcast", {
+    method: "POST",
+    body: JSON.stringify({ subject, body }),
+  });
+  if (result.error) return { error: result.error, status: result.status };
+  return { success: true, status: result.status };
+}

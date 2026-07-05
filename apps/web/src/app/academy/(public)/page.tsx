@@ -1,3 +1,5 @@
+"use client";
+import React, { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -14,6 +16,7 @@ import {
   ChevronRight,
   MonitorPlay,
 } from "lucide-react";
+import { WaitlistModal } from "@/components/academy/WaitlistModal";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -64,6 +67,8 @@ const requirements = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AcademyLandingPage() {
+  const [isWaitlistOpen, setIsWaitlistOpen] = useState(false);
+
   return (
     <div className="bg-background text-foreground min-h-screen font-sans antialiased selection:bg-yellow-500/30 selection:text-yellow-200 transition-colors duration-300">
 
@@ -79,10 +84,10 @@ export default function AcademyLandingPage() {
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-yellow-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[200px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none" />
 
-        {/* Eyebrow */}
-        <div className="relative z-10 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-yellow-500/20 bg-yellow-500/5 text-yellow-500 dark:text-yellow-400 text-[11px] font-bold uppercase tracking-[0.2em] mb-8">
-          <span className="w-1.5 h-1.5 rounded-full bg-yellow-500 dark:bg-yellow-400 animate-pulse" />
-          Cohort 1 · Now Enrolling · Starting April 2026
+        {/* Eyebrow / Status Badge */}
+        <div className="relative z-10 inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/5 text-emerald-500 text-[11px] font-bold uppercase tracking-[0.2em] mb-8 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          🟢 Cohort 1: In Session
         </div>
 
         {/* Headline */}
@@ -103,13 +108,13 @@ export default function AcademyLandingPage() {
 
         {/* CTAs */}
         <div className="relative z-10 flex flex-col sm:flex-row items-center gap-4">
-          <Link
-            href="/academy/register"
-            className="group inline-flex items-center gap-3 px-8 py-4 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-sm uppercase tracking-widest rounded-xl transition-all duration-200 shadow-[0_0_30px_rgba(234,179,8,0.35)] hover:shadow-[0_0_50px_rgba(234,179,8,0.5)] active:scale-[0.98]"
+          <button
+            onClick={() => setIsWaitlistOpen(true)}
+            className="group inline-flex items-center gap-3 px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black text-sm uppercase tracking-widest rounded-xl transition-all duration-200 shadow-[0_0_30px_rgba(234,179,8,0.35)] hover:shadow-[0_0_50px_rgba(234,179,8,0.5)] active:scale-[0.98]"
           >
-            Apply for Cohort 1
+            Join the Cohort 2 Waitlist
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          </button>
           <Link
             href="/academy/break-it-labs"
             className="inline-flex items-center gap-2 px-6 py-4 text-muted-foreground hover:text-yellow-500 dark:hover:text-yellow-400 text-sm font-bold uppercase tracking-widest transition-colors"
@@ -421,12 +426,12 @@ export default function AcademyLandingPage() {
                 ))}
               </ul>
 
-              <Link
-                href="/academy/register"
+              <button
+                onClick={() => setIsWaitlistOpen(true)}
                 className="w-full text-center py-3.5 px-6 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)] hover:shadow-[0_0_30px_rgba(234,179,8,0.4)] active:scale-[0.99]"
               >
-                Apply & Pay in Full →
-              </Link>
+                Join the Waitlist →
+              </button>
             </div>
 
             {/* Option 2: Flexible Ledger */}
@@ -459,12 +464,12 @@ export default function AcademyLandingPage() {
                 </li>
               </ul>
 
-              <Link
-                href="/academy/register"
+              <button
+                onClick={() => setIsWaitlistOpen(true)}
                 className="w-full text-center py-3.5 px-6 bg-cyan-600/10 dark:bg-cyan-500/10 hover:bg-cyan-600/20 dark:hover:bg-cyan-500/20 border border-cyan-600/30 dark:border-cyan-500/30 hover:border-cyan-600 dark:hover:border-cyan-400/50 text-cyan-700 dark:text-cyan-300 font-black text-xs uppercase tracking-widest rounded-xl transition-all active:scale-[0.99]"
               >
-                Apply & Pay Deposit →
-              </Link>
+                Join the Waitlist →
+              </button>
             </div>
           </div>
 
@@ -482,18 +487,18 @@ export default function AcademyLandingPage() {
         <div className="max-w-2xl mx-auto text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-4">Final Admission Pass</p>
           <h2 className="text-4xl sm:text-5xl font-black tracking-tight mb-6">
-            Ready to commit?
+            Ready for Cohort 2?
           </h2>
           <p className="text-muted-foreground text-lg leading-relaxed mb-12 text-muted-foreground/60 font-bold uppercase tracking-widest">
-            The next cohort cycle begins shortly. Approved applicants proceed directly to payment — there is no waiting list for accepted students.
+            Cohort 1 is fully in session. Secure your priority enrollment spot for Cohort 2 today.
           </p>
-          <Link
-            href="/academy/register"
+          <button
+            onClick={() => setIsWaitlistOpen(true)}
             className="group inline-flex items-center gap-3 px-10 py-5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-sm uppercase tracking-widest rounded-xl transition-all shadow-[0_0_40px_rgba(234,179,8,0.3)] hover:shadow-[0_0_60px_rgba(234,179,8,0.5)] active:scale-[0.98]"
           >
-            Go to Admission Form
+            Join the Cohort 2 Waitlist
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          </button>
         </div>
       </section>
 
@@ -506,24 +511,23 @@ export default function AcademyLandingPage() {
 
         <div className="relative z-10 max-w-4xl mx-auto text-center">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-yellow-500/60 mb-6 font-black uppercase tracking-[0.3em]">
-            ⚡ Enrollment Open
+            🟢 Cohort 1 In Session
           </p>
           <h2 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight mb-6">
             Admission for Cohort 1 is<br />
-            <span className="text-muted-foreground/30">curated to ensure</span>{" "}
-            <span className="text-yellow-500 dark:text-yellow-400">high-quality mentorship.</span>
+            <span className="text-muted-foreground/30 text-yellow-500 dark:text-yellow-400">now closed.</span>
           </h2>
           <p className="text-muted-foreground text-lg mb-12 max-w-xl mx-auto leading-relaxed">
-            Join a community of high-performing engineers. Our roadmap is designed for those ready to master live infrastructure and professional DevOps workflows.
+            Cohort 1 is fully underway. Join the Cohort 2 waitlist to be notified first when registration details for our next session are released.
           </p>
 
-          <Link
-            href="/academy/register"
-            className="group inline-flex items-center gap-4 px-10 py-5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black text-base uppercase tracking-widest rounded-2xl transition-all duration-200 shadow-[0_0_50px_rgba(234,179,8,0.4)] hover:shadow-[0_0_80px_rgba(234,179,8,0.6)] active:scale-[0.99]"
+          <button
+            onClick={() => setIsWaitlistOpen(true)}
+            className="group inline-flex items-center gap-4 px-10 py-5 bg-yellow-400 hover:bg-yellow-300 text-slate-900 font-black text-base uppercase tracking-widest rounded-2xl transition-all duration-200 shadow-[0_0_50px_rgba(234,179,8,0.4)] hover:shadow-[0_0_80px_rgba(234,179,8,0.6)] active:scale-[0.99]"
           >
-            Confirm Enrollment
+            Join the Cohort 2 Waitlist
             <ArrowRight className="w-6 h-6 group-hover:translate-x-1.5 transition-transform" />
-          </Link>
+          </button>
 
           {/* Trust signals */}
           <div className="flex flex-wrap justify-center gap-8 mt-16 pt-10 border-t border-border text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40">
@@ -538,6 +542,9 @@ export default function AcademyLandingPage() {
           </p>
         </div>
       </footer>
+
+      {/* Waitlist Dialog Modal */}
+      <WaitlistModal isOpen={isWaitlistOpen} onClose={() => setIsWaitlistOpen(false)} />
     </div>
   );
 }
