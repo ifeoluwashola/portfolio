@@ -41,6 +41,7 @@ interface CohortWeek {
   materials?: CourseMaterial[];
   transcript?: string;
   assignment_instructions?: string;
+  assignment_due_date?: string;
   sessions?: ClassSession[];
 }
 
@@ -526,6 +527,34 @@ export default function CurriculumManager() {
                   value={editingWeek.assignment_instructions || ""}
                   onChange={(e) => setEditingWeek({...editingWeek, assignment_instructions: e.target.value})}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Assignment Due / Lock Date</label>
+                <input 
+                  type="datetime-local" 
+                  className="w-full p-4 bg-background border border-border rounded-md text-sm font-medium focus:outline-none focus:ring-1 focus:ring-primary"
+                  value={editingWeek.assignment_due_date ? (() => {
+                    try {
+                      // format ISO to YYYY-MM-DDTHH:MM local format safely
+                      const date = new Date(editingWeek.assignment_due_date);
+                      const tzoffset = date.getTimezoneOffset() * 60000; // offset in milliseconds
+                      const localISOTime = (new Date(date.getTime() - tzoffset)).toISOString().slice(0, 16);
+                      return localISOTime;
+                    } catch (e) {
+                      return "";
+                    }
+                  })() : ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value) {
+                      setEditingWeek({...editingWeek, assignment_due_date: new Date(value).toISOString()});
+                    } else {
+                      setEditingWeek({...editingWeek, assignment_due_date: undefined});
+                    }
+                  }}
+                />
+                <p className="text-[10px] text-muted-foreground italic">Students will not be able to commit or resubmit solutions after this lock date.</p>
               </div>
 
               <div className="space-y-2">

@@ -683,6 +683,7 @@ func (s *academyService) UpdateCohortWeek(ctx context.Context, req *domain.Updat
 	week.Materials = req.Materials
 	week.Transcript = req.Transcript
 	week.AssignmentInstructions = req.AssignmentInstructions
+	week.AssignmentDueDate = req.AssignmentDueDate
 
 	err = s.repo.UpdateWeek(ctx, week)
 	if err != nil {
@@ -729,6 +730,10 @@ func (s *academyService) SubmitAssignment(ctx context.Context, studentID uuid.UU
 
 	if !hasPublished || !allArchived {
 		return errors.New("assignments can only be submitted once all published sessions in this module are archived")
+	}
+
+	if week.AssignmentDueDate != nil && time.Now().After(*week.AssignmentDueDate) {
+		return errors.New("submission locked: the due date for this assignment has passed")
 	}
 
 	ass := &domain.Assignment{
@@ -799,7 +804,7 @@ func (s *academyService) GetAdminSubmissions(ctx context.Context) ([]*domain.Ass
 }
 
 func (s *academyService) GradeSubmission(ctx context.Context, req *domain.GradeAssignmentRequest) error {
-	return s.repo.UpdateAssignmentGrade(ctx, req.AssignmentID, req.Status, req.Feedback)
+	return s.repo.UpdateAssignmentGrade(ctx, req.AssignmentID, req.Status, req.Feedback, req.Score)
 }
 
 // Phase 5: Break-It Labs

@@ -252,6 +252,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/media/download-url", authMW.RequireStudentAuth(academyHandler.HandleGetDownloadURL))
 	mux.HandleFunc("POST /api/v1/labs/{id}/submit", authMW.RequireStudentAuth(academyHandler.HandleSubmitLabFix))
 	mux.HandleFunc("POST /api/v1/labs/submissions/{id}/comments", authMW.RequireStudentAuth(academyHandler.HandleAddSubmissionComment))
+	mux.HandleFunc("POST /api/v1/academy/assignments", authMW.RequireStudentAuth(academyHandler.HandleSubmitAssignment))
 	// Billing & Installments
 	mux.HandleFunc("GET /api/v1/academy/billing", authMW.RequireStudentAuth(academyHandler.HandleGetBillingStatus))
 	mux.HandleFunc("GET /api/v1/academy/billing/hub", authMW.RequireStudentAuth(academyHandler.HandleGetBillingHub))

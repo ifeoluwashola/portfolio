@@ -1,0 +1,1 @@
+ALTER TABLE cohort_weeks ADD COLUMN IF NOT EXISTS assignment_due_date TIMESTAMP WITH TIME ZONE;

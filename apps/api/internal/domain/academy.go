@@ -243,7 +243,7 @@ type AcademyRepository interface {
 	CreateAssignment(ctx context.Context, assignment *Assignment) error
 	GetStudentAssignments(ctx context.Context, studentID uuid.UUID) ([]*Assignment, error)
 	GetAllAssignments(ctx context.Context) ([]*Assignment, error)
-	UpdateAssignmentGrade(ctx context.Context, id uuid.UUID, status, feedback string) error
+	UpdateAssignmentGrade(ctx context.Context, id uuid.UUID, status, feedback string, score *int) error
 
 	// Break-It Labs
 	GetLabs(ctx context.Context) ([]*BreakItLab, error)
@@ -583,6 +583,7 @@ type CohortWeek struct {
 	Materials              []CourseMaterial `json:"materials"`
 	Transcript             *string           `json:"transcript"`
 	AssignmentInstructions *string           `json:"assignment_instructions"`
+	AssignmentDueDate      *time.Time         `json:"assignment_due_date,omitempty"`
 	Sessions               []*ClassSession  `json:"sessions"`
 	CreatedAt              time.Time         `json:"created_at"`
 	UpdatedAt              time.Time         `json:"updated_at"`
@@ -597,6 +598,7 @@ type Assignment struct {
 	GitHubURL         string    `json:"github_url"`
 	SubmissionFileKey *string   `json:"submission_file_key,omitempty"`
 	Status            string    `json:"status"` // pending, passed, failed
+	Score             *int      `json:"score,omitempty"`
 	AdminFeedback     *string   `json:"admin_feedback"`
 	CreatedAt         time.Time `json:"created_at"`
 }
@@ -608,6 +610,7 @@ type UpdateWeekRequest struct {
 	Materials              []CourseMaterial `json:"materials"`
 	Transcript             *string          `json:"transcript"`
 	AssignmentInstructions *string          `json:"assignment_instructions"`
+	AssignmentDueDate      *time.Time        `json:"assignment_due_date,omitempty"`
 }
 
 type SubmitAssignmentRequest struct {
@@ -620,6 +623,7 @@ type GradeAssignmentRequest struct {
 	AssignmentID uuid.UUID `json:"assignment_id"`
 	Status       string    `json:"status"`
 	Feedback     string    `json:"feedback"`
+	Score        *int      `json:"score"`
 }
 
 type StudentDashboardResponse struct {

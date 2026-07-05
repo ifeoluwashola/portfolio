@@ -11,7 +11,8 @@ import {
   X,
   ChevronRight,
   Github,
-  Paperclip
+  Paperclip,
+  Award
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ interface Assignment {
   week_number: number;
   github_url: string;
   status: 'pending' | 'passed' | 'failed';
+  score?: number | null;
   admin_feedback?: string;
   created_at: string;
   submission_file_key?: string;
@@ -35,6 +37,7 @@ export default function SubmissionsHub() {
   const [loading, setLoading] = useState(true);
   const [gradingSub, setGradingSub] = useState<Assignment | null>(null);
   const [feedback, setFeedback] = useState("");
+  const [score, setScore] = useState<string>("");
   const [isGrading, setIsGrading] = useState(false);
 
   const fetchSubmissions = useCallback(async () => {
@@ -60,6 +63,8 @@ export default function SubmissionsHub() {
     setIsGrading(true);
     
     try {
+      const scoreValue = score !== "" ? parseInt(score, 10) : null;
+      
       const res = await fetch("/api/admin/proxy/v1/admin/academy/submissions/grade", {
         method: "POST",
         headers: {
@@ -69,12 +74,14 @@ export default function SubmissionsHub() {
           assignment_id: gradingSub.id,
           status,
           feedback,
+          score: scoreValue,
         }),
       });
 
       if (res.ok) {
         setGradingSub(null);
         setFeedback("");
+        setScore("");
         fetchSubmissions();
       }
     } catch (err) {
@@ -115,6 +122,7 @@ export default function SubmissionsHub() {
                 <th className="px-6 py-4 font-semibold text-muted-foreground">Student Profile</th>
                 <th className="px-6 py-4 font-semibold text-muted-foreground">Week / Module</th>
                 <th className="px-6 py-4 font-semibold text-muted-foreground">GitHub Repository</th>
+                <th className="px-6 py-4 font-semibold text-muted-foreground">Score</th>
                 <th className="px-6 py-4 font-semibold text-muted-foreground">Status</th>
                 <th className="px-6 py-4 font-semibold text-muted-foreground text-right">Actions</th>
               </tr>
@@ -122,7 +130,7 @@ export default function SubmissionsHub() {
             <tbody className="divide-y divide-border">
               {submissions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground italic">
+                  <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground italic">
                     No assignment submissions detected for this cohort yet.
                   </td>
                 </tr>
@@ -156,6 +164,22 @@ export default function SubmissionsHub() {
                       </a>
                     </td>
                     <td className="px-6 py-4">
+                      {sub.score != null ? (
+                        <div className="flex items-center gap-1.5">
+                          <Award className="w-3.5 h-3.5 text-yellow-500" />
+                          <span className={`font-bold text-sm tabular-nums ${
+                            sub.score >= 70 ? 'text-emerald-500' : 
+                            sub.score >= 50 ? 'text-yellow-500' : 
+                            'text-red-500'
+                          }`}>
+                            {sub.score}/100
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground/50 italic">—</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
                       <Badge variant={
                         sub.status === 'passed' ? 'default' : 
                         sub.status === 'failed' ? 'destructive' : 'secondary'
@@ -172,6 +196,7 @@ export default function SubmissionsHub() {
                         onClick={() => {
                           setGradingSub(sub);
                           setFeedback(sub.admin_feedback || "");
+                          setScore(sub.score != null ? String(sub.score) : "");
                         }}
                       >
                         View & Grade
@@ -228,6 +253,53 @@ export default function SubmissionsHub() {
                 </div>
               )}
 
+              {/* Score Input */}
+              <div className="space-y-2">
+                <label className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground px-1">
+                  <Award className="w-4 h-4 text-yellow-500" />
+                  Score (out of 100)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    min="0"
+                    max="100"
+                    placeholder="e.g. 85"
+                    className="w-full p-4 bg-background border border-border rounded-2xl focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 focus:outline-none transition-all text-2xl font-bold tabular-nums text-center"
+                    value={score}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || (parseInt(val, 10) >= 0 && parseInt(val, 10) <= 100)) {
+                        setScore(val);
+                      }
+                    }}
+                    disabled={isGrading}
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground/40 font-bold text-lg">/100</span>
+                </div>
+                {score !== "" && (
+                  <div className="flex items-center gap-2 px-1">
+                    <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full rounded-full transition-all duration-300 ${
+                          parseInt(score) >= 70 ? 'bg-emerald-500' : 
+                          parseInt(score) >= 50 ? 'bg-yellow-500' : 
+                          'bg-red-500'
+                        }`}
+                        style={{ width: `${Math.min(parseInt(score) || 0, 100)}%` }}
+                      />
+                    </div>
+                    <span className={`text-xs font-bold tabular-nums ${
+                      parseInt(score) >= 70 ? 'text-emerald-500' : 
+                      parseInt(score) >= 50 ? 'text-yellow-500' : 
+                      'text-red-500'
+                    }`}>
+                      {score}%
+                    </span>
+                  </div>
+                )}
+              </div>
+
               <div className="space-y-2">
                 <label className="text-sm font-bold flex items-center gap-2 uppercase tracking-wider text-muted-foreground px-1">
                   <MessageSquare className="w-4 h-4" />
@@ -249,7 +321,10 @@ export default function SubmissionsHub() {
                   type="button" 
                   variant="ghost" 
                   className="px-6"
-                  onClick={() => setGradingSub(null)}
+                  onClick={() => {
+                    setGradingSub(null);
+                    setScore("");
+                  }}
                   disabled={isGrading}
                 >
                   Cancel

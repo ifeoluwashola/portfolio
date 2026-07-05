@@ -16,7 +16,12 @@ import {
   EyeOff,
   Clock,
   History,
-  UploadCloud
+  UploadCloud,
+  Award,
+  ChevronDown,
+  ChevronUp,
+  Github,
+  Paperclip
 } from "lucide-react";
 import { getDashboardData, submitAssignment, getS3UploadUrl } from "../../../actions";
 import { SecureFilePreview } from "@/components/ui/SecureFilePreview";
@@ -44,6 +49,7 @@ interface CohortWeek {
   materials?: CourseMaterial[];
   transcript?: string;
   assignment_instructions?: string;
+  assignment_due_date?: string;
   sessions?: ClassSession[];
 }
 
@@ -51,6 +57,7 @@ interface Assignment {
   id: string;
   github_url: string;
   status: 'pending' | 'passed' | 'failed';
+  score?: number | null;
   admin_feedback?: string;
   week_id: number;
   submission_file_key?: string;
@@ -76,9 +83,30 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [githubUrl, setGithubUrl] = useState("");
   const [showTranscript, setShowTranscript] = useState(false);
+  const [showFullInstructions, setShowFullInstructions] = useState(false);
+  const [isEditingSubmission, setIsEditingSubmission] = useState(false);
   const [activeSession, setActiveSession] = useState<ClassSession | null>(null);
   const [attendance, setAttendance] = useState<{ rate: number; attended: number; total: number } | null>(null);
   const [isReadOnly, setIsReadOnly] = useState(false);
+  
+  const isPastDueDate = week?.assignment_due_date ? new Date() > new Date(week.assignment_due_date) : false;
+
+  const formatDueDate = (dateStr: string) => {
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString("en-US", {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return dateStr;
+    }
+  };
   
   // Derived states for module status (replacing removed week.status)
   const publishedSessions = week?.sessions || [];
@@ -209,6 +237,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
         const foundAss = (data.assignments || []).find((a: Assignment) => a.week_id === parseInt(id));
         setAssignment(foundAss || null);
         setSubmissionFile(null);
+        setIsEditingSubmission(false);
       }
     } catch (err) {
       console.error("Submission failed:", err);
@@ -450,14 +479,42 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
               </div>
             )}
 
-            {/* Assignment & Resources Section */}
             {week.assignment_instructions && (
               <div className="bg-card border border-yellow-500/10 rounded-3xl p-8 space-y-6">
-                <div className="flex items-center gap-3">
-                  <Terminal className="w-5 h-5 text-yellow-500" />
-                  <h3 className="text-sm font-black uppercase tracking-[0.15em] text-yellow-500">{'>'}_ LAB SPECIFICATIONS</h3>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1 space-y-1">
+                    <div className="flex items-center gap-3">
+                      <Terminal className="w-5 h-5 text-yellow-500" />
+                      <h3 className="text-sm font-black uppercase tracking-[0.15em] text-yellow-500">{'>'}_ LAB SPECIFICATIONS</h3>
+                    </div>
+                    {week.assignment_due_date && (
+                      <div className={`flex items-center gap-1.5 text-xs font-semibold ${isPastDueDate ? 'text-rose-400' : 'text-yellow-500/70'}`}>
+                        <Clock className="w-3.5 h-3.5" />
+                        <span>Deadline: {formatDueDate(week.assignment_due_date)} {isPastDueDate ? '(Locked)' : ''}</span>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowFullInstructions(!showFullInstructions)}
+                    className="text-[10px] font-bold text-yellow-500 hover:text-yellow-400 flex items-center gap-2 transition-colors uppercase tracking-widest"
+                  >
+                    {showFullInstructions ? (
+                      <>
+                        <ChevronUp className="w-3.5 h-3.5" />
+                        Collapse Specifications
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="w-3.5 h-3.5" />
+                        Expand Full Specs
+                      </>
+                    )}
+                  </button>
                 </div>
-                <div className="bg-background border border-border rounded-2xl p-6 overflow-x-auto">
+                <div className={`relative bg-background border border-border rounded-2xl transition-all duration-300 ${
+                  showFullInstructions ? 'p-6 overflow-x-auto max-h-none' : 'p-6 overflow-hidden max-h-[300px]'
+                }`}>
                   <div className="prose prose-invert prose-sm max-w-none
                     prose-headings:text-yellow-500 prose-headings:font-bold prose-headings:tracking-tight prose-headings:uppercase
                     prose-h2:text-base prose-h2:border-b prose-h2:border-border prose-h2:pb-2 prose-h2:mb-4
@@ -477,6 +534,19 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                   ">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{week.assignment_instructions}</ReactMarkdown>
                   </div>
+                  
+                  {/* Bottom fade indicator when collapsed */}
+                  {!showFullInstructions && (
+                    <div 
+                      onClick={() => setShowFullInstructions(true)}
+                      className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-background via-background/95 to-transparent flex items-end justify-center pb-4 cursor-pointer hover:bg-slate-950/20 transition-all"
+                    >
+                      <span className="text-[10px] font-bold text-yellow-500/80 hover:text-yellow-400 uppercase tracking-widest bg-background border border-yellow-500/20 px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-1">
+                        <ChevronDown className="w-3.5 h-3.5 animate-bounce" />
+                        Read Full Specifications
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -501,101 +571,255 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                   )}
                 </div>
 
-                <form onSubmit={handleSubmitAssignment} className="space-y-6">
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
-                      GitHub Repository URL
-                      {assignment?.status === 'passed' && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Validated</span>}
-                    </label>
-                    <div className="relative group/input">
-                      <input 
-                        type="url" 
-                        required
-                        placeholder="https://github.com/user/kybern-lab-01"
-                        className="w-full bg-background border border-border rounded-2xl px-6 py-4 text-sm text-yellow-500 focus:outline-none focus:border-yellow-500/40 transition-all font-semibold"
-                        value={githubUrl}
-                        onChange={(e) => setGithubUrl(e.target.value)}
-                        disabled={submitting || assignment?.status === 'passed'}
-                      />
+                {/* Score Display */}
+                {assignment && assignment.score != null && (
+                  <div className={`flex items-center gap-4 p-4 rounded-2xl border ${
+                    assignment.score >= 70 ? 'bg-emerald-500/5 border-emerald-500/20' :
+                    assignment.score >= 50 ? 'bg-yellow-500/5 border-yellow-500/20' :
+                    'bg-red-500/5 border-red-500/20'
+                  }`}>
+                    <Award className={`w-6 h-6 ${
+                      assignment.score >= 70 ? 'text-emerald-500' :
+                      assignment.score >= 50 ? 'text-yellow-500' :
+                      'text-red-500'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em]">Assignment Score</p>
+                      <p className={`text-2xl font-black tabular-nums tracking-tight ${
+                        assignment.score >= 70 ? 'text-emerald-500' :
+                        assignment.score >= 50 ? 'text-yellow-500' :
+                        'text-red-500'
+                      }`}>
+                        {assignment.score}<span className="text-sm font-bold text-muted-foreground/40">/100</span>
+                      </p>
+                    </div>
+                    <div className="w-16 h-16 relative">
+                      <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="3"
+                          className="text-muted/30"
+                        />
+                        <path
+                          d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                          fill="none"
+                          strokeWidth="3"
+                          strokeDasharray={`${assignment.score}, 100`}
+                          strokeLinecap="round"
+                          className={`${
+                            assignment.score >= 70 ? 'stroke-emerald-500' :
+                            assignment.score >= 50 ? 'stroke-yellow-500' :
+                            'stroke-red-500'
+                          }`}
+                        />
+                      </svg>
+                      <span className={`absolute inset-0 flex items-center justify-center text-xs font-bold ${
+                        assignment.score >= 70 ? 'text-emerald-500' :
+                        assignment.score >= 50 ? 'text-yellow-500' :
+                        'text-red-500'
+                      }`}>
+                        {assignment.score}%
+                      </span>
                     </div>
                   </div>
+                )}
 
-                  {/* Drag and Drop File Upload */}
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
-                      Supplementary Document (Optional)
-                      {assignment?.submission_file_key && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Uploaded</span>}
-                    </label>
-                    <div 
-                      className={`relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl transition-all ${submissionFile ? 'border-yellow-500 bg-yellow-500/5' : 'border-[#0f172a] hover:border-[#eab308] hover:bg-[#0f172a]/20 bg-background'}`}
-                      onDragOver={handleDragOver}
-                      onDrop={handleDrop}
-                      onClick={() => !submitting && assignment?.status !== 'passed' && fileInputRef.current?.click()}
-                    >
-                      <input 
-                        type="file" 
-                        ref={fileInputRef}
-                        className="hidden" 
-                        onChange={handleFileSelect}
-                        disabled={submitting || assignment?.status === 'passed'}
-                      />
-                      <UploadCloud className={`w-8 h-8 mb-4 ${submissionFile ? 'text-yellow-500' : 'text-slate-600'}`} />
-                      <p className="text-sm font-semibold text-slate-300 text-center">
-                        {submissionFile ? submissionFile.name : "Drag & drop file here or click to browse"}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-2 text-center">Max size: 50MB (PDF, DOCX, ZIP, PNG, etc.)</p>
-                    </div>
-                  </div>
-
-                  {assignment?.admin_feedback && (
-                    <div className="p-4 bg-background border-l-2 border-yellow-500/40 rounded-r-xl space-y-2">
-                      <p className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-2">
-                        <Terminal className="w-3 h-3" />
-                        Instructor Feedback
-                      </p>
-                      <p className="text-sm text-muted-foreground leading-relaxed font-medium">
-                        &quot;{assignment.admin_feedback}&quot;
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Uploaded Asset Preview */}
-                  {assignment?.submission_file_key && (
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-500" />
-                        Uploaded Asset
-                      </p>
-                      <SecureFilePreview
-                        fileKey={assignment.submission_file_key}
-                        fileName={assignment.submission_file_key.split("-").slice(1).join("-") || "submission"}
-                        mode="student"
-                      />
-                    </div>
-                  )}
-
-                  <button 
-                    type="submit" 
-                    disabled={submitting || assignment?.status === 'passed'}
-                    className={`w-full py-5 rounded-2xl font-bold uppercase transition-all flex items-center justify-center gap-4 group tracking-tighter ${
-                      assignment?.status === 'passed' 
-                        ? 'bg-muted border border-border text-muted-foreground/40 cursor-not-allowed'
-                        : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
-                    }`}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="w-6 h-6 animate-spin" />
-                        <span className="tracking-widest text-sm">{submitStatus || "COMMITTING..."}</span>
-                      </>
+                {assignment && !isEditingSubmission ? (
+                  <div className="space-y-6">
+                    {/* Header Alert depending on status */}
+                    {assignment.status === 'pending' ? (
+                      <div className="p-5 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl space-y-2">
+                        <div className="flex items-center gap-2 text-yellow-500">
+                          <Clock className="w-5 h-5 animate-pulse" />
+                          <h4 className="text-xs font-black uppercase tracking-wider">Assignment Submitted</h4>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          Your solution has been successfully submitted! The instructing team will run code checks and review your submission. You will see your score and feedback here once review is complete.
+                        </p>
+                      </div>
                     ) : (
-                      <>
-                        <Send className={`w-5 h-5 ${assignment?.status === 'passed' ? "" : "group-hover:translate-x-1 group-hover:-translate-y-1"} transition-transform`} />
-                        {assignment?.status === 'passed' ? "Module Validated" : assignment ? "Resubmit Solution" : "Commit Pull Request"}
-                      </>
+                      <div className={`p-5 rounded-2xl border space-y-2 ${
+                        assignment.status === 'passed' 
+                          ? 'bg-emerald-500/5 border-emerald-500/10 text-emerald-400' 
+                          : 'bg-red-500/5 border-red-500/10 text-red-400'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5" />
+                          <h4 className="text-xs font-black uppercase tracking-wider">
+                            Evaluation Completed: {assignment.status === 'passed' ? 'Passed' : 'Needs Revision'}
+                          </h4>
+                        </div>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                          {assignment.status === 'passed' 
+                            ? 'Congratulations! Your submission has passed all verification gates and has been approved.'
+                            : 'Your solution requires some adjustments. Please review the instructor feedback below, make the necessary corrections, and resubmit.'}
+                        </p>
+                      </div>
                     )}
-                  </button>
-                </form>
+
+                    {/* Instructor Review & Feedback (only when graded) */}
+                    {assignment.status !== 'pending' && (
+                      <div className="p-4 bg-background border-l-2 border-yellow-500/40 rounded-r-xl space-y-2">
+                        <p className="text-[10px] font-bold text-yellow-500 uppercase tracking-widest flex items-center gap-2">
+                          <Terminal className="w-3 h-3" />
+                          Instructor Review & Feedback
+                        </p>
+                        <p className="text-sm text-muted-foreground leading-relaxed font-medium">
+                          {assignment.admin_feedback && assignment.admin_feedback.trim() !== "" 
+                            ? `"${assignment.admin_feedback}"` 
+                            : "No written review comments provided."}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Submitted Details */}
+                    <div className="space-y-4 pt-2 border-t border-border/40">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1">
+                          Submitted GitHub Repository
+                        </label>
+                        <a
+                          href={assignment.github_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 p-4 bg-background border border-border/60 hover:border-yellow-500/40 rounded-2xl transition-all group font-mono text-xs text-yellow-500/90 font-semibold"
+                        >
+                          <Github className="w-4 h-4 text-muted-foreground group-hover:text-yellow-500 transition-colors" />
+                          <span className="flex-1 truncate">{assignment.github_url}</span>
+                          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/60" />
+                        </a>
+                      </div>
+
+                      {assignment.submission_file_key && (
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
+                            <Paperclip className="w-3.5 h-3.5 text-yellow-500" />
+                            Submitted Attachment
+                          </label>
+                          <SecureFilePreview
+                            fileKey={assignment.submission_file_key}
+                            fileName={assignment.submission_file_key.split("-").slice(1).join("-") || "submission"}
+                            mode="student"
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Resubmit/Update Option (only if not passed) */}
+                    {assignment.status !== 'passed' && (
+                      isPastDueDate ? (
+                        <div className="flex items-center justify-center gap-2 p-3 bg-[#020617]/40 border border-border rounded-2xl text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                          <Lock className="w-3.5 h-3.5 text-rose-500" />
+                          Resubmission Period Closed (Deadline Passed)
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingSubmission(true)}
+                          className="w-full py-4 mt-2 rounded-2xl font-bold uppercase transition-all bg-muted hover:bg-slate-800 text-foreground border border-border flex items-center justify-center gap-2 text-xs tracking-wider"
+                        >
+                          <History className="w-4 h-4" />
+                          Update Submission / Resubmit
+                        </button>
+                      )
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {isPastDueDate ? (
+                      <div className="p-8 text-center bg-[#020617]/50 border border-rose-500/20 rounded-2xl space-y-4">
+                        <Lock className="w-12 h-12 mx-auto text-rose-500 animate-pulse" />
+                        <div className="space-y-1">
+                          <h4 className="font-bold text-slate-200">Submission Window Closed</h4>
+                          <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                            The deadline for this lab was <strong>{week.assignment_due_date ? formatDueDate(week.assignment_due_date) : ""}</strong>. Submissions are now locked for this module.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <form onSubmit={handleSubmitAssignment} className="space-y-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
+                            GitHub Repository URL
+                            {assignment?.status === 'passed' && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Validated</span>}
+                          </label>
+                          <div className="relative group/input">
+                            <input 
+                              type="url" 
+                              required
+                              placeholder="https://github.com/user/kybern-lab-01"
+                              className="w-full bg-background border border-border rounded-2xl px-6 py-4 text-sm text-yellow-500 focus:outline-none focus:border-yellow-500/40 transition-all font-semibold"
+                              value={githubUrl}
+                              onChange={(e) => setGithubUrl(e.target.value)}
+                              disabled={submitting || assignment?.status === 'passed'}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Drag and Drop File Upload */}
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
+                            Supplementary Document (Optional)
+                            {assignment?.submission_file_key && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Uploaded</span>}
+                          </label>
+                          <div 
+                            className={`relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl transition-all ${submissionFile ? 'border-yellow-500 bg-yellow-500/5' : 'border-[#0f172a] hover:border-[#eab308] hover:bg-[#0f172a]/20 bg-background'}`}
+                            onDragOver={handleDragOver}
+                            onDrop={handleDrop}
+                            onClick={() => !submitting && assignment?.status !== 'passed' && fileInputRef.current?.click()}
+                          >
+                            <input 
+                              type="file" 
+                              ref={fileInputRef}
+                              className="hidden" 
+                              onChange={handleFileSelect}
+                              disabled={submitting || assignment?.status === 'passed'}
+                            />
+                            <UploadCloud className={`w-8 h-8 mb-4 ${submissionFile ? 'text-yellow-500' : 'text-slate-600'}`} />
+                            <p className="text-sm font-semibold text-slate-300 text-center">
+                              {submissionFile ? submissionFile.name : "Drag & drop file here or click to browse"}
+                            </p>
+                            <p className="text-xs text-slate-500 mt-2 text-center">Max size: 50MB (PDF, DOCX, ZIP, PNG, etc.)</p>
+                          </div>
+                        </div>
+
+                        <button 
+                          type="submit" 
+                          disabled={submitting || assignment?.status === 'passed'}
+                          className={`w-full py-5 rounded-2xl font-bold uppercase transition-all flex items-center justify-center gap-4 group tracking-tighter ${
+                            assignment?.status === 'passed' 
+                              ? 'bg-muted border border-border text-muted-foreground/40 cursor-not-allowed'
+                              : 'bg-yellow-500 hover:bg-yellow-400 text-slate-950 shadow-[0_0_15px_rgba(234,179,8,0.2)]'
+                          }`}
+                        >
+                          {submitting ? (
+                            <>
+                              <Loader2 className="w-6 h-6 animate-spin" />
+                              <span className="tracking-widest text-sm">{submitStatus || "COMMITTING..."}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className={`w-5 h-5 ${assignment?.status === 'passed' ? "" : "group-hover:translate-x-1 group-hover:-translate-y-1"} transition-transform`} />
+                              {assignment?.status === 'passed' ? "Module Validated" : assignment ? "Resubmit Solution" : "Commit Pull Request"}
+                            </>
+                          )}
+                        </button>
+
+                        {assignment && (
+                          <button
+                            type="button"
+                            onClick={() => setIsEditingSubmission(false)}
+                            className="w-full py-3 rounded-2xl font-semibold uppercase text-xs text-muted-foreground hover:text-foreground transition-all flex items-center justify-center gap-2"
+                          >
+                            Cancel and View Summary
+                          </button>
+                        )}
+                      </form>
+                    )}
+                  </>
+                )}
               </div>
 
               <div className="space-y-8">

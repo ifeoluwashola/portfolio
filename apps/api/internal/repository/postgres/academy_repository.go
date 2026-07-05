@@ -319,7 +319,7 @@ func (r *AcademyRepository) WarnStudent(ctx context.Context, id uuid.UUID, reaso
 
 func (r *AcademyRepository) GetWeeks(ctx context.Context, cohortID int) ([]*domain.CohortWeek, error) {
 	query := `
-		SELECT id, cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
+		SELECT id, cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, assignment_due_date, created_at, updated_at
 		FROM cohort_weeks WHERE cohort_id = $1 ORDER BY week_number ASC
 	`
 	rows, err := r.db.Query(ctx, query, cohortID)
@@ -331,7 +331,7 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context, cohortID int) ([]*doma
 	var weeks []*domain.CohortWeek
 	for rows.Next() {
 		w := &domain.CohortWeek{}
-		err := rows.Scan(&w.ID, &w.CohortID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
+		err := rows.Scan(&w.ID, &w.CohortID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.AssignmentDueDate, &w.CreatedAt, &w.UpdatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -350,11 +350,11 @@ func (r *AcademyRepository) GetWeeks(ctx context.Context, cohortID int) ([]*doma
 
 func (r *AcademyRepository) GetWeekByID(ctx context.Context, id int) (*domain.CohortWeek, error) {
 	query := `
-		SELECT id, cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, created_at, updated_at
+		SELECT id, cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, assignment_due_date, created_at, updated_at
 		FROM cohort_weeks WHERE id = $1
 	`
 	w := &domain.CohortWeek{}
-	err := r.db.QueryRow(ctx, query, id).Scan(&w.ID, &w.CohortID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.CreatedAt, &w.UpdatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&w.ID, &w.CohortID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.AssignmentDueDate, &w.CreatedAt, &w.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -371,10 +371,10 @@ func (r *AcademyRepository) GetWeekByID(ctx context.Context, id int) (*domain.Co
 func (r *AcademyRepository) UpdateWeek(ctx context.Context, week *domain.CohortWeek) error {
 	query := `
 		UPDATE cohort_weeks
-		SET title = $1, recording_url = $2, materials = $3, transcript = $4, assignment_instructions = $5, updated_at = CURRENT_TIMESTAMP
-		WHERE id = $6
+		SET title = $1, recording_url = $2, materials = $3, transcript = $4, assignment_instructions = $5, assignment_due_date = $6, updated_at = CURRENT_TIMESTAMP
+		WHERE id = $7
 	`
-	_, err := r.db.Exec(ctx, query, week.Title, week.RecordingURL, week.Materials, week.Transcript, week.AssignmentInstructions, week.ID)
+	_, err := r.db.Exec(ctx, query, week.Title, week.RecordingURL, week.Materials, week.Transcript, week.AssignmentInstructions, week.AssignmentDueDate, week.ID)
 	return err
 }
 
@@ -391,7 +391,7 @@ func (r *AcademyRepository) CreateAssignment(ctx context.Context, ass *domain.As
 
 func (r *AcademyRepository) GetStudentAssignments(ctx context.Context, studentID uuid.UUID) ([]*domain.Assignment, error) {
 	query := `
-		SELECT a.id, a.student_id, a.week_id, w.week_number, a.github_url, a.submission_file_key, a.status, a.admin_feedback, a.created_at
+		SELECT a.id, a.student_id, a.week_id, w.week_number, a.github_url, a.submission_file_key, a.status, a.score, a.admin_feedback, a.created_at
 		FROM assignments a
 		JOIN cohort_weeks w ON a.week_id = w.id
 		WHERE a.student_id = $1
@@ -405,7 +405,7 @@ func (r *AcademyRepository) GetStudentAssignments(ctx context.Context, studentID
 	var asses []*domain.Assignment
 	for rows.Next() {
 		a := &domain.Assignment{}
-		err := rows.Scan(&a.ID, &a.StudentID, &a.WeekID, &a.WeekNumber, &a.GitHubURL, &a.SubmissionFileKey, &a.Status, &a.AdminFeedback, &a.CreatedAt)
+		err := rows.Scan(&a.ID, &a.StudentID, &a.WeekID, &a.WeekNumber, &a.GitHubURL, &a.SubmissionFileKey, &a.Status, &a.Score, &a.AdminFeedback, &a.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -420,7 +420,7 @@ func (r *AcademyRepository) GetStudentAssignments(ctx context.Context, studentID
 
 func (r *AcademyRepository) GetAllAssignments(ctx context.Context) ([]*domain.Assignment, error) {
 	query := `
-		SELECT a.id, a.student_id, COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as student_name, a.week_id, w.week_number, a.github_url, a.submission_file_key, a.status, a.admin_feedback, a.created_at
+		SELECT a.id, a.student_id, COALESCE(s.display_name, s.first_name || ' ' || s.last_name) as student_name, a.week_id, w.week_number, a.github_url, a.submission_file_key, a.status, a.score, a.admin_feedback, a.created_at
 		FROM assignments a
 		JOIN students s ON a.student_id = s.id
 		JOIN cohort_weeks w ON a.week_id = w.id
@@ -435,7 +435,7 @@ func (r *AcademyRepository) GetAllAssignments(ctx context.Context) ([]*domain.As
 	var asses []*domain.Assignment
 	for rows.Next() {
 		a := &domain.Assignment{}
-		err := rows.Scan(&a.ID, &a.StudentID, &a.StudentName, &a.WeekID, &a.WeekNumber, &a.GitHubURL, &a.SubmissionFileKey, &a.Status, &a.AdminFeedback, &a.CreatedAt)
+		err := rows.Scan(&a.ID, &a.StudentID, &a.StudentName, &a.WeekID, &a.WeekNumber, &a.GitHubURL, &a.SubmissionFileKey, &a.Status, &a.Score, &a.AdminFeedback, &a.CreatedAt)
 		if err != nil {
 			return nil, err
 		}
@@ -447,13 +447,13 @@ func (r *AcademyRepository) GetAllAssignments(ctx context.Context) ([]*domain.As
 	return asses, nil
 }
 
-func (r *AcademyRepository) UpdateAssignmentGrade(ctx context.Context, id uuid.UUID, status, feedback string) error {
+func (r *AcademyRepository) UpdateAssignmentGrade(ctx context.Context, id uuid.UUID, status, feedback string, score *int) error {
 	query := `
 		UPDATE assignments
-		SET status = $1, admin_feedback = $2
-		WHERE id = $3
+		SET status = $1, admin_feedback = $2, score = $3
+		WHERE id = $4
 	`
-	_, err := r.db.Exec(ctx, query, status, feedback, id)
+	_, err := r.db.Exec(ctx, query, status, feedback, score, id)
 	return err
 }
 
@@ -1316,7 +1316,7 @@ func (r *AcademyRepository) CloneCohortCurriculum(ctx context.Context, sourceCoh
 	defer tx.Rollback(ctx)
 
 	// Fetch master weeks
-	weeksQuery := `SELECT id, week_number, title, recording_url, materials, transcript, assignment_instructions FROM cohort_weeks WHERE cohort_id = $1`
+	weeksQuery := `SELECT id, week_number, title, recording_url, materials, transcript, assignment_instructions, assignment_due_date FROM cohort_weeks WHERE cohort_id = $1`
 	rows, err := tx.Query(ctx, weeksQuery, sourceCohortID)
 	if err != nil {
 		return err
@@ -1331,11 +1331,12 @@ func (r *AcademyRepository) CloneCohortCurriculum(ctx context.Context, sourceCoh
 		Materials              []domain.CourseMaterial
 		Transcript             *string
 		AssignmentInstructions *string
+		AssignmentDueDate      *time.Time
 	}
 	var weeksToClone []weekData
 	for rows.Next() {
 		var w weekData
-		if err := rows.Scan(&w.ID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions); err != nil {
+		if err := rows.Scan(&w.ID, &w.WeekNumber, &w.Title, &w.RecordingURL, &w.Materials, &w.Transcript, &w.AssignmentInstructions, &w.AssignmentDueDate); err != nil {
 			return err
 		}
 		weeksToClone = append(weeksToClone, w)
@@ -1345,10 +1346,10 @@ func (r *AcademyRepository) CloneCohortCurriculum(ctx context.Context, sourceCoh
 	for _, w := range weeksToClone {
 		var newWeekID int
 		insertWeekQuery := `
-			INSERT INTO cohort_weeks (cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, status)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, 'locked') RETURNING id
+			INSERT INTO cohort_weeks (cohort_id, week_number, title, recording_url, materials, transcript, assignment_instructions, assignment_due_date, status)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'locked') RETURNING id
 		`
-		if err := tx.QueryRow(ctx, insertWeekQuery, newCohortID, w.WeekNumber, w.Title, w.RecordingURL, w.Materials, w.Transcript, w.AssignmentInstructions).Scan(&newWeekID); err != nil {
+		if err := tx.QueryRow(ctx, insertWeekQuery, newCohortID, w.WeekNumber, w.Title, w.RecordingURL, w.Materials, w.Transcript, w.AssignmentInstructions, w.AssignmentDueDate).Scan(&newWeekID); err != nil {
 			return err
 		}
 
