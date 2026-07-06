@@ -599,7 +599,7 @@ type Assignment struct {
 	WeekID            int       `json:"week_id"`
 	WeekNumber        int       `json:"week_number,omitempty"`
 	GitHubURL         string    `json:"github_url"`
-	SubmissionFileKey *string   `json:"submission_file_key,omitempty"`
+	SubmissionFileKeys []string  `json:"submission_file_keys,omitempty"`
 	Status            string    `json:"status"` // pending, passed, failed
 	Score             *int      `json:"score,omitempty"`
 	AdminFeedback     *string   `json:"admin_feedback"`
@@ -617,9 +617,9 @@ type UpdateWeekRequest struct {
 }
 
 type SubmitAssignmentRequest struct {
-	WeekID            int     `json:"week_id"`
-	GitHubURL         string  `json:"github_url"`
-	SubmissionFileKey *string `json:"submission_file_key,omitempty"`
+	WeekID             int      `json:"week_id"`
+	GitHubURL          string   `json:"github_url"`
+	SubmissionFileKeys []string `json:"submission_file_keys,omitempty"`
 }
 
 type GradeAssignmentRequest struct {

@@ -29,7 +29,7 @@ interface Assignment {
   score?: number | null;
   admin_feedback?: string;
   created_at: string;
-  submission_file_key?: string;
+  submission_file_keys?: string[];
 }
 
 export default function SubmissionsHub() {
@@ -239,17 +239,22 @@ export default function SubmissionsHub() {
             
             <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-card">
               {/* Submitted File Preview */}
-              {gradingSub.submission_file_key && (
+              {gradingSub.submission_file_keys && gradingSub.submission_file_keys.length > 0 && (
                 <div className="space-y-2 pt-1">
                   <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] flex items-center gap-2">
                     <Paperclip className="w-3 h-3 text-yellow-500" />
-                    Submitted Asset
+                    Submitted Assets ({gradingSub.submission_file_keys.length})
                   </p>
-                  <SecureFilePreview
-                    fileKey={gradingSub.submission_file_key}
-                    fileName={gradingSub.submission_file_key.split("-").slice(1).join("-") || "submission"}
-                    mode="admin"
-                  />
+                  <div className="space-y-2">
+                    {gradingSub.submission_file_keys.map((fileKey, idx) => (
+                      <SecureFilePreview
+                        key={idx}
+                        fileKey={fileKey}
+                        fileName={fileKey.split("-").slice(1).join("-") || "submission"}
+                        mode="admin"
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
 

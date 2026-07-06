@@ -755,10 +755,10 @@ func (s *academyService) SubmitAssignment(ctx context.Context, studentID uuid.UU
 	}
 
 	ass := &domain.Assignment{
-		StudentID:         studentID,
-		WeekID:            req.WeekID,
-		GitHubURL:         req.GitHubURL,
-		SubmissionFileKey: req.SubmissionFileKey,
+		StudentID:          studentID,
+		WeekID:             req.WeekID,
+		GitHubURL:          req.GitHubURL,
+		SubmissionFileKeys: req.SubmissionFileKeys,
 	}
 
 	return s.repo.CreateAssignment(ctx, ass)

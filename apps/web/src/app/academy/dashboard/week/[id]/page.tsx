@@ -21,7 +21,9 @@ import {
   ChevronDown,
   ChevronUp,
   Github,
-  Paperclip
+  Paperclip,
+  X,
+  FileText
 } from "lucide-react";
 import { getDashboardData, submitAssignment, getS3UploadUrl } from "../../../actions";
 import { SecureFilePreview } from "@/components/ui/SecureFilePreview";
@@ -60,7 +62,7 @@ interface Assignment {
   score?: number | null;
   admin_feedback?: string;
   week_id: number;
-  submission_file_key?: string;
+  submission_file_keys?: string[];
 }
 
 function getThumbnailUrl(url: string | undefined): string | null {
@@ -79,7 +81,8 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState("");
-  const [submissionFile, setSubmissionFile] = useState<File | null>(null);
+  const [submissionFiles, setSubmissionFiles] = useState<File[]>([]);
+  const MAX_FILES = 5;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [githubUrl, setGithubUrl] = useState("");
   const [showTranscript, setShowTranscript] = useState(false);
@@ -202,30 +205,31 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
     setSubmitStatus("COMMITTING...");
 
     try {
-      let fileKey: string | undefined = undefined;
+      const fileKeys: string[] = [];
 
-      if (submissionFile) {
-        setSubmitStatus("UPLOADING TO S3...");
-        const presignRes = await getS3UploadUrl(submissionFile.name);
-        if ("error" in presignRes) {
-          throw new Error(presignRes.error);
-        }
-        
-        const uploadUrl = presignRes.upload_url;
-        fileKey = presignRes.file_key;
+      if (submissionFiles.length > 0) {
+        for (let i = 0; i < submissionFiles.length; i++) {
+          const file = submissionFiles[i];
+          setSubmitStatus(`UPLOADING FILE ${i + 1}/${submissionFiles.length}...`);
+          const presignRes = await getS3UploadUrl(file.name);
+          if ("error" in presignRes) {
+            throw new Error(presignRes.error);
+          }
 
-        const uploadRes = await fetch(uploadUrl, {
-          method: "PUT",
-          body: submissionFile,
-        });
+          const uploadRes = await fetch(presignRes.upload_url, {
+            method: "PUT",
+            body: file,
+          });
 
-        if (!uploadRes.ok) {
-          throw new Error("Failed to upload file to S3");
+          if (!uploadRes.ok) {
+            throw new Error(`Failed to upload file: ${file.name}`);
+          }
+          fileKeys.push(presignRes.file_key);
         }
       }
 
       setSubmitStatus("COMMITTING...");
-      const result = await submitAssignment(parseInt(id), githubUrl, fileKey);
+      const result = await submitAssignment(parseInt(id), githubUrl, fileKeys.length > 0 ? fileKeys : undefined);
 
       if (result.error) {
         throw new Error(result.error);
@@ -236,7 +240,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
       if (data && !data.error) {
         const foundAss = (data.assignments || []).find((a: Assignment) => a.week_id === parseInt(id));
         setAssignment(foundAss || null);
-        setSubmissionFile(null);
+        setSubmissionFiles([]);
         setIsEditingSubmission(false);
       }
     } catch (err) {
@@ -256,14 +260,22 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
     e.preventDefault();
     e.stopPropagation();
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      setSubmissionFile(e.dataTransfer.files[0]);
+      const newFiles = Array.from(e.dataTransfer.files);
+      setSubmissionFiles(prev => [...prev, ...newFiles].slice(0, MAX_FILES));
     }
   };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      setSubmissionFile(e.target.files[0]);
+      const newFiles = Array.from(e.target.files);
+      setSubmissionFiles(prev => [...prev, ...newFiles].slice(0, MAX_FILES));
+      // Reset input so the same file can be re-selected
+      e.target.value = '';
     }
+  };
+
+  const removeFile = (index: number) => {
+    setSubmissionFiles(prev => prev.filter((_, i) => i !== index));
   };
 
   if (loading) return <div className="flex items-center gap-2 text-yellow-500 animate-pulse tracking-widest uppercase text-sm p-10"><Loader2 className="w-4 h-4 animate-spin" /> Synchronizing Module {id}...</div>;
@@ -692,17 +704,22 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                         </a>
                       </div>
 
-                      {assignment.submission_file_key && (
+                      {assignment.submission_file_keys && assignment.submission_file_keys.length > 0 && (
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center gap-2">
                             <Paperclip className="w-3.5 h-3.5 text-yellow-500" />
-                            Submitted Attachment
+                            Submitted Attachments ({assignment.submission_file_keys.length})
                           </label>
-                          <SecureFilePreview
-                            fileKey={assignment.submission_file_key}
-                            fileName={assignment.submission_file_key.split("-").slice(1).join("-") || "submission"}
-                            mode="student"
-                          />
+                          <div className="space-y-2">
+                            {assignment.submission_file_keys.map((fileKey, idx) => (
+                              <SecureFilePreview
+                                key={idx}
+                                fileKey={fileKey}
+                                fileName={fileKey.split("-").slice(1).join("-") || "submission"}
+                                mode="student"
+                              />
+                            ))}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -761,28 +778,52 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                         {/* Drag and Drop File Upload */}
                         <div className="space-y-2">
                           <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
-                            Supplementary Document (Optional)
-                            {assignment?.submission_file_key && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Uploaded</span>}
+                            Supplementary Documents (Optional — max {MAX_FILES})
+                            {assignment?.submission_file_keys && assignment.submission_file_keys.length > 0 && <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> {assignment.submission_file_keys.length} Uploaded</span>}
                           </label>
-                          <div 
-                            className={`relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl transition-all ${submissionFile ? 'border-yellow-500 bg-yellow-500/5' : 'border-[#0f172a] hover:border-[#eab308] hover:bg-[#0f172a]/20 bg-background'}`}
-                            onDragOver={handleDragOver}
-                            onDrop={handleDrop}
-                            onClick={() => !submitting && assignment?.status !== 'passed' && fileInputRef.current?.click()}
-                          >
-                            <input 
-                              type="file" 
-                              ref={fileInputRef}
-                              className="hidden" 
-                              onChange={handleFileSelect}
-                              disabled={submitting || assignment?.status === 'passed'}
-                            />
-                            <UploadCloud className={`w-8 h-8 mb-4 ${submissionFile ? 'text-yellow-500' : 'text-slate-600'}`} />
-                            <p className="text-sm font-semibold text-slate-300 text-center">
-                              {submissionFile ? submissionFile.name : "Drag & drop file here or click to browse"}
-                            </p>
-                            <p className="text-xs text-slate-500 mt-2 text-center">Max size: 50MB (PDF, DOCX, ZIP, PNG, etc.)</p>
-                          </div>
+                          
+                          {submissionFiles.length < MAX_FILES && (
+                            <div 
+                              className={`relative flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-2xl transition-all ${submissionFiles.length > 0 ? 'border-yellow-500/40 bg-yellow-500/5' : 'border-[#0f172a] hover:border-[#eab308] hover:bg-[#0f172a]/20 bg-background'}`}
+                              onDragOver={handleDragOver}
+                              onDrop={handleDrop}
+                              onClick={() => !submitting && assignment?.status !== 'passed' && fileInputRef.current?.click()}
+                            >
+                              <input 
+                                type="file" 
+                                ref={fileInputRef}
+                                className="hidden" 
+                                onChange={handleFileSelect}
+                                multiple
+                                disabled={submitting || assignment?.status === 'passed'}
+                              />
+                              <UploadCloud className={`w-8 h-8 mb-4 ${submissionFiles.length > 0 ? 'text-yellow-500' : 'text-slate-600'}`} />
+                              <p className="text-sm font-semibold text-slate-300 text-center">
+                                Drag & drop files here or click to browse
+                              </p>
+                              <p className="text-xs text-slate-500 mt-2 text-center">Max size: 50MB per file (PDF, DOCX, ZIP, PNG, etc.)</p>
+                            </div>
+                          )}
+
+                          {submissionFiles.length > 0 && (
+                            <div className="space-y-2">
+                              {submissionFiles.map((file, idx) => (
+                                <div key={idx} className="flex items-center gap-3 p-3 bg-background border border-border/60 rounded-xl group">
+                                  <FileText className="w-4 h-4 text-yellow-500 shrink-0" />
+                                  <span className="text-sm font-medium text-slate-300 truncate flex-1">{file.name}</span>
+                                  <span className="text-[10px] text-muted-foreground/60 font-mono shrink-0">{(file.size / 1024 / 1024).toFixed(1)}MB</span>
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); removeFile(idx); }}
+                                    className="p-1 rounded-lg hover:bg-red-500/10 text-muted-foreground/40 hover:text-red-400 transition-all shrink-0"
+                                  >
+                                    <X className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                              <p className="text-[10px] text-muted-foreground/40 ml-1">{submissionFiles.length}/{MAX_FILES} files selected</p>
+                            </div>
+                          )}
                         </div>
 
                         <button 

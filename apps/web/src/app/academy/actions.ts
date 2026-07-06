@@ -293,10 +293,10 @@ export async function getStudentStatus() {
   return { status: result.data.status, cohort_status: result.data.cohort_status };
 }
 
-export async function submitAssignment(weekId: number, githubUrl: string, submissionFileKey?: string) {
+export async function submitAssignment(weekId: number, githubUrl: string, submissionFileKeys?: string[]) {
   const result = await academyFetch("/v1/academy/assignments", {
     method: "POST",
-    body: JSON.stringify({ week_id: weekId, github_url: githubUrl, submission_file_key: submissionFileKey || null }),
+    body: JSON.stringify({ week_id: weekId, github_url: githubUrl, submission_file_keys: submissionFileKeys && submissionFileKeys.length > 0 ? submissionFileKeys : null }),
   });
   if (result.error) return { error: result.error };
   return { success: true };
