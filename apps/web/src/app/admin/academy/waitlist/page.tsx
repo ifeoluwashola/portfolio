@@ -11,6 +11,8 @@ interface WaitlistLead {
   email: string;
   whatsapp_number: string;
   joined_at: string;
+  deposit_paid: boolean;
+  total_amount_paid: number;
 }
 
 export default function AdminWaitlistPage() {

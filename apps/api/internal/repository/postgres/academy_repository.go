@@ -1886,3 +1886,62 @@ func (r *AcademyRepository) ToggleReaction(ctx context.Context, entityType strin
 	return !exists, reactionCounts, nil
 }
 
+func (r *AcademyRepository) RecordWaitlistDeposit(ctx context.Context, email string, amountKobo int, reference string) (int, error) {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer tx.Rollback(ctx)
+
+	// 1. Get waitlist ID by email
+	var waitlistID uuid.UUID
+	err = tx.QueryRow(ctx, "SELECT id FROM waitlist WHERE email = $1", email).Scan(&waitlistID)
+	if err != nil {
+		return 0, fmt.Errorf("waitlist lead not found: %w", err)
+	}
+
+	// 2. Check if transaction has already been processed
+	var exists bool
+	err = tx.QueryRow(ctx, "SELECT EXISTS(SELECT 1 FROM waitlist_transactions WHERE reference = $1)", reference).Scan(&exists)
+	if err != nil {
+		return 0, fmt.Errorf("failed to check transaction existence: %w", err)
+	}
+	if exists {
+		var currentTotal int
+		err = tx.QueryRow(ctx, "SELECT total_amount_paid FROM waitlist WHERE id = $1", waitlistID).Scan(&currentTotal)
+		if err != nil {
+			return 0, fmt.Errorf("failed to fetch current waitlist total: %w", err)
+		}
+		return currentTotal, nil
+	}
+
+	// 3. Log into waitlist_transactions ledger
+	_, err = tx.Exec(ctx, `
+		INSERT INTO waitlist_transactions (waitlist_id, amount, reference)
+		VALUES ($1, $2, $3)
+	`, waitlistID, amountKobo, reference)
+	if err != nil {
+		return 0, fmt.Errorf("failed to log waitlist transaction: %w", err)
+	}
+
+	// 4. Update total amount paid and set deposit_paid to true
+	var newTotal int
+	err = tx.QueryRow(ctx, `
+		UPDATE waitlist
+		SET deposit_paid = true,
+		    total_amount_paid = total_amount_paid + $1
+		WHERE id = $2
+		RETURNING total_amount_paid
+	`, amountKobo, waitlistID).Scan(&newTotal)
+	if err != nil {
+		return 0, fmt.Errorf("failed to update waitlist lead totals: %w", err)
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
+		return 0, err
+	}
+
+	return newTotal, nil
+}
+

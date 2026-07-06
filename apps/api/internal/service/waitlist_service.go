@@ -1,11 +1,15 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"regexp"
 
+	"github.com/Ifeoluwa/portfolio/apps/api/internal/config"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/domain"
 	"github.com/Ifeoluwa/portfolio/apps/api/internal/notifications"
 )
@@ -13,12 +17,14 @@ import (
 type WaitlistService struct {
 	repo     domain.WaitlistRepository
 	notifier *notifications.ResendNotifier
+	cfg      *config.Config
 }
 
-func NewWaitlistService(repo domain.WaitlistRepository, notifier *notifications.ResendNotifier) domain.WaitlistService {
+func NewWaitlistService(repo domain.WaitlistRepository, notifier *notifications.ResendNotifier, cfg *config.Config) domain.WaitlistService {
 	return &WaitlistService{
 		repo:     repo,
 		notifier: notifier,
+		cfg:      cfg,
 	}
 }
 
@@ -36,15 +42,25 @@ func (s *WaitlistService) JoinWaitlist(ctx context.Context, req *domain.AddWaitl
 		return nil, errors.New("whatsapp number is required")
 	}
 
+	existing, err := s.repo.GetLeadByEmail(ctx, req.Email)
+	if err == nil && existing != nil {
+		return existing, nil
+	}
+
 	lead := &domain.WaitlistLead{
 		Name:           req.Name,
 		Email:          req.Email,
 		WhatsappNumber: req.WhatsappNumber,
 	}
 
-	err := s.repo.AddLead(ctx, lead)
+	err = s.repo.AddLead(ctx, lead)
 	if err != nil {
 		return nil, fmt.Errorf("failed to join waitlist: %w", err)
+	}
+
+	// Send welcome email for new waitlist signups
+	if s.notifier != nil {
+		_ = s.notifier.SendWaitlistWelcomeEmail(req.Name, req.Email)
 	}
 
 	return lead, nil
@@ -87,4 +103,64 @@ func (s *WaitlistService) BroadcastToWaitlist(ctx context.Context, subject, body
 	}
 
 	return nil
+}
+
+func (s *WaitlistService) InitializeCheckout(ctx context.Context, email string, amountNgn float64) (string, error) {
+	if email == "" {
+		return "", errors.New("email is required")
+	}
+	if amountNgn <= 0 {
+		return "", errors.New("amount must be greater than zero")
+	}
+
+	// 1. Verify email exists in waitlist
+	_, err := s.repo.GetLeadByEmail(ctx, email)
+	if err != nil {
+		return "", fmt.Errorf("email is not registered on the waitlist: %w", err)
+	}
+
+	// 2. Convert NGN -> Kobo
+	amountKobo := int(amountNgn * 100)
+
+	// 3. Initialize transaction on Paystack
+	paystackReqBody := map[string]interface{}{
+		"email":        email,
+		"amount":       amountKobo,
+		"callback_url": s.cfg.FrontendURL + "/academy/deposit-success",
+		"metadata": map[string]interface{}{
+			"transaction_type": "waitlist_deposit",
+			"email":            email,
+		},
+	}
+
+	bodyBytes, err := json.Marshal(paystackReqBody)
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal paystack payload: %w", err)
+	}
+
+	httpReq, err := http.NewRequestWithContext(ctx, "POST", "https://api.paystack.co/transaction/initialize", bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return "", fmt.Errorf("failed to create http request: %w", err)
+	}
+
+	httpReq.Header.Set("Authorization", "Bearer "+s.cfg.PaystackSecretKey)
+	httpReq.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(httpReq)
+	if err != nil {
+		return "", fmt.Errorf("failed to communicate with Paystack: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var paystackResp domain.PaystackInitResponse
+	if err := json.NewDecoder(resp.Body).Decode(&paystackResp); err != nil {
+		return "", fmt.Errorf("failed to decode response from paystack: %w", err)
+	}
+
+	if !paystackResp.Status {
+		return "", fmt.Errorf("paystack initialization failed: %s", paystackResp.Message)
+	}
+
+	return paystackResp.Data.AuthorizationURL, nil
 }

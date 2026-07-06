@@ -109,7 +109,7 @@ func main() {
 	authSvc := service.NewAuthService(userRepo, userRepo, cfg, tokenCache, resendNotifier)
 	academySvc := service.NewAcademyService(academyRepo, userRepo, cfg, tokenCache, resendNotifier)
 	auditSvc := service.NewAuditService(auditRepo)
-	waitlistSvc := service.NewWaitlistService(waitlistRepo, resendNotifier)
+	waitlistSvc := service.NewWaitlistService(waitlistRepo, resendNotifier, cfg)
 
 	// Background Task: Cleanup old audit logs every 24 hours
 	go func() {
@@ -171,6 +171,7 @@ func main() {
 	// === PUBLIC ROUTES ===
 	mux.HandleFunc("/api/v1/contact", contactHandler.HandleSubmitContact)
 	mux.HandleFunc("POST /api/v1/waitlist", waitlistHandler.HandleJoinWaitlist)
+	mux.HandleFunc("POST /api/v1/waitlist/checkout", waitlistHandler.HandleWaitlistCheckout)
 	mux.HandleFunc("/api/v1/projects/guardrail/stats", projectHandler.HandleGetGuardrailStats)
 
 	// Admin Auth (public: login only — NO register endpoint)
@@ -360,7 +361,7 @@ func main() {
 	c := cors.New(cors.Options{
 		AllowedOrigins:   allowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "OPTIONS", "PUT", "DELETE", "PATCH"},
-		AllowedHeaders:   []string{"Content-Type", "Authorization"},
+		AllowedHeaders:   []string{"Content-Type", "Authorization", "ngrok-skip-browser-warning"},
 		AllowCredentials: true,
 	})
 	

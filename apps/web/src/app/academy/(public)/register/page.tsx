@@ -11,6 +11,7 @@ import {
   Loader2
 } from "lucide-react";
 import Link from "next/link";
+import { WaitlistUpsell } from "@/components/academy/WaitlistUpsell";
 
 export default function RegisterPage() {
   const [name, setName] = useState('');
@@ -31,6 +32,7 @@ export default function RegisterPage() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({
           name,
@@ -121,17 +123,11 @@ export default function RegisterPage() {
           {/* Right Column: Form */}
           <div className="bg-card border border-border rounded-3xl p-8 shadow-2xl relative overflow-hidden">
             {success ? (
-              <div className="py-12 text-center space-y-6">
-                <CheckCircle2 className="w-16 h-16 mx-auto text-yellow-500 animate-bounce" />
-                <div className="space-y-2">
-                  <h2 className="text-2xl font-black text-foreground uppercase tracking-tight">You're on the list!</h2>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    We've registered your spot in the queue for Cohort 2. We'll reach out to you via <strong>{email}</strong> and WhatsApp (<strong>{whatsappNumber}</strong>) as soon as enrolling begins!
-                  </p>
-                </div>
+              <div className="py-6 space-y-6">
+                <WaitlistUpsell email={email} />
                 <Link
                   href="/academy"
-                  className="mt-6 inline-flex items-center justify-center w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold uppercase tracking-widest text-xs rounded-2xl transition-all"
+                  className="inline-flex items-center justify-center w-full py-4 border border-border hover:bg-muted text-foreground font-bold uppercase tracking-widest text-xs rounded-2xl transition-all"
                 >
                   Return to Academy Page
                 </Link>

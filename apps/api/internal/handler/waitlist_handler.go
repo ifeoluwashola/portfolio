@@ -108,3 +108,27 @@ func (h *WaitlistHandler) HandleBroadcastToWaitlist(w http.ResponseWriter, r *ht
 		"message": "Broadcast email dispatched successfully to waitlist.",
 	})
 }
+
+func (h *WaitlistHandler) HandleWaitlistCheckout(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		writeJSONError(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req domain.CheckoutRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSONError(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	authURL, err := h.service.InitializeCheckout(r.Context(), req.Email, req.AmountNgn)
+	if err != nil {
+		writeJSONError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"authorization_url": authURL,
+	})
+}

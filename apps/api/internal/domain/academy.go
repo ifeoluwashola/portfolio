@@ -203,6 +203,7 @@ type AcademyRepository interface {
 	GetStudentBilling(ctx context.Context, studentID uuid.UUID) (*StudentBilling, error)
 	InsertPaymentHistory(ctx context.Context, ph *PaymentHistory) error
 	IncrementBillingPaid(ctx context.Context, studentID uuid.UUID, amountKobo int) (int, error)
+	RecordWaitlistDeposit(ctx context.Context, email string, amountKobo int, reference string) (int, error)
 	SetBillingStatus(ctx context.Context, studentID uuid.UUID, status string) error
 	SetNextPaymentDue(ctx context.Context, studentID uuid.UUID, dueDate *time.Time) error
 	GetOverdueBillings(ctx context.Context) ([]*StudentBilling, error)
@@ -482,8 +483,10 @@ type PaystackWebhookEvent struct {
 }
 
 type PaystackMetadata struct {
-	PaymentType string `json:"payment_type"`
-	StudentID   string `json:"student_id,omitempty"`
+	PaymentType     string `json:"payment_type,omitempty"`
+	StudentID       string `json:"student_id,omitempty"`
+	TransactionType string `json:"transaction_type,omitempty"`
+	Email           string `json:"email,omitempty"`
 }
 
 type CohortApplication struct {

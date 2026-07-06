@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from 'react';
 import { X, Send, Loader2, CheckCircle2 } from 'lucide-react';
+import { WaitlistUpsell } from "./WaitlistUpsell";
 
 interface WaitlistModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose })
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
         body: JSON.stringify({
           name,
@@ -72,17 +74,11 @@ export const WaitlistModal: React.FC<WaitlistModalProps> = ({ isOpen, onClose })
           </div>
 
           {success ? (
-            <div className="py-6 text-center space-y-4">
-              <CheckCircle2 className="w-16 h-16 mx-auto text-yellow-500 animate-bounce" />
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-foreground uppercase tracking-tight">You're on the list!</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  We've secured your spot in the queue for Cohort 2. We'll reach out via <strong>{email}</strong> and WhatsApp (<strong>{whatsappNumber}</strong>) as soon as enrolling begins!
-                </p>
-              </div>
+            <div className="py-6 space-y-4">
+              <WaitlistUpsell email={email} />
               <button
                 onClick={onClose}
-                className="mt-6 w-full py-4 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold uppercase tracking-widest text-xs rounded-2xl transition-all"
+                className="w-full py-4 border border-border hover:bg-muted text-foreground font-bold uppercase tracking-widest text-xs rounded-2xl transition-all"
               >
                 Close Window
               </button>

@@ -8,6 +8,8 @@ interface WaitlistLead {
   email: string;
   whatsapp_number: string;
   joined_at: string;
+  deposit_paid: boolean;
+  total_amount_paid: number;
 }
 
 interface AdminWaitlistTableProps {
@@ -73,6 +75,7 @@ export const AdminWaitlistTable: React.FC<AdminWaitlistTableProps> = ({ leads, o
               <th className="py-4 px-6">Contact Info</th>
               <th className="py-4 px-6">WhatsApp</th>
               <th className="py-4 px-6">Joined Date</th>
+              <th className="py-4 px-6">Deposit (NGN)</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border/40 text-xs">
@@ -107,6 +110,15 @@ export const AdminWaitlistTable: React.FC<AdminWaitlistTableProps> = ({ leads, o
                       <Calendar className="w-3 h-3 text-muted-foreground/40" />
                       {formatDate(lead.joined_at)}
                     </span>
+                  </td>
+                  <td className="py-5 px-6 font-mono">
+                    {lead.deposit_paid ? (
+                      <span className="text-emerald-400 font-bold">
+                        ₦{(lead.total_amount_paid / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground/40">—</span>
+                    )}
                   </td>
                 </tr>
               ))

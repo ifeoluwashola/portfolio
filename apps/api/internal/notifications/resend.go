@@ -1062,3 +1062,163 @@ func (n *ResendNotifier) SendCohortEmail(firstName, email, subject, body string)
 	return err
 }
 
+// SendWaitlistWelcomeEmail sends a confirmation when a user joins the Cohort 2 waitlist.
+func (n *ResendNotifier) SendWaitlistWelcomeEmail(name, email string) error {
+	subject := "You're on the Cohort 2 Waitlist — Kybern Academy"
+	sender := "Kybern Academy <academy@kyberncloud.com>"
+
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Inter", -apple-system, sans-serif; line-height: 1.6; color: #cbd5e1; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+				.header { background-color: #020617; padding: 32px; text-align: center; border-bottom: 1px solid #1e293b; }
+				.status-badge { display: inline-block; padding: 6px 16px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; background-color: rgba(250, 204, 21, 0.1); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); }
+				.content { padding: 48px 32px; }
+				.greeting { color: #f8fafc; font-size: 22px; font-weight: 800; margin-bottom: 24px; }
+				.body-text { color: #94a3b8; font-size: 15px; line-height: 1.8; margin-bottom: 24px; }
+				.highlight-box { background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 24px; margin: 32px 0; }
+				.highlight-title { color: #facc15; font-size: 11px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+				.highlight-item { color: #cbd5e1; font-size: 14px; margin-bottom: 8px; padding-left: 16px; border-left: 2px solid #facc15; }
+				.button { display: inline-block; background-color: #facc15; color: #020617 !important; font-weight: 900; padding: 16px 32px; border-radius: 8px; text-decoration: none; margin: 24px 0; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
+				.footer { background-color: #020617; padding: 40px 32px; text-align: center; font-size: 11px; color: #475569; border-top: 1px solid #1e293b; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<div class="status-badge">WAITLIST CONFIRMED</div>
+				</div>
+				<div class="content">
+					<p class="greeting">Welcome, %s.</p>
+					<p class="body-text">
+						You've successfully secured your spot on the <strong style="color: #f8fafc;">Kybern Academy Cohort 2</strong> waitlist. We'll notify you as soon as enrollment opens with all the details you need to get started.
+					</p>
+
+					<div class="highlight-box">
+						<p class="highlight-title">What Happens Next</p>
+						<p class="highlight-item">You'll receive priority access when Cohort 2 enrollment opens</p>
+						<p class="highlight-item">Optionally secure your seat early with a flexible commitment deposit</p>
+						<p class="highlight-item">Get exclusive pre-cohort updates and early-bird offers</p>
+					</div>
+
+					<p class="body-text">
+						Want to lock in your seat right now? You can make a flexible deposit of any amount — it goes directly toward your tuition.
+					</p>
+
+					<div style="text-align: center;">
+						<a href="%s/academy/register" class="button">Secure Your Seat →</a>
+					</div>
+				</div>
+				<div class="footer">
+					KYBERN ACADEMY · CLOUD NATIVE MENTORSHIP<br/>
+					YOU'RE RECEIVING THIS BECAUSE YOU JOINED THE COHORT 2 WAITLIST
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+
+	htmlBody := fmt.Sprintf(htmlTemplate, name, n.frontendURL)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}
+
+// SendWaitlistDepositEmail sends a receipt when a waitlisted user makes or tops up a commitment deposit.
+func (n *ResendNotifier) SendWaitlistDepositEmail(email string, amountKobo int, totalPaidKobo int) error {
+	subject := "Deposit Confirmed — Kybern Academy Cohort 2"
+	sender := "Kybern Academy Billing <billing@kyberncloud.com>"
+
+	amountNaira := float64(amountKobo) / 100.0
+	totalNaira := float64(totalPaidKobo) / 100.0
+
+	htmlTemplate := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<style>
+				body { font-family: "Inter", -apple-system, sans-serif; line-height: 1.6; color: #cbd5e1; margin: 0; padding: 20px; background-color: #020617; }
+				.wrapper { max-width: 600px; margin: 0 auto; background-color: #0f172a; border: 1px solid #1e293b; border-radius: 12px; overflow: hidden; }
+				.header { background-color: #020617; padding: 32px; text-align: center; border-bottom: 1px solid #1e293b; }
+				.status-badge { display: inline-block; padding: 6px 16px; border-radius: 999px; font-size: 10px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; background-color: rgba(34, 197, 94, 0.1); color: #22c55e; border: 1px solid rgba(34, 197, 94, 0.3); }
+				.content { padding: 48px 32px; }
+				.amount-hero { text-align: center; margin-bottom: 48px; }
+				.amount-label { color: #64748b; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 12px; display: block; }
+				.amount-value { color: #f8fafc; font-size: 48px; font-weight: 900; margin: 0; }
+				.ledger-box { background-color: #020617; border: 1px solid #1e293b; border-radius: 12px; padding: 24px; margin: 40px 0; }
+				.ledger-row { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 14px; }
+				.ledger-row:last-child { margin-bottom: 0; padding-top: 12px; border-top: 1px solid #1e293b; }
+				.ledger-label { color: #64748b; }
+				.ledger-value { color: #cbd5e1; font-weight: 700; }
+				.success-text { color: #94a3b8; font-size: 15px; text-align: center; line-height: 1.8; }
+				.button { display: inline-block; background-color: #facc15; color: #020617 !important; font-weight: 900; padding: 16px 32px; border-radius: 8px; text-decoration: none; margin: 24px 0; text-transform: uppercase; font-size: 13px; letter-spacing: 1px; }
+				.footer { background-color: #020617; padding: 40px 32px; text-align: center; font-size: 11px; color: #475569; border-top: 1px solid #1e293b; }
+			</style>
+		</head>
+		<body>
+			<div class="wrapper">
+				<div class="header">
+					<div class="status-badge">DEPOSIT CONFIRMED</div>
+				</div>
+				<div class="content">
+					<div class="amount-hero">
+						<span class="amount-label">Deposit Received</span>
+						<p class="amount-value">₦%0.2f</p>
+					</div>
+
+					<p class="success-text">
+						Thank you for securing your seat in Kybern Academy Cohort 2. Your deposit has been recorded and will be applied directly toward your tuition when enrollment opens.
+					</p>
+
+					<div class="ledger-box">
+						<div class="ledger-row">
+							<span class="ledger-label">This Deposit: </span>
+							<span class="ledger-value">₦%0.2f</span>
+						</div>
+						<div class="ledger-row">
+							<span class="ledger-label">Total Committed: </span>
+							<span class="ledger-value" style="color: #22c55e;">₦%0.2f</span>
+						</div>
+						<div class="ledger-row">
+							<span class="ledger-label">Allocation: </span>
+							<span class="ledger-value">Cohort 2 Tuition Pre-Payment</span>
+						</div>
+					</div>
+
+					<p class="success-text">
+						You can increase your commitment at any time. Every deposit brings you closer to a fully paid seat.
+					</p>
+
+					<div style="text-align: center;">
+						<a href="%s/academy/register" class="button">Top Up Deposit →</a>
+					</div>
+				</div>
+				<div class="footer">
+					KYBERN ACADEMY · CLOUD NATIVE MENTORSHIP<br/>
+					THIS IS AN AUTOMATED SECURE TRANSACTION RECEIPT
+				</div>
+			</div>
+		</body>
+		</html>
+	`
+
+	htmlBody := fmt.Sprintf(htmlTemplate, amountNaira, amountNaira, totalNaira, n.frontendURL)
+	params := &resend.SendEmailRequest{
+		From:    sender,
+		To:      []string{email},
+		Subject: subject,
+		Html:    htmlBody,
+	}
+
+	_, err := n.client.Emails.Send(params)
+	return err
+}

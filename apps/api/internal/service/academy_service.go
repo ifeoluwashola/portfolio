@@ -153,6 +153,24 @@ func (s *academyService) ProcessWebhook(ctx context.Context, signature string, b
 		return nil
 	}
 
+	if event.Data.Metadata.TransactionType == "waitlist_deposit" {
+		email := event.Data.Metadata.Email
+		if email == "" {
+			email = event.Data.Customer.Email
+		}
+		newTotal, err := s.repo.RecordWaitlistDeposit(ctx, email, event.Data.Amount, event.Data.Reference)
+		if err != nil {
+			log.Printf("ERROR: Failed to record waitlist deposit: %v\n", err)
+			return err
+		}
+		log.Printf("Successfully processed waitlist deposit for email %s, amount %d, reference %s, new total %d\n", email, event.Data.Amount, event.Data.Reference, newTotal)
+		
+		if s.notification != nil {
+			_ = s.notification.SendWaitlistDepositEmail(email, event.Data.Amount, newTotal)
+		}
+		return nil
+	}
+
 	// 2. Determine payment context from Metadata (Primary Path)
 	var targetStudentID uuid.UUID
 	var isProvisioningRequired bool
