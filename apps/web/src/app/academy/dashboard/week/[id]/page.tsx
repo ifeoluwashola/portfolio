@@ -492,7 +492,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
             )}
 
             {week.assignment_instructions && (
-              <div className="bg-card border border-yellow-500/10 rounded-3xl p-8 space-y-6">
+              <div className="bg-card border border-yellow-500/10 rounded-3xl p-5 sm:p-8 space-y-4 sm:space-y-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-3">
@@ -525,9 +525,9 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                   </button>
                 </div>
                 <div className={`relative bg-background border border-border rounded-2xl transition-all duration-300 ${
-                  showFullInstructions ? 'p-6 overflow-x-auto max-h-none' : 'p-6 overflow-hidden max-h-[300px]'
+                  showFullInstructions ? 'p-6 overflow-x-auto max-h-none' : 'p-6 overflow-hidden max-h-[150px] sm:max-h-[300px]'
                 }`}>
-                  <div className="prose prose-invert prose-sm max-w-none
+                  <div className="prose prose-invert prose-sm max-w-none break-words
                     prose-headings:text-yellow-500 prose-headings:font-bold prose-headings:tracking-tight prose-headings:uppercase
                     prose-h2:text-base prose-h2:border-b prose-h2:border-border prose-h2:pb-2 prose-h2:mb-4
                     prose-h3:text-xs prose-h3:tracking-[0.15em]

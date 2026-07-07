@@ -106,7 +106,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground selection:bg-yellow-500/30 selection:text-yellow-200">
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-yellow-500/30 selection:text-yellow-200 w-full overflow-x-hidden">
       {isFirstLogin && <FirstLoginOverlay />}
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-md border-b border-border z-40 px-6 flex items-center justify-between">
@@ -286,7 +286,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             You are viewing the archived workspace for {cohortName}.
           </div>
         )}
-        <div className="p-4 sm:p-10 max-w-6xl mx-auto">
+        <div className="p-4 sm:p-10 max-w-6xl mx-auto w-full min-w-0">
           {children}
         </div>
       </main>
