@@ -282,19 +282,19 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   if (!week) return <div className="text-red-400 p-10">Module ID Invalid: Critical link failure.</div>;
 
   return (
-    <div className="space-y-12 pb-20">
+    <div className="space-y-12 pb-20 overflow-x-hidden">
       {/* Week Header */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="text-[10px] font-bold text-yellow-500/60 border border-yellow-500/20 px-2 py-0.5 uppercase rounded">
+      <div className="space-y-4 min-w-0">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="text-[10px] font-bold text-yellow-500/60 border border-yellow-500/20 px-2 py-0.5 uppercase rounded shrink-0">
             Module {week.week_number}
           </div>
           <div className="h-px bg-border flex-1" />
           {attendance && (
-             <div className="flex items-center gap-4 px-3 py-1 bg-white/5 border border-white/10 rounded-full group cursor-help transition-all hover:border-yellow-500/30">
-                <div className="flex flex-col items-start leading-none">
-                   <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5">Live Attendance</span>
-                   <span className="text-[10px] font-bold text-slate-300">{attendance.attended}/{attendance.total} Sessions</span>
+             <div className="flex items-center gap-3 sm:gap-4 px-3 py-1 bg-white/5 border border-white/10 rounded-full group cursor-help transition-all hover:border-yellow-500/30 min-w-0 shrink">
+                <div className="flex flex-col items-start leading-none min-w-0">
+                   <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter mb-0.5 truncate">Live Attendance</span>
+                   <span className="text-[10px] font-bold text-slate-300 whitespace-nowrap">{attendance.attended}/{attendance.total} Sessions</span>
                 </div>
                 <div className="h-6 w-px bg-white/10" />
                 <div className="flex items-center gap-2">
