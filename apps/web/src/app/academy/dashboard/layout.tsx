@@ -22,6 +22,7 @@ import { useEffect, useState, useCallback } from "react";
 import { logout, getDashboardData } from "../actions";
 import { FirstLoginOverlay } from "@/components/academy/FirstLoginOverlay";
 import { ModeToggle } from "@/components/ModeToggle";
+import { NotificationBell } from "@/components/academy/NotificationBell";
 
 interface CohortWeek {
   id: number;
@@ -114,12 +115,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <Terminal className="w-6 h-6 text-yellow-500" />
           <span className="text-sm font-bold uppercase tracking-widest text-foreground">Kybern Academy</span>
         </Link>
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="p-2 text-muted-foreground hover:text-yellow-500 transition-colors"
-        >
-          {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationBell />
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="p-2 text-muted-foreground hover:text-yellow-500 transition-colors"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Sidebar Overlay for Mobile */}
@@ -279,14 +283,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content Area */}
-      <main className={`flex-1 min-h-screen min-w-0 overflow-x-hidden transition-all duration-300 pt-24 lg:pt-0 ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}>
+      <main className={`flex-1 min-h-screen min-w-0 overflow-x-hidden transition-all duration-300 pt-24 lg:pt-0 relative ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}>
         {isReadOnly && (
           <div className="w-full bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-500 px-6 py-3 text-sm font-semibold flex items-center justify-center sticky top-0 z-10 backdrop-blur-md">
             <Lock className="w-4 h-4 mr-2" />
             You are viewing the archived workspace for {cohortName}.
           </div>
         )}
-        <div className="p-4 sm:p-10 max-w-6xl mx-auto w-full min-w-0">
+        <div className="p-4 sm:px-10 sm:pt-8 sm:pb-10 max-w-6xl mx-auto w-full min-w-0">
+          <div className="hidden lg:flex justify-end mb-6">
+            <NotificationBell />
+          </div>
           {children}
         </div>
       </main>
