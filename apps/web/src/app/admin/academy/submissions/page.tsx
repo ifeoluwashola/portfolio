@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { 
   Clock, 
   GraduationCap, 
@@ -30,6 +32,7 @@ interface Assignment {
   admin_feedback?: string;
   created_at: string;
   submission_file_keys?: string[];
+  comment?: string;
 }
 
 export default function SubmissionsHub() {
@@ -254,6 +257,21 @@ export default function SubmissionsHub() {
                         mode="admin"
                       />
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Student Comment */}
+              {gradingSub.comment && (
+                <div className="space-y-2">
+                  <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] flex items-center gap-2">
+                    <MessageSquare className="w-3 h-3 text-yellow-500" />
+                    Student Notes / Comment
+                  </p>
+                  <div className="p-4 bg-muted/20 border border-border rounded-2xl text-sm prose prose-invert prose-sm max-w-none">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                      {gradingSub.comment}
+                    </ReactMarkdown>
                   </div>
                 </div>
               )}

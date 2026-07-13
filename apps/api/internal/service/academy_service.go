@@ -759,6 +759,7 @@ func (s *academyService) SubmitAssignment(ctx context.Context, studentID uuid.UU
 		WeekID:             req.WeekID,
 		GitHubURL:          req.GitHubURL,
 		SubmissionFileKeys: req.SubmissionFileKeys,
+		Comment:            req.Comment,
 	}
 
 	return s.repo.CreateAssignment(ctx, ass)

@@ -108,12 +108,15 @@ CREATE TABLE IF NOT EXISTS cohort_weeks (
 
 CREATE TABLE IF NOT EXISTS assignments (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-    week_id INT NOT NULL REFERENCES cohort_weeks(id) ON DELETE CASCADE,
-    github_url VARCHAR(255) NOT NULL,
-    status VARCHAR(50) NOT NULL DEFAULT 'pending', -- pending, passed, failed
+    student_id UUID REFERENCES students(id) ON DELETE CASCADE,
+    week_id INT REFERENCES cohort_weeks(id) ON DELETE CASCADE,
+    github_url TEXT NOT NULL,
+    submission_file_keys TEXT[],
+    comment TEXT,
+    status VARCHAR(50) DEFAULT 'pending',
+    score INT CHECK (score >= 0 AND score <= 100),
     admin_feedback TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(student_id, week_id)
 );
 

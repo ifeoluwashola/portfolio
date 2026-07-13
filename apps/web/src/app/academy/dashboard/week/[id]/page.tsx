@@ -63,6 +63,7 @@ interface Assignment {
   admin_feedback?: string;
   week_id: number;
   submission_file_keys?: string[];
+  comment?: string;
 }
 
 function getThumbnailUrl(url: string | undefined): string | null {
@@ -85,6 +86,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
   const MAX_FILES = 5;
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [githubUrl, setGithubUrl] = useState("");
+  const [comment, setComment] = useState("");
   const [showTranscript, setShowTranscript] = useState(false);
   const [showFullInstructions, setShowFullInstructions] = useState(false);
   const [isEditingSubmission, setIsEditingSubmission] = useState(false);
@@ -129,7 +131,10 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
         const foundAss = (data.assignments || []).find((a: Assignment) => a.week_id === parseInt(id));
         setWeek(foundWeek || null);
         setAssignment(foundAss || null);
-        if (foundAss) setGithubUrl(foundAss.github_url);
+        if (foundAss) {
+          setGithubUrl(foundAss.github_url);
+          if (foundAss.comment) setComment(foundAss.comment);
+        }
         setIsReadOnly(data.status === 'graduated' || data.cohort_status === 'graduated');
 
         if (data.total_held_sessions !== undefined) {
@@ -229,7 +234,7 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
       }
 
       setSubmitStatus("COMMITTING...");
-      const result = await submitAssignment(parseInt(id), githubUrl, fileKeys.length > 0 ? fileKeys : undefined);
+      const result = await submitAssignment(parseInt(id), githubUrl, fileKeys.length > 0 ? fileKeys : undefined, comment);
 
       if (result.error) {
         throw new Error(result.error);
@@ -722,6 +727,19 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                           </div>
                         </div>
                       )}
+
+                      {assignment.comment && (
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1">
+                            Additional Comments
+                          </label>
+                          <div className="p-4 bg-background border border-border/60 rounded-2xl text-sm text-foreground/80 prose prose-invert prose-sm">
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                              {assignment.comment}
+                            </ReactMarkdown>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Resubmit/Update Option (only if not passed) */}
@@ -824,6 +842,19 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                               <p className="text-[10px] text-muted-foreground/40 ml-1">{submissionFiles.length}/{MAX_FILES} files selected</p>
                             </div>
                           )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-[0.2em] ml-1 flex items-center justify-between">
+                            Additional Comments (Optional, supports Markdown)
+                          </label>
+                          <textarea
+                            placeholder="Add any notes, issues, or specific things you'd like the reviewer to look at..."
+                            className="w-full bg-background border border-border rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-yellow-500/40 transition-all font-medium min-h-[120px] resize-y"
+                            value={comment}
+                            onChange={(e) => setComment(e.target.value)}
+                            disabled={submitting || assignment?.status === 'passed'}
+                          />
                         </div>
 
                         <button 
