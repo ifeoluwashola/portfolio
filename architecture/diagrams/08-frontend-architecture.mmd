@@ -1,0 +1,61 @@
+flowchart TB
+
+
+    subgraph Frontend["Kybern Frontend Ecosystem"]
+
+
+        Main["kybern-web<br/>Main Website"]
+
+        Academy["kybern-academy-web<br/>Learning Platform"]
+
+        Nexus["kybern-nexus-web<br/>Enterprise Platform"]
+
+
+        UI["@kybern/ui<br/>Shared Design System"]
+
+        SDK["@kybern/sdk<br/>Shared API Client"]
+
+        Auth["@kybern/auth<br/>Authentication Utilities"]
+
+    end
+
+
+
+    subgraph Backend["Backend Platform"]
+
+        API["Kybern API Core<br/>Go Modular Monolith"]
+
+    end
+
+
+
+    Main --> UI
+
+    Academy --> UI
+
+    Nexus --> UI
+
+
+
+    Main --> SDK
+
+    Academy --> SDK
+
+    Nexus --> SDK
+
+
+
+    Main --> Auth
+
+    Academy --> Auth
+
+    Nexus --> Auth
+
+
+
+    Main --> API
+
+    Academy --> API
+
+    Nexus --> API
+

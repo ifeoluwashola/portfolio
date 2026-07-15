@@ -1,0 +1,65 @@
+flowchart TD
+
+    Start["Business Operation<br/>Example: Payment Completed"]
+
+
+    subgraph Transaction["Database Transaction"]
+
+        Service["Go Domain Service"]
+
+        UpdateDB["Update Business Data<br/>Example: billing.transactions"]
+
+        CreateEvent["Create Outbox Event<br/>shared.outbox_events"]
+
+        Commit["Commit Transaction"]
+
+    end
+
+
+    Signal["Redis Pub/Sub Signal<br/>event_signal:<domain>"]
+
+
+    Worker["Background Worker<br/>Go Goroutine"]
+
+
+    ReadEvent["Read Pending Outbox Events"]
+
+    Process["Process Event<br/>Example: Send Email / Update Academy"]
+
+    Complete["Mark Event Completed"]
+
+
+    Failed["Retry Counter Increment"]
+
+    DLQ["Dead Letter State<br/>Manual Review"]
+
+
+
+    Start --> Service
+
+    Service --> UpdateDB
+
+    UpdateDB --> CreateEvent
+
+    CreateEvent --> Commit
+
+
+    Commit --> Signal
+
+
+    Signal --> Worker
+
+
+    Worker --> ReadEvent
+
+    ReadEvent --> Process
+
+
+    Process --> Complete
+
+
+    Process --> Failed
+
+    Failed --> Worker
+
+    Failed --> DLQ

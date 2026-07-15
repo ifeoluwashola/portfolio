@@ -1,0 +1,84 @@
+flowchart TB
+
+    %% External Users
+
+    Student["Student<br/>Kybern Academy Learner"]
+
+    Instructor["Instructor<br/>Academy Educator"]
+
+    Client["Enterprise Client<br/>B2B Consulting Customer"]
+
+    Admin["Platform Administrator<br/>Internal Operations"]
+
+
+    %% Frontend Applications
+
+    MainWeb["Kybern Main Website<br/>Marketing & Documentation"]
+
+    AcademyWeb["Kybern Academy Web<br/>B2C Learning Platform"]
+
+    NexusWeb["Kybern Nexus Web<br/>B2B Consulting Platform"]
+
+    AdminWeb["Admin Portal<br/>Platform Management"]
+
+
+    %% Core Platform
+
+    API["Kybern API Core<br/>Go Modular Monolith"]
+
+
+    %% Data Layer
+
+    Database[(Aurora PostgreSQL<br/>Domain Isolated Schemas)]
+
+    Redis[(ElastiCache Redis<br/>Cache + Pub/Sub + Rate Limiting)]
+
+
+    %% External Services
+
+    Paystack["Paystack<br/>Payment Gateway"]
+
+    Stripe["Stripe<br/>Future Payment Gateway"]
+
+    SES["AWS SES<br/>Email Delivery"]
+
+
+
+    %% User Relationships
+
+    Student --> AcademyWeb
+
+    Instructor --> AcademyWeb
+
+    Client --> NexusWeb
+
+    Admin --> AdminWeb
+
+
+
+    %% Frontend Communication
+
+    MainWeb --> API
+
+    AcademyWeb --> API
+
+    NexusWeb --> API
+
+    AdminWeb --> API
+
+
+
+    %% Backend Dependencies
+
+    API --> Database
+
+    API --> Redis
+
+
+    %% External Integrations
+
+    API --> Paystack
+
+    API --> Stripe
+
+    API --> SES

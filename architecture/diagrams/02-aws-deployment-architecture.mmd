@@ -1,0 +1,71 @@
+flowchart TD
+
+    Users[Users]
+
+    Route53[AWS Route53]
+
+    WAF[AWS WAF]
+
+    CloudFront[CloudFront CDN]
+
+
+    Users --> Route53
+
+    Route53 --> WAF
+
+    WAF --> CloudFront
+
+
+    subgraph AWS["AWS Production Environment"]
+
+        ALB[Application Load Balancer]
+
+
+        CloudFront --> ALB
+
+
+        subgraph ECS["Private ECS Fargate Services"]
+
+            AcademyWeb["Academy Next.js Container"]
+
+            NexusWeb["Nexus Next.js Container"]
+
+            API["Go API Core Container"]
+
+        end
+
+
+        ALB --> AcademyWeb
+
+        ALB --> NexusWeb
+
+        ALB --> API
+
+
+        AcademyWeb --> API
+
+        NexusWeb --> API
+
+
+
+        subgraph Data["Private Data Layer"]
+
+            Aurora[(Aurora PostgreSQL)]
+
+            Redis[(ElastiCache Redis)]
+
+        end
+
+
+        API --> Aurora
+
+        API --> Redis
+
+
+    end
+
+
+    API --> SES[AWS SES]
+
+    API --> Paystack[Paystack API]
+

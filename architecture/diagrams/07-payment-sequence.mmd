@@ -1,0 +1,66 @@
+sequenceDiagram
+    autonumber
+
+    actor Student
+
+    participant AcademyUI as Academy Next.js App
+    participant API as Go API Core
+    participant Academy as Academy Domain
+    participant Billing as Billing Domain
+    participant Paystack
+    participant DB as Aurora PostgreSQL
+    participant Redis
+    participant Worker as Event Worker
+
+
+    Student->>AcademyUI: Click Secure Seat
+
+    AcademyUI->>API: POST /api/v2/academy/waitlist/checkout
+
+    API->>Academy: Create Checkout Request
+
+    Academy->>Billing: InitializePayment(amount,email)
+
+    Billing->>Paystack: Create Transaction
+
+    Paystack-->>Billing: Return Authorization URL
+
+    Billing-->>Academy: Return Payment URL
+
+    Academy-->>AcademyUI: Return Payment URL
+
+    AcademyUI->>Student: Redirect To Paystack Checkout
+
+
+    Student->>Paystack: Complete Payment
+
+
+    Paystack->>API: Send Payment Webhook
+
+    API->>Billing: Validate Webhook
+
+
+    Billing->>Paystack: Verify Transaction
+
+    Paystack-->>Billing: Payment Confirmed
+
+
+    Billing->>DB: BEGIN TRANSACTION
+
+    Billing->>DB: Insert Transaction Record
+
+    Billing->>DB: Insert PaymentReceived Outbox Event
+
+    DB-->>Billing: COMMIT TRANSACTION
+
+
+    Billing->>Redis: Publish Event Signal
+
+    Redis->>Worker: Trigger Event Processing
+
+
+    Worker->>DB: Fetch Pending Outbox Event
+
+    Worker->>Academy: Update Waitlist Status
+
+    Worker->>DB: Mark Event Completed

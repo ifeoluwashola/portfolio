@@ -1,0 +1,62 @@
+flowchart LR
+
+
+Postgres[(Aurora PostgreSQL Database)]
+
+
+Postgres --> AuthSchema
+
+Postgres --> AcademySchema
+
+Postgres --> BillingSchema
+
+Postgres --> ConsultingSchema
+
+Postgres --> AdminSchema
+
+
+
+AuthSchema["auth schema
+
+users
+
+roles
+
+sessions"]
+
+
+AcademySchema["academy schema
+
+courses
+
+cohorts
+
+labs
+
+submissions"]
+
+
+BillingSchema["billing schema
+
+transactions
+
+payments
+
+invoices"]
+
+
+ConsultingSchema["consulting schema
+
+clients
+
+api_keys
+
+telemetry"]
+
+
+AdminSchema["admin schema
+
+configuration
+
+analytics"]
+

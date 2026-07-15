@@ -1,0 +1,83 @@
+flowchart TB
+
+
+subgraph API["Kybern API Core - Go Modular Monolith"]
+
+
+    Gateway["HTTP API Gateway"]
+
+
+    subgraph Domains["Independent Domain Modules"]
+
+        Auth["Auth Domain
+
+        Identity
+        RBAC
+        Sessions"]
+
+
+        Academy["Academy Domain
+
+        Courses
+        Cohorts
+        Labs"]
+
+
+        Billing["Billing Domain
+
+        Payments
+        Transactions"]
+
+
+        Consulting["Consulting Domain
+
+        Leads
+        API Keys
+        CMP"]
+
+
+        Admin["Admin Domain
+
+        Configuration
+        Analytics"]
+
+    end
+
+
+
+    Gateway --> Auth
+
+    Gateway --> Academy
+
+    Gateway --> Billing
+
+    Gateway --> Consulting
+
+    Gateway --> Admin
+
+
+
+    Academy -.->|Interface| Billing
+
+    Admin -.->|Read Interfaces| Academy
+
+    Admin -.->|Read Interfaces| Billing
+
+
+
+end
+
+
+
+Database[(PostgreSQL)]
+
+
+Auth --> Database
+
+Academy --> Database
+
+Billing --> Database
+
+Consulting --> Database
+
+Admin --> Database

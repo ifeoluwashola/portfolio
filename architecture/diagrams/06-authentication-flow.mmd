@@ -1,0 +1,40 @@
+sequenceDiagram
+    autonumber
+
+    actor User
+
+    participant Browser as Next.js Application
+    participant API as Go API Gateway
+    participant Auth as Auth Domain
+    participant DB as PostgreSQL Auth Schema
+    participant Redis as Redis
+
+
+    User->>Browser: Enter email and password
+
+    Browser->>API: POST /api/v2/auth/login
+
+    API->>Auth: Authenticate User
+
+    Auth->>DB: Find User Record
+
+    DB-->>Auth: Return User Data
+
+    Auth->>Auth: Verify Argon2id Password Hash
+
+    Auth->>DB: Create User Session
+
+    Auth->>Redis: Store Session Metadata
+
+    Auth-->>API: Authentication Successful
+
+    API-->>Browser: Set Secure HttpOnly Cookie
+
+
+    Browser->>API: Request Protected Resource
+
+    API->>Redis: Validate Session
+
+    Redis-->>API: Session Valid
+
+    API-->>Browser: Return Protected Resource
