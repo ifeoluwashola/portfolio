@@ -6,6 +6,7 @@ import { BlogInteractivity } from "@/components/BlogInteractivity";
 import Link from "next/link";
 import { BookOpen, Lock } from "lucide-react";
 import { checkMaterialAccess } from "@/app/academy/actions";
+import { mdxComponents, mdxOptions } from "@/components/mdx/MdxComponents";
 
 export default async function AcademyMaterialPage({ params }: { params: Promise<{ slug: string }> }) {
   const access = await checkMaterialAccess();
@@ -74,7 +75,7 @@ export default async function AcademyMaterialPage({ params }: { params: Promise<
         </header>
 
         <div className="prose dark:prose-invert prose-emerald lg:prose-lg max-w-none prose-pre:bg-secondary prose-pre:text-secondary-foreground prose-pre:border-border prose-pre:border">
-          <MDXRemote source={material.content} />
+          <MDXRemote source={material.content} options={mdxOptions} components={mdxComponents} />
         </div>
 
         <BlogInteractivity slug={resolvedParams.slug} isAcademy={true} />

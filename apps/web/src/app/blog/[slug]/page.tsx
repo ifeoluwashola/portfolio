@@ -3,6 +3,7 @@ import { MDXRemote } from "next-mdx-remote/rsc";
 import { notFound } from "next/navigation";
 import { format, parseISO } from "date-fns";
 import { BlogInteractivity } from "@/components/BlogInteractivity";
+import { mdxComponents, mdxOptions } from "@/components/mdx/MdxComponents";
 
 export async function generateStaticParams() {
   const slugs = getConsultingSlugs();
@@ -33,7 +34,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </header>
 
         <div className="prose dark:prose-invert lg:prose-lg max-w-none prose-a:text-kn-accent hover:prose-a:brightness-110 prose-pre:bg-kn-card prose-pre:text-kn-heading prose-pre:border-kn-border prose-pre:border prose-headings:text-kn-heading prose-p:text-kn-body">
-          <MDXRemote source={post.content} />
+          <MDXRemote source={post.content} options={mdxOptions} components={mdxComponents} />
         </div>
 
         <BlogInteractivity slug={resolvedParams.slug} />

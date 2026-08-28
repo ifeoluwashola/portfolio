@@ -8,6 +8,7 @@ import { ThreadDetail } from "./ThreadDetail";
 import { MentionTextArea } from "./MentionTextArea";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
 import { AlertModal } from "../AlertModal";
 
 
@@ -502,7 +503,7 @@ export function DiscussionForumFeed() {
                             [&_code:not(pre_code)]:text-yellow-400 [&_code:not(pre_code)]:bg-yellow-400/10 [&_code:not(pre_code)]:px-1.5 [&_code:not(pre_code)]:py-0.5 [&_code:not(pre_code)]:rounded prose-code:before:hidden prose-code:after:hidden
                             prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:max-w-[calc(100vw-4rem)] md:prose-pre:max-w-full prose-pre:overflow-x-auto
                           ">
-                            <ReactMarkdown rehypePlugins={[rehypeHighlight]} components={markdownComponents}>{preprocessMentions(thread.content)}</ReactMarkdown>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>{preprocessMentions(thread.content)}</ReactMarkdown>
                           </div>
 
                           {/* Media Preview in Feed */}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, User, Loader2, Send, CornerDownRight, Check, Heart, Pencil, Paperclip, FileIcon, X, Trash2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import rehypeHighlight from "rehype-highlight";
+import remarkGfm from "remark-gfm";
 import { getThread, createReply, endorseReply, getStudentProfile, getPublicAvatarUrl, updateReply, updateThread, toggleThreadReaction, toggleReplyReaction, getUploadUrl, getDownloadUrl, deleteReply } from "../../app/academy/actions";
 import { MentionTextArea } from "./MentionTextArea";
 import { AlertModal } from "../AlertModal";
@@ -562,7 +563,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
               prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:max-w-[calc(100vw-4rem)] md:prose-pre:max-w-full prose-pre:overflow-x-auto
               prose-headings:text-white prose-headings:font-bold prose-headings:uppercase
             ">
-              <ReactMarkdown rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
+              <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
                 {preprocessMentions(thread.content)}
               </ReactMarkdown>
             </div>
@@ -798,7 +799,7 @@ export function ThreadDetail({ threadId, isDrawer = false }: { threadId: string;
                   prose-pre:bg-slate-950 prose-pre:border prose-pre:border-white/5 prose-pre:rounded-xl prose-pre:p-4 prose-pre:max-w-[calc(100vw-4rem)] md:prose-pre:max-w-full prose-pre:overflow-x-auto
                   prose-headings:text-white prose-headings:font-bold prose-headings:uppercase
                 ">
-                  <ReactMarkdown rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeHighlight]} components={markdownComponents}>
                     {preprocessMentions(reply.content)}
                   </ReactMarkdown>
                 </div>

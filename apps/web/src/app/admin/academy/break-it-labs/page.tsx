@@ -14,6 +14,7 @@ import {
   X
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { AlertModal } from "@/components/AlertModal";
 
 interface SubmissionComment {
@@ -211,7 +212,7 @@ export default function AdminLabsPage() {
                   </span>
                 </div>
                 <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-muted-foreground leading-relaxed mt-2">
-                  <ReactMarkdown>{lab.scenario}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{lab.scenario}</ReactMarkdown>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -237,7 +238,7 @@ export default function AdminLabsPage() {
                     Current Broken State
                   </div>
                   <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-red-400/80 leading-relaxed max-h-[200px] overflow-y-auto scrollbar-hide">
-                    <ReactMarkdown>{lab.broken_code}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{lab.broken_code}</ReactMarkdown>
                   </div>
                </div>
 
@@ -247,7 +248,7 @@ export default function AdminLabsPage() {
                     Reference Solution
                   </div>
                   <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-emerald-400/80 leading-relaxed max-h-[200px] overflow-y-auto scrollbar-hide">
-                    <ReactMarkdown>{lab.solution_code || "No solution provided_"}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{lab.solution_code || "No solution provided_"}</ReactMarkdown>
                   </div>
                </div>
             </div>
@@ -310,7 +311,7 @@ export default function AdminLabsPage() {
                         </div>
                         <div className="bg-background border border-border/50 rounded-xl p-6 overflow-x-auto max-h-[400px] overflow-y-auto">
                           <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-emerald-400 leading-relaxed">
-                            <ReactMarkdown>{sub.proposed_fix}</ReactMarkdown>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{sub.proposed_fix}</ReactMarkdown>
                           </div>
                         </div>
                       </div>

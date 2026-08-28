@@ -22,6 +22,7 @@ import { getAcademySession, submitLabFix, addLabComment, getStudentStatus, logou
 import { AlertModal } from "../../../../../components/AlertModal";
 import { MentionTextArea } from "@/components/academy/MentionTextArea";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 interface SubmissionComment {
   id: number;
@@ -210,7 +211,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
               <ShieldAlert className="w-4 h-4 text-yellow-500" /> Scenario Outline
             </h2>
             <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words text-foreground/70 dark:text-muted-foreground leading-relaxed font-sans">
-              <ReactMarkdown>{lab.scenario}</ReactMarkdown>
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{lab.scenario}</ReactMarkdown>
             </div>
           </section>
 
@@ -225,7 +226,7 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
               </div>
               <div className="bg-card/50 border border-border rounded-2xl p-6">
                 <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words leading-relaxed text-red-500 dark:text-red-300">
-                  <ReactMarkdown>{lab.broken_code}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{lab.broken_code}</ReactMarkdown>
                 </div>
               </div>
             </div>
@@ -340,8 +341,8 @@ export default function LabDetailPage({ params }: { params: Promise<{ id: string
 
                   {/* PR Code */}
                   <div className="p-6 bg-background rounded-2xl border border-border m-6">
-                    <div className="prose prose-invert prose-sm max-w-none w-full min-w-0 break-words leading-relaxed">
-                      <ReactMarkdown>{sub.proposed_fix}</ReactMarkdown>
+                    <div className="prose prose-invert prose-sm max-w-none text-muted-foreground">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{sub.proposed_fix}</ReactMarkdown>
                     </div>
                   </div>
 
