@@ -1,0 +1,561 @@
+---
+
+title: ">_ Minikube Kubernetes Cluster Setup"
+date: "2026-08-28"
+description: "Create a local Kubernetes environment using Minikube on AWS EC2 or your local workstation."
+category: "Academy"
+-------------------
+
+# >_ RUNBOOK K8S-001: Minikube Cluster Setup
+
+**STATUS:** REQUIRED BEFORE KUBERNETES LABS
+**OBJECTIVE:** Create a working Kubernetes cluster using Minikube and verify access with `kubectl`.
+
+Throughout the Kubernetes module, you need access to a Kubernetes cluster where you can safely create Pods, Deployments, Services, ConfigMaps, Secrets, and other Kubernetes resources.
+
+We will use **Minikube**, which allows us to create a small Kubernetes cluster for learning and development.
+
+You have two options:
+
+1. **Recommended: Run Minikube on an AWS EC2 instance**
+2. **Alternative: Run Minikube directly on your laptop**
+
+---
+
+# Option 1: AWS EC2 — Recommended
+
+Use this option if:
+
+* Your laptop has limited RAM or CPU.
+* Docker makes your laptop slow.
+* You are experiencing Minikube installation problems locally.
+* You want a Linux environment similar to what you will encounter on servers.
+
+## Phase 1: Create the EC2 Instance
+
+From the AWS Console:
+
+```text
+EC2 → Instances → Launch Instance
+```
+
+Use the following configuration:
+
+| Setting          | Value                   |
+| ---------------- | ----------------------- |
+| Name             | `kybern-minikube`       |
+| Operating System | Ubuntu Server 24.04 LTS |
+| Architecture     | 64-bit x86              |
+| Instance Type    | `t3.large`              |
+| vCPU             | 2                       |
+| Memory           | 8 GB                    |
+| Storage          | 30 GB gp3               |
+| Public IP        | Enabled                 |
+| Security Group   | SSH - Port 22           |
+| SSH Source       | My IP                   |
+
+> `t3.large` is recommended because Kubernetes and Docker both require memory. Stop the instance when you are not using it to avoid unnecessary AWS charges.
+
+Download your SSH key and connect to the instance:
+
+```bash
+ssh -i your-key.pem ubuntu@<EC2-PUBLIC-IP>
+```
+
+---
+
+# Phase 2: Install Docker
+
+Update the server:
+
+```bash
+sudo apt update
+```
+
+Install Docker:
+
+```bash
+sudo apt install -y docker.io
+```
+
+Start and enable Docker:
+
+```bash
+sudo systemctl enable --now docker
+```
+
+Allow your Ubuntu user to run Docker without `sudo`:
+
+```bash
+sudo usermod -aG docker $USER
+```
+
+Apply the new group:
+
+```bash
+newgrp docker
+```
+
+Verify:
+
+```bash
+docker --version
+```
+
+Then:
+
+```bash
+docker ps
+```
+
+Both commands should work successfully.
+
+---
+
+# Phase 3: Install kubectl
+
+`kubectl` is the command-line tool used to communicate with Kubernetes.
+
+Run:
+
+```bash
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+```
+
+Install it:
+
+```bash
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+
+Remove the downloaded file:
+
+```bash
+rm kubectl
+```
+
+Verify:
+
+```bash
+kubectl version --client
+```
+
+---
+
+# Phase 4: Install Minikube
+
+Download Minikube:
+
+```bash
+curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+```
+
+Install it:
+
+```bash
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+```
+
+Remove the downloaded file:
+
+```bash
+rm minikube-linux-amd64
+```
+
+Verify:
+
+```bash
+minikube version
+```
+
+---
+
+# Phase 5: Create the Cluster
+
+Start Minikube using Docker:
+
+```bash
+minikube start --driver=docker --cpus=2 --memory=4096
+```
+
+Minikube will download the required Kubernetes components and create your cluster.
+
+When it finishes, verify the cluster:
+
+```bash
+minikube status
+```
+
+Then:
+
+```bash
+kubectl get nodes
+```
+
+You should see something similar to:
+
+```text
+NAME       STATUS   ROLES           AGE   VERSION
+minikube   Ready    control-plane   1m    v1.x.x
+```
+
+The important part is:
+
+```text
+STATUS: Ready
+```
+
+Your Kubernetes cluster is now operational.
+
+---
+
+# Option 2: Install Minikube on Your Local Machine
+
+You can use this option if your laptop has enough resources.
+
+Recommended:
+
+* 2+ CPU cores
+* At least 8 GB system RAM
+* At least 20 GB free disk space
+* Docker installed and running
+
+Minikube itself requires at least 2 CPUs, 2 GB of free memory, and 20 GB of free disk space.
+
+---
+
+# Windows Users
+
+Windows students should use:
+
+```text
+Windows
+   ↓
+WSL 2
+   ↓
+Ubuntu
+   ↓
+Docker Desktop
+   ↓
+Minikube
+```
+
+Do not use Command Prompt for the Academy Kubernetes labs.
+
+Install WSL if you have not already:
+
+```powershell
+wsl --install
+```
+
+Restart your computer.
+
+Install **Docker Desktop** and enable:
+
+```text
+Docker Desktop
+→ Settings
+→ Resources
+→ WSL Integration
+→ Enable Ubuntu
+```
+
+Open your Ubuntu/WSL terminal and verify:
+
+```bash
+docker ps
+```
+
+If this works, use the same **Linux installation commands** below to install `kubectl` and Minikube.
+
+---
+
+# macOS Users
+
+Install Docker Desktop first.
+
+Then, if you have Homebrew:
+
+```bash
+brew install kubectl
+```
+
+Install Minikube:
+
+```bash
+brew install minikube
+```
+
+Verify:
+
+```bash
+docker ps
+kubectl version --client
+minikube version
+```
+
+Start your cluster:
+
+```bash
+minikube start --driver=docker --cpus=2 --memory=4096
+```
+
+---
+
+# Linux / Ubuntu / WSL Users
+
+Make sure Docker is installed and:
+
+```bash
+docker ps
+```
+
+works.
+
+Install `kubectl`:
+
+```bash
+curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
+```
+
+```bash
+sudo install -o root -g root -m 0755 kubectl /usr/local/bin/kubectl
+```
+
+```bash
+rm kubectl
+```
+
+Install Minikube:
+
+```bash
+curl -LO https://github.com/kubernetes/minikube/releases/latest/download/minikube-linux-amd64
+```
+
+```bash
+sudo install minikube-linux-amd64 /usr/local/bin/minikube
+```
+
+```bash
+rm minikube-linux-amd64
+```
+
+Create the cluster:
+
+```bash
+minikube start --driver=docker --cpus=2 --memory=4096
+```
+
+---
+
+# Verify Your Cluster
+
+Regardless of whether you used EC2 or your local machine, run the following commands.
+
+Check Minikube:
+
+```bash
+minikube status
+```
+
+Check your Kubernetes context:
+
+```bash
+kubectl config current-context
+```
+
+Expected:
+
+```text
+minikube
+```
+
+Check the node:
+
+```bash
+kubectl get nodes
+```
+
+Expected status:
+
+```text
+Ready
+```
+
+Check Kubernetes system Pods:
+
+```bash
+kubectl get pods -A
+```
+
+Most system Pods should show:
+
+```text
+Running
+```
+
+---
+
+# Test Your Cluster
+
+Create an NGINX Deployment:
+
+```bash
+kubectl create deployment nginx --image=nginx
+```
+
+Check the Deployment:
+
+```bash
+kubectl get deployments
+```
+
+Check the Pod:
+
+```bash
+kubectl get pods
+```
+
+You should see an NGINX Pod with:
+
+```text
+STATUS: Running
+```
+
+You have successfully deployed your first application to Kubernetes.
+
+Delete the test Deployment:
+
+```bash
+kubectl delete deployment nginx
+```
+
+---
+
+# Managing Your Minikube Cluster
+
+When you finish working:
+
+```bash
+minikube stop
+```
+
+This stops Kubernetes but keeps your cluster.
+
+Start it again with:
+
+```bash
+minikube start
+```
+
+Check the status:
+
+```bash
+minikube status
+```
+
+To completely destroy your cluster:
+
+```bash
+minikube delete
+```
+
+> `minikube stop` temporarily shuts down the cluster.
+> `minikube delete` permanently removes the cluster.
+
+---
+
+# EC2 Students: Important
+
+When you finish your Kubernetes session, you should do two things.
+
+First stop Minikube:
+
+```bash
+minikube stop
+```
+
+Then go to:
+
+```text
+AWS Console
+→ EC2
+→ Instances
+→ Select kybern-minikube
+→ Instance State
+→ Stop Instance
+```
+
+Do **not** terminate the EC2 instance unless you want to permanently remove it.
+
+When your next class begins:
+
+1. Start the EC2 instance.
+2. SSH into it.
+3. Run:
+
+```bash
+minikube start
+```
+
+4. Verify:
+
+```bash
+kubectl get nodes
+```
+
+---
+
+# Essential Commands
+
+| Task                  | Command                          |
+| --------------------- | -------------------------------- |
+| Start cluster         | `minikube start`                 |
+| Check Minikube        | `minikube status`                |
+| Stop cluster          | `minikube stop`                  |
+| Delete cluster        | `minikube delete`                |
+| Check current cluster | `kubectl config current-context` |
+| Check nodes           | `kubectl get nodes`              |
+| Check Pods            | `kubectl get pods`               |
+| Check all Pods        | `kubectl get pods -A`            |
+| Check Deployments     | `kubectl get deployments`        |
+| Check Services        | `kubectl get services`           |
+| Cluster information   | `kubectl cluster-info`           |
+
+---
+
+# Completion Check
+
+Before proceeding to the next Kubernetes lab, these commands must work:
+
+```bash
+docker ps
+```
+
+```bash
+minikube status
+```
+
+```bash
+kubectl config current-context
+```
+
+```bash
+kubectl get nodes
+```
+
+```bash
+kubectl get pods -A
+```
+
+Your cluster is ready when:
+
+```text
+Current Context: minikube
+Node Status: Ready
+Minikube: Running
+```
+
+If all three conditions are true, your Kubernetes lab environment is ready.
+
+**Next Mission:** Kubernetes Pods, ReplicaSets, Deployments, and Services.
