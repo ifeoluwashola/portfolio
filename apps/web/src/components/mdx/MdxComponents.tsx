@@ -2,6 +2,8 @@ import React from "react";
 import Link from "next/link";
 import remarkGfm from "remark-gfm";
 
+import { Mermaid } from "./Mermaid";
+
 export const mdxOptions = {
   mdxOptions: {
     remarkPlugins: [remarkGfm],
@@ -9,6 +11,45 @@ export const mdxOptions = {
 };
 
 export const mdxComponents = {
+  Mermaid,
+  pre: ({ children, ...props }: React.HTMLAttributes<HTMLPreElement>) => {
+    const childrenArray = React.Children.toArray(children);
+    const codeElement = childrenArray.find(
+      (child) =>
+        React.isValidElement(child) &&
+        typeof (child.props as any)?.className === "string" &&
+        (child.props as any).className.includes("language-mermaid")
+    );
+
+    if (codeElement && React.isValidElement(codeElement)) {
+      const codeProps = codeElement.props as any;
+      const chart =
+        typeof codeProps.children === "string"
+          ? codeProps.children
+          : Array.isArray(codeProps.children)
+            ? codeProps.children.join("")
+            : String(codeProps.children || "");
+      return <Mermaid chart={chart.trim()} />;
+    }
+
+    return <pre {...props}>{children}</pre>;
+  },
+  code: ({ className, children, ...props }: React.HTMLAttributes<HTMLElement>) => {
+    if (typeof className === "string" && className.includes("language-mermaid")) {
+      const chart =
+        typeof children === "string"
+          ? children
+          : Array.isArray(children)
+            ? children.join("")
+            : String(children || "");
+      return <Mermaid chart={chart.trim()} />;
+    }
+    return (
+      <code className={className} {...props}>
+        {children}
+      </code>
+    );
+  },
   table: ({ children, className, ...props }: React.TableHTMLAttributes<HTMLTableElement>) => (
     <div className="my-8 w-full overflow-x-auto rounded-xl border border-border bg-card/50 shadow-sm backdrop-blur-xs">
       <table className={`w-full text-left text-sm text-foreground divide-y divide-border border-collapse ${className || ""}`} {...props}>
