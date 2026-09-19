@@ -12,6 +12,9 @@ export interface PostMeta {
   description: string;
   slug: string;
   category: string;
+  author?: string;
+  image?: string;
+  tags?: string[];
 }
 
 export interface Post {
@@ -50,6 +53,9 @@ const getGenericPostFromSlug = (dirPath: string, slug: string): Post | null => {
       date: data.date ?? new Date().toISOString(),
       description: data.description ?? "",
       category: data.category ?? "General",
+      author: data.author,
+      image: data.image,
+      tags: data.tags,
     },
   };
 };
