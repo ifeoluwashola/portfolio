@@ -183,8 +183,11 @@ export default async function StudentDashboard() {
                 </div>
               </div>
 
-              {/* Status Pill */}
-              <div>
+              {/* Status & Deadline Pills */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-yellow-500/10 border border-yellow-500/30 text-yellow-500">
+                  <Calendar className="w-3.5 h-3.5" /> Deadline: Oct 21 &bull; 11:59 PM WAT
+                </span>
                 {capstone?.status === "approved" ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/30 text-emerald-500">
                     <ShieldCheck className="w-3.5 h-3.5" /> Certified Graduate
@@ -210,10 +213,10 @@ export default async function StudentDashboard() {
                 {capstone?.status === "approved"
                   ? `Congratulations! Your Capstone project "${capstone.project_title}" has been approved. You are officially certified in the Alumni Hall of Fame.`
                   : capstone?.status === "needs_revision"
-                  ? `Your Capstone submission requires architectural or code adjustments. Admin feedback: "${capstone.feedback || "Please review reviewer comments"}". Resubmit when ready.`
+                  ? `Your Capstone submission requires architectural or code adjustments. Admin feedback: "${capstone.feedback || "Please review reviewer comments"}". Resubmit before October 21 at 11:59 PM WAT.`
                   : capstone?.status === "pending"
                   ? `Your Capstone PR "${capstone.project_title}" has been queued for faculty evaluation. Turnaround is typically 48–72 hours.`
-                  : "To earn your graduation certificate and portfolio showcase in the Alumni Hall of Fame, submit your production-ready Capstone PR with complete IaC, live deployment, and architecture diagrams."}
+                  : "To earn your graduation certificate and portfolio showcase in the Alumni Hall of Fame, submit your production-ready Capstone PR before the strict deadline of October 21 at 11:59 PM WAT."}
               </p>
 
               <div className="flex flex-wrap items-center gap-3 pt-2">

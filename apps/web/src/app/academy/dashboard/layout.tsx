@@ -24,6 +24,7 @@ import { logout, getDashboardData } from "../actions";
 import { FirstLoginOverlay } from "@/components/academy/FirstLoginOverlay";
 import { ModeToggle } from "@/components/ModeToggle";
 import { NotificationBell } from "@/components/academy/NotificationBell";
+import { CapstoneDeadlineTicker } from "@/components/academy/CapstoneDeadlineTicker";
 
 interface CohortWeek {
   id: number;
@@ -299,6 +300,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       {/* Main Content Area */}
       <main className={`flex-1 min-h-screen min-w-0 overflow-x-hidden transition-all duration-300 pt-24 lg:pt-0 relative ${isSidebarOpen ? "lg:ml-72" : "lg:ml-20"}`}>
+        <CapstoneDeadlineTicker />
         {isReadOnly && (
           <div className="w-full bg-yellow-500/10 border-b border-yellow-500/20 text-yellow-500 px-6 py-3 text-sm font-semibold flex items-center justify-center sticky top-0 z-10 backdrop-blur-md">
             <Lock className="w-4 h-4 mr-2" />

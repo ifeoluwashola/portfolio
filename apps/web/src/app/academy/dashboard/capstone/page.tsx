@@ -26,7 +26,10 @@ import {
   Eye,
   CheckSquare,
   RotateCcw,
-  MessageSquare
+  MessageSquare,
+  AlertTriangle,
+  Calendar,
+  Timer
 } from "lucide-react";
 import { 
   submitCapstone, 
@@ -55,6 +58,9 @@ interface Capstone {
   updated_at?: string;
 }
 
+// Strict Capstone Deadline: October 21, 2026 at 11:59:59 PM WAT (UTC+1)
+const CAPSTONE_DEADLINE_MS = new Date("2026-10-21T23:59:59+01:00").getTime();
+
 export default function CapstoneSubmissionPage() {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
@@ -62,6 +68,44 @@ export default function CapstoneSubmissionPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Live Deadline Countdown state
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number;
+    hours: number;
+    minutes: number;
+    seconds: number;
+    isExpired: boolean;
+  }>({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isExpired: false,
+  });
+
+  useEffect(() => {
+    const calculateTimeLeft = () => {
+      const diff = CAPSTONE_DEADLINE_MS - Date.now();
+      if (diff <= 0) {
+        return { days: 0, hours: 0, minutes: 0, seconds: 0, isExpired: true };
+      }
+      return {
+        days: Math.floor(diff / (1000 * 60 * 60 * 24)),
+        hours: Math.floor((diff / (1000 * 60 * 60)) % 24),
+        minutes: Math.floor((diff / (1000 * 60)) % 60),
+        seconds: Math.floor((diff / 1000) % 60),
+        isExpired: false,
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+    const interval = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   // Student Quick Response state (for responding directly to admin feedback)
   const [quickResponse, setQuickResponse] = useState("");
@@ -86,6 +130,7 @@ export default function CapstoneSubmissionPage() {
   useEffect(() => {
     fetchInitialData();
   }, []);
+
 
   const fetchInitialData = async () => {
     setInitialLoading(true);
@@ -156,6 +201,10 @@ export default function CapstoneSubmissionPage() {
   const handleSendQuickResponse = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quickResponse.trim()) return;
+    if (timeLeft.isExpired) {
+      setError("The Capstone revision deadline has passed (October 21, 2026 at 11:59 PM WAT).");
+      return;
+    }
     setSendingResponse(true);
     setError("");
     setSuccessMsg("");
@@ -173,6 +222,7 @@ export default function CapstoneSubmissionPage() {
     }
     setSendingResponse(false);
   };
+
 
   // Auto-save draft changes to localStorage so student work is never lost
   useEffect(() => {
@@ -235,9 +285,14 @@ export default function CapstoneSubmissionPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (timeLeft.isExpired) {
+      setError("The Capstone submission deadline has passed (October 21, 2026 at 11:59 PM WAT). Submissions are permanently closed.");
+      return;
+    }
     setLoading(true);
     setError("");
     setSuccessMsg("");
+
 
     // URL validations
     try {
@@ -332,6 +387,108 @@ export default function CapstoneSubmissionPage() {
         )}
       </div>
 
+      {/* DEADLINE CUTOFF & COUNTDOWN BANNER */}
+      <div className={`relative overflow-hidden rounded-3xl border-2 transition-all p-6 sm:p-8 ${
+        timeLeft.isExpired
+          ? "bg-gradient-to-r from-red-950/40 via-red-900/20 to-background border-red-500/50 shadow-[0_0_30px_rgba(239,68,68,0.15)]"
+          : "bg-gradient-to-r from-amber-950/30 via-yellow-950/20 to-background border-yellow-500/40 shadow-[0_0_30px_rgba(234,179,8,0.1)]"
+      }`}>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                timeLeft.isExpired
+                  ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                  : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+              }`}>
+                {timeLeft.isExpired ? (
+                  <>
+                    <XCircle size={12} /> Submission Window Closed
+                  </>
+                ) : (
+                  <>
+                    <AlertTriangle size={12} className="animate-pulse" /> Critical Graduation Cutoff
+                  </>
+                )}
+              </span>
+              <span className="text-xs font-mono text-muted-foreground flex items-center gap-1.5">
+                <Calendar size={13} className="text-yellow-500" /> October 21, 2026 &bull; 11:59 PM WAT
+              </span>
+            </div>
+
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-foreground flex items-center gap-2">
+                <span>Capstone Submission Deadline:</span>
+                <span className={timeLeft.isExpired ? "text-red-400" : "text-yellow-500"}>
+                  21st October, 11:59 PM WAT
+                </span>
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mt-1.5">
+                The Capstone submission portal closes strictly at <strong className="text-foreground">11:59 PM WAT on 21st October</strong>. 
+                After this deadline, students will <span className="text-red-400 font-semibold">no longer be able to submit or revise</span> their capstone. 
+                Failure to submit by the deadline means you <strong className="text-foreground">cannot graduate with this cohort</strong> and will <span className="text-red-400 font-semibold">not be published to the Alumni page</span>.
+              </p>
+            </div>
+          </div>
+
+          {/* Countdown Clock / Locked Box */}
+          <div className="shrink-0 bg-background/80 backdrop-blur border border-border/80 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center min-w-[280px]">
+            {timeLeft.isExpired ? (
+              <div className="text-center space-y-1 py-2">
+                <div className="w-10 h-10 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center mx-auto text-red-500 mb-2">
+                  <XCircle size={22} />
+                </div>
+                <div className="text-sm font-black text-red-400 uppercase tracking-wider">Submissions Closed</div>
+                <div className="text-[11px] text-muted-foreground">Cutoff Passed (Oct 21, 11:59 PM WAT)</div>
+              </div>
+            ) : (
+              <div className="space-y-2 w-full">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                  <span className="flex items-center gap-1.5">
+                    <Timer size={12} className="text-yellow-500" /> Time Remaining
+                  </span>
+                  <span className="text-yellow-500 font-mono">WAT (UTC+1)</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2 text-center">
+                  <div className="bg-card border border-border rounded-xl p-2 sm:p-2.5">
+                    <span className="block text-xl sm:text-2xl font-black text-foreground font-mono">
+                      {String(timeLeft.days).padStart(2, "0")}
+                    </span>
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
+                      Days
+                    </span>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-2 sm:p-2.5">
+                    <span className="block text-xl sm:text-2xl font-black text-foreground font-mono">
+                      {String(timeLeft.hours).padStart(2, "0")}
+                    </span>
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
+                      Hours
+                    </span>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-2 sm:p-2.5">
+                    <span className="block text-xl sm:text-2xl font-black text-foreground font-mono">
+                      {String(timeLeft.minutes).padStart(2, "0")}
+                    </span>
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
+                      Mins
+                    </span>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl p-2 sm:p-2.5">
+                    <span className="block text-xl sm:text-2xl font-black text-yellow-500 font-mono">
+                      {String(timeLeft.seconds).padStart(2, "0")}
+                    </span>
+                    <span className="block text-[9px] font-bold uppercase tracking-wider text-muted-foreground mt-0.5">
+                      Secs
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
       {/* Main Header Banner */}
       <div className="relative bg-card border border-border rounded-3xl p-8 sm:p-10 overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-5 text-foreground pointer-events-none">
@@ -417,47 +574,60 @@ export default function CapstoneSubmissionPage() {
               <MessageSquare className="w-4 h-4 text-yellow-500" />
               <span>Respond or Send Follow-Up Note to Reviewer</span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              If you have questions, clarifications, or have made adjustments to your repository/live demo, send a message directly back to the faculty committee:
-            </p>
-            <form onSubmit={handleSendQuickResponse} className="space-y-3">
-              <textarea
-                required
-                rows={3}
-                value={quickResponse}
-                onChange={(e) => setQuickResponse(e.target.value)}
-                placeholder="e.g. 'I have updated the Kubernetes manifests to include PodDisruptionBudgets and fixed the live demo ingress certificate as requested...'"
-                className="w-full bg-background border border-border rounded-xl p-3.5 text-xs text-foreground focus:ring-1 focus:ring-yellow-500 outline-none transition-all placeholder:text-muted-foreground/30 resize-none leading-relaxed"
-              />
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <p className="text-[11px] text-muted-foreground">
-                  Sending a response automatically flips your Capstone status to <strong className="text-blue-400 font-medium">Resubmitted</strong> in the admin graduation queue.
-                </p>
-                <button
-                  type="submit"
-                  disabled={sendingResponse || !quickResponse.trim()}
-                  className="px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
-                >
-                  {sendingResponse ? (
-                    <>
-                      <Loader2 size={14} className="animate-spin" /> Sending...
-                    </>
-                  ) : (
-                    <>
-                      <Send size={14} /> Send Response
-                    </>
-                  )}
-                </button>
+            {timeLeft.isExpired ? (
+              <div className="p-4 rounded-xl bg-red-950/30 border border-red-500/40 text-red-400 text-xs flex items-center gap-2.5">
+                <XCircle size={18} className="shrink-0 text-red-500" />
+                <span>
+                  <strong>Revision Window Closed:</strong> The deadline of October 21 at 11:59 PM WAT has expired. Faculty audit submissions and responses are now locked.
+                </span>
               </div>
-            </form>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">
+                  If you have questions, clarifications, or have made adjustments to your repository/live demo, send a message directly back to the faculty committee:
+                </p>
+                <form onSubmit={handleSendQuickResponse} className="space-y-3">
+                  <textarea
+                    required
+                    rows={3}
+                    value={quickResponse}
+                    onChange={(e) => setQuickResponse(e.target.value)}
+                    placeholder="e.g. 'I have updated the Kubernetes manifests to include PodDisruptionBudgets and fixed the live demo ingress certificate as requested...'"
+                    className="w-full bg-background border border-border rounded-xl p-3.5 text-xs text-foreground focus:ring-1 focus:ring-yellow-500 outline-none transition-all placeholder:text-muted-foreground/30 resize-none leading-relaxed"
+                  />
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <p className="text-[11px] text-muted-foreground">
+                      Sending a response automatically flips your Capstone status to <strong className="text-blue-400 font-medium">Resubmitted</strong> in the admin graduation queue.
+                    </p>
+                    <button
+                      type="submit"
+                      disabled={sendingResponse || !quickResponse.trim()}
+                      className="px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold text-xs uppercase tracking-wider rounded-xl transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+                    >
+                      {sendingResponse ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" /> Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Send size={14} /> Send Response
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-orange-900/30">
-            <Pencil size={12} className="text-yellow-500" />
-            <span>
-              Need to modify your links, description, or diagram? Edit the fields below and click <strong>&quot;Resubmit Capstone PR&quot;</strong>.
-            </span>
-          </div>
+          {!timeLeft.isExpired && (
+            <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-orange-900/30">
+              <Pencil size={12} className="text-yellow-500" />
+              <span>
+                Need to modify your links, description, or diagram? Edit the fields below and click <strong>&quot;Resubmit Capstone PR&quot;</strong>.
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -838,16 +1008,34 @@ export default function CapstoneSubmissionPage() {
               </div>
             )}
 
-            <div className="md:col-span-2 pt-4">
+            <div className="md:col-span-2 pt-4 space-y-3">
+              {timeLeft.isExpired && capstone?.status !== "approved" && (
+                <div className="bg-red-950/30 border border-red-500/40 text-red-400 p-4 rounded-xl flex items-center gap-3 text-xs sm:text-sm font-medium">
+                  <AlertCircle size={18} className="shrink-0 text-red-500" />
+                  <span>
+                    <strong>Submission Cutoff Reached:</strong> The deadline of October 21, 2026 (11:59 PM WAT) has elapsed. New submissions and updates are closed.
+                  </span>
+                </div>
+              )}
+
               <button 
                 type="submit" 
-                disabled={loading || uploadingDiagram}
-                className="w-full bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-black py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 uppercase tracking-widest shadow-[0_0_25px_rgba(234,179,8,0.25)] hover:shadow-[0_0_35px_rgba(234,179,8,0.45)] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || uploadingDiagram || (timeLeft.isExpired && capstone?.status !== "approved")}
+                className={`w-full font-black py-4 px-6 rounded-xl transition-all flex items-center justify-center gap-3 uppercase tracking-widest ${
+                  timeLeft.isExpired && capstone?.status !== "approved"
+                    ? "bg-slate-800 text-slate-500 border border-slate-700 cursor-not-allowed"
+                    : "bg-yellow-500 hover:bg-yellow-400 text-slate-950 shadow-[0_0_25px_rgba(234,179,8,0.25)] hover:shadow-[0_0_35px_rgba(234,179,8,0.45)] disabled:opacity-50 disabled:cursor-not-allowed"
+                }`}
               >
                 {loading ? (
                   <>
                     <Loader2 className="animate-spin" size={20} />
                     <span>Transmitting to Faculty Audit Queue...</span>
+                  </>
+                ) : timeLeft.isExpired && capstone?.status !== "approved" ? (
+                  <>
+                    <XCircle size={20} />
+                    <span>Submission Window Closed</span>
                   </>
                 ) : (
                   <>

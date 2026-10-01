@@ -1028,11 +1028,18 @@ func (s *academyService) AdminDisqualifyStudent(ctx context.Context, id uuid.UUI
 }
 
 func (s *academyService) SubmitCapstone(ctx context.Context, studentID uuid.UUID, req *domain.CapstoneProjectRequest) error {
+	// Strict submission deadline: October 21, 2026 at 11:59:59 PM WAT (UTC+1)
+	deadline := time.Date(2026, time.October, 21, 23, 59, 59, 0, time.FixedZone("WAT", 1*3600))
+	if time.Now().After(deadline) {
+		return errors.New("the Capstone Project submission deadline has passed (October 21, 2026 at 11:59 PM WAT). Submissions are permanently closed.")
+	}
+
 	status := "pending"
 	existing, _ := s.repo.GetCapstoneByStudentID(ctx, studentID)
 	if existing != nil && (existing.Status == "needs_revision" || existing.Status == "resubmitted") {
 		status = "resubmitted"
 	}
+
 
 	diagramURL := req.ArchitectureDiagramURL
 	if strings.Contains(diagramURL, ".amazonaws.com/") && strings.Contains(diagramURL, "?") {
@@ -1090,6 +1097,12 @@ func (s *academyService) SubmitCapstone(ctx context.Context, studentID uuid.UUID
 }
 
 func (s *academyService) RespondToCapstone(ctx context.Context, studentID uuid.UUID, req *domain.RespondToCapstoneRequest) error {
+	// Strict revision/response deadline: October 21, 2026 at 11:59:59 PM WAT (UTC+1)
+	deadline := time.Date(2026, time.October, 21, 23, 59, 59, 0, time.FixedZone("WAT", 1*3600))
+	if time.Now().After(deadline) {
+		return errors.New("the Capstone Project revision and response deadline has passed (October 21, 2026 at 11:59 PM WAT)")
+	}
+
 	if req.Comment == "" {
 		return errors.New("comment cannot be empty")
 	}
@@ -1098,6 +1111,7 @@ func (s *academyService) RespondToCapstone(ctx context.Context, studentID uuid.U
 	if err != nil {
 		return fmt.Errorf("capstone project not found: %w", err)
 	}
+
 
 	err = s.repo.UpdateCapstoneStudentResponse(ctx, studentID, req.Comment, "resubmitted")
 	if err != nil {
