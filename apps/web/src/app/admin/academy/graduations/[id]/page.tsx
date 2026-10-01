@@ -29,7 +29,10 @@ interface Capstone {
   live_demo_url: string;
   repo_url: string;
   status: string;
+  feedback?: string;
+  student_comment?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export default function CapstoneReviewPage({ params }: { params: Promise<{ id: string }> }) {
@@ -62,6 +65,9 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
       // Pre-fill from student's saved profile; allow admin to override
       setLinkedinUrl(data.student_linkedin || "");
       setGitHubUrl(data.student_github || data.repo_url || "");
+      if (data.feedback) {
+        setFeedback(data.feedback);
+      }
     }
     setLoading(false);
   };
@@ -90,7 +96,9 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
 
     const res = await rejectCapstone(capstone.id, feedback);
     if (res.success) {
-      router.push("/admin/academy/graduations");
+      setShowRejectModal(false);
+      setIsRejecting(false);
+      fetchCapstone();
     } else {
       alert(res.error || "Reject failed");
       setIsRejecting(false);
@@ -100,7 +108,7 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-40 text-muted-foreground gap-3">
-        <Loader2 className="animate-spin" size={32} />
+        <Loader2 className="animate-spin text-[#eab308]" size={32} />
         <span>Loading PR details...</span>
       </div>
     );
@@ -119,6 +127,35 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
     );
   }
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "resubmitted":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-blue-500/10 border border-blue-500/30 text-blue-400">
+            Resubmitted by Student
+          </span>
+        );
+      case "needs_revision":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-orange-500/10 border border-orange-500/30 text-orange-400">
+            Changes Requested
+          </span>
+        );
+      case "approved":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+            Approved
+          </span>
+        );
+      default:
+        return (
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/30 text-amber-400">
+            Pending Review
+          </span>
+        );
+    }
+  };
+
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-8">
       {/* Header */}
@@ -130,16 +167,28 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
           <ArrowLeft size={16} /> Back to Queue
         </Link>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight">
-            <GraduationCap className="text-[#eab308]" size={36} />
-            Capstone Review
-          </h1>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-3xl font-bold text-white flex items-center gap-3 tracking-tight">
+                <GraduationCap className="text-[#eab308]" size={36} />
+                Capstone Review
+              </h1>
+              {getStatusBadge(capstone.status)}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Submitted on {new Date(capstone.created_at).toLocaleDateString()}
+              {capstone.updated_at && capstone.updated_at !== capstone.created_at && (
+                <> &bull; Last updated {new Date(capstone.updated_at).toLocaleDateString()}</>
+              )}
+            </p>
+          </div>
+
           <div className="flex gap-3 w-full md:w-auto">
             <button 
               onClick={() => setShowRejectModal(true)}
               className="flex-1 md:flex-none px-6 py-2.5 bg-slate-800 text-slate-300 font-bold rounded-xl hover:bg-slate-700 hover:text-white transition-all flex items-center justify-center gap-2"
             >
-              <XCircle size={18} /> Request Changes
+              <XCircle size={18} /> {capstone.status === "needs_revision" ? "Update Feedback" : "Request Changes"}
             </button>
             <button 
               onClick={() => setShowApproveModal(true)}
@@ -150,6 +199,47 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       </div>
+
+      {/* FEEDBACK & RESPONSE CONVERSATION THREAD */}
+      {(capstone.student_comment || capstone.feedback) && (
+        <div className="bg-card border border-border rounded-2xl p-6 space-y-4">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+            <FileText size={16} className="text-[#eab308]" /> Review &amp; Student Communication History
+          </h3>
+
+          <div className="space-y-4 pt-2">
+            {/* Admin Feedback Box */}
+            {capstone.feedback && (
+              <div className="bg-orange-950/20 border border-orange-500/30 rounded-xl p-4 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-orange-400 flex items-center gap-1.5">
+                    <XCircle size={14} /> Reviewer Feedback / Changes Requested:
+                  </span>
+                  <span className="text-[10px] text-orange-400/70">Faculty Audit</span>
+                </div>
+                <p className="text-sm text-orange-200/90 leading-relaxed whitespace-pre-wrap">
+                  {capstone.feedback}
+                </p>
+              </div>
+            )}
+
+            {/* Student Response Box */}
+            {capstone.student_comment && (
+              <div className="bg-blue-950/20 border border-blue-500/30 rounded-xl p-4 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-blue-400 flex items-center gap-1.5">
+                    <CheckCircle2 size={14} /> Student Response / Note ({capstone.student_name}):
+                  </span>
+                  <span className="text-[10px] text-blue-400/70">Candidate</span>
+                </div>
+                <p className="text-sm text-blue-200/90 leading-relaxed whitespace-pre-wrap italic">
+                  &ldquo;{capstone.student_comment}&rdquo;
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-6">
         {/* Main Content */}
@@ -164,12 +254,27 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
             
             <div className="space-y-4">
               <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                <FileText size={16} /> Project Description
+                <FileText size={16} /> Architecture &amp; Project Description
               </h3>
               <div className="text-foreground text-base leading-relaxed whitespace-pre-wrap">
                 {capstone.description}
               </div>
             </div>
+
+            {capstone.architecture_diagram_url && (
+              <div className="space-y-4 pt-6 border-t border-border">
+                <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500 flex items-center gap-2">
+                  <Layers size={16} /> Architecture Diagram
+                </h3>
+                <div className="rounded-xl overflow-hidden border border-border bg-slate-950 p-2 max-h-96 flex items-center justify-center">
+                  <img 
+                    src={capstone.architecture_diagram_url} 
+                    alt="Architecture Diagram" 
+                    className="max-h-92 object-contain rounded-lg"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -213,6 +318,7 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       </div>
+
 
       {/* Approval Modal */}
       {showApproveModal && (
@@ -307,10 +413,10 @@ export default function CapstoneReviewPage({ params }: { params: Promise<{ id: s
                 />
               </div>
 
-              <div className="bg-red-950/20 border border-red-800/30 p-4 rounded-xl flex items-start gap-3">
-                 <AlertCircle className="text-red-500 shrink-0" size={20} />
-                 <p className="text-xs text-red-400/80 leading-relaxed">
-                   The student will be notified and the capstone status will be changed to <span className="font-bold">needs_revision</span>. It will be removed from this queue.
+              <div className="bg-orange-950/20 border border-orange-800/30 p-4 rounded-xl flex items-start gap-3">
+                 <AlertCircle className="text-orange-400 shrink-0" size={20} />
+                 <p className="text-xs text-orange-400/90 leading-relaxed">
+                   The student will be notified and the capstone status will be changed to <span className="font-bold">needs_revision</span>. It will remain visible in your queue under <span className="font-bold">&quot;Changes Requested&quot;</span>.
                  </p>
               </div>
             </div>

@@ -470,6 +470,9 @@ export async function getStudentCapstone() {
   const result = await academyFetch("/v1/academy/capstone", {
     method: "GET",
   });
+  if (result.status === 404 || (result.error && typeof result.error === "string" && result.error.toLowerCase().includes("not found"))) {
+    return { data: null };
+  }
   if (result.error) return { error: result.error };
   return result;
 }
@@ -482,6 +485,16 @@ export async function submitCapstone(data: Record<string, unknown>) {
   if (result.error) return { error: result.error };
   return { success: true };
 }
+
+export async function respondToCapstone(comment: string) {
+  const result = await academyFetch("/v1/academy/capstone/respond", {
+    method: "POST",
+    body: JSON.stringify({ comment }),
+  });
+  if (result.error) return { error: result.error };
+  return { success: true };
+}
+
 
 export async function getPendingCapstones() {
   const token = (await cookies()).get("auth_token")?.value;

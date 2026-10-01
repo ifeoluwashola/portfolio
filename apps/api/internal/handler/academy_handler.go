@@ -940,6 +940,37 @@ func (h *AcademyHandler) HandleSubmitCapstone(w http.ResponseWriter, r *http.Req
 	w.WriteHeader(http.StatusCreated)
 }
 
+func (h *AcademyHandler) HandleRespondToCapstone(w http.ResponseWriter, r *http.Request) {
+	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
+	if !ok {
+		RespondWithError(w, r, http.StatusUnauthorized, "Unauthorized session", nil)
+		return
+	}
+	studentID, err := uuid.Parse(studentIDStr)
+	if err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid student ID", nil)
+		return
+	}
+
+	var req domain.RespondToCapstoneRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		RespondWithError(w, r, http.StatusBadRequest, "Invalid request body", err)
+		return
+	}
+
+	if strings.TrimSpace(req.Comment) == "" {
+		RespondWithError(w, r, http.StatusBadRequest, "Response comment is required", nil)
+		return
+	}
+
+	if err := h.svc.RespondToCapstone(r.Context(), studentID, &req); err != nil {
+		RespondWithError(w, r, http.StatusInternalServerError, "An error occurred", err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
+
 func (h *AcademyHandler) HandleGetStudentCapstone(w http.ResponseWriter, r *http.Request) {
 	studentIDStr, ok := r.Context().Value(middleware.StudentIDKey).(string)
 	if !ok {

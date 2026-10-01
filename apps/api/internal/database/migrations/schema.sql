@@ -234,12 +234,14 @@ CREATE TABLE capstone_projects (
     student_id UUID NOT NULL UNIQUE REFERENCES students(id) ON DELETE CASCADE,
     project_title VARCHAR(255) NOT NULL,
     description TEXT NOT NULL,
-    architecture_diagram_url VARCHAR(255),
-    live_demo_url VARCHAR(255),
-    repo_url VARCHAR(255),
+    architecture_diagram_url TEXT,
+    live_demo_url TEXT,
+    repo_url TEXT,
     status VARCHAR(20) DEFAULT 'pending', -- 'pending', 'approved', 'needs_revision'
     feedback TEXT,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    student_comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Index for public lookup

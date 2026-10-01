@@ -23,8 +23,11 @@ import {
   Github,
   Paperclip,
   X,
-  FileText
+  FileText,
+  GraduationCap,
+  ArrowRight
 } from "lucide-react";
+import Link from "next/link";
 import { getDashboardData, submitAssignment, getS3UploadUrl } from "../../../actions";
 import { SecureFilePreview } from "@/components/ui/SecureFilePreview";
 
@@ -565,6 +568,30 @@ export default function WeekPage({ params }: { params: Promise<{ id: string }> }
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {/* Capstone Callout */}
+            {(week.week_number === 16 || week.title.toLowerCase().includes("capstone") || week.title.toLowerCase().includes("final")) && (
+              <div className="bg-gradient-to-r from-yellow-500/10 via-card to-yellow-500/5 border border-yellow-500/30 rounded-3xl p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 shadow-[0_0_30px_rgba(234,179,8,0.06)]">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-yellow-500 text-xs font-bold uppercase tracking-widest">
+                    <GraduationCap className="w-4 h-4" />
+                    Capstone Project & Graduation Certification
+                  </div>
+                  <h4 className="text-xl font-bold tracking-tight text-foreground">
+                    Final Module: Submit Your Capstone PR
+                  </h4>
+                  <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
+                    This module represents your graduation phase. Submit your production-ready architecture walkthrough, live deployment demo, and IaC repository for faculty audit to earn your graduation certification.
+                  </p>
+                </div>
+                <Link
+                  href="/academy/dashboard/capstone"
+                  className="shrink-0 inline-flex items-center gap-2 px-6 py-3.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_0_20px_rgba(234,179,8,0.2)]"
+                >
+                  Go To Capstone Submission <ArrowRight className="w-4 h-4" />
+                </Link>
               </div>
             )}
 

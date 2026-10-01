@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"time"
@@ -1027,30 +1028,150 @@ func (s *academyService) AdminDisqualifyStudent(ctx context.Context, id uuid.UUI
 }
 
 func (s *academyService) SubmitCapstone(ctx context.Context, studentID uuid.UUID, req *domain.CapstoneProjectRequest) error {
+	status := "pending"
+	existing, _ := s.repo.GetCapstoneByStudentID(ctx, studentID)
+	if existing != nil && (existing.Status == "needs_revision" || existing.Status == "resubmitted") {
+		status = "resubmitted"
+	}
+
+	diagramURL := req.ArchitectureDiagramURL
+	if strings.Contains(diagramURL, ".amazonaws.com/") && strings.Contains(diagramURL, "?") {
+		diagramURL = strings.Split(diagramURL, "?")[0]
+	}
+
 	project := &domain.CapstoneProject{
 		StudentID:              studentID,
 		ProjectTitle:           req.ProjectTitle,
 		Description:            req.Description,
-		ArchitectureDiagramURL: req.ArchitectureDiagramURL,
+		ArchitectureDiagramURL: diagramURL,
 		LiveDemoURL:            req.LiveDemoURL,
 		RepoURL:                req.RepoURL,
-		Status:                 "pending",
+		Status:                 status,
 	}
+
+
+	if req.StudentComment != "" {
+		project.StudentComment = &req.StudentComment
+	} else if existing != nil && existing.StudentComment != nil {
+		project.StudentComment = existing.StudentComment
+	}
+
 	_, err := s.repo.CreateCapstoneProject(ctx, project)
-	return err
+	if err != nil {
+		return err
+	}
+
+	student, sErr := s.repo.GetStudentByID(ctx, studentID)
+	if sErr == nil && student != nil {
+		if req.LinkedInURL != "" || req.GitHubURL != "" {
+			li := student.LinkedInURL
+			if req.LinkedInURL != "" {
+				li = &req.LinkedInURL
+			}
+			gh := student.GitHubURL
+			if req.GitHubURL != "" {
+				gh = &req.GitHubURL
+			}
+			_ = s.repo.UpdateStudentProfile(ctx, studentID, student.AvatarS3Key, li, gh, student.Bio, &student.Username, student.DisplayName)
+		}
+
+		go func() {
+			actorID := studentID.String()
+			refURL := "/admin/academy/graduations"
+			msg := fmt.Sprintf("%s %s submitted a Capstone PR: \"%s\"", student.FirstName, student.LastName, req.ProjectTitle)
+			if status == "resubmitted" {
+				msg = fmt.Sprintf("%s %s updated and resubmitted Capstone PR: \"%s\"", student.FirstName, student.LastName, req.ProjectTitle)
+			}
+			_ = s.notifSystem.NotifyUser(context.Background(), &actorID, "admin_system", "submission", msg, &refURL)
+		}()
+	}
+
+	return nil
+}
+
+func (s *academyService) RespondToCapstone(ctx context.Context, studentID uuid.UUID, req *domain.RespondToCapstoneRequest) error {
+	if req.Comment == "" {
+		return errors.New("comment cannot be empty")
+	}
+
+	capstone, err := s.repo.GetCapstoneByStudentID(ctx, studentID)
+	if err != nil {
+		return fmt.Errorf("capstone project not found: %w", err)
+	}
+
+	err = s.repo.UpdateCapstoneStudentResponse(ctx, studentID, req.Comment, "resubmitted")
+	if err != nil {
+		return fmt.Errorf("failed to submit response: %w", err)
+	}
+
+	student, sErr := s.repo.GetStudentByID(ctx, studentID)
+	if sErr == nil && student != nil {
+		go func() {
+			actorID := studentID.String()
+			refURL := "/admin/academy/graduations"
+			msg := fmt.Sprintf("%s %s responded to feedback on Capstone PR: \"%s\"", student.FirstName, student.LastName, capstone.ProjectTitle)
+			_ = s.notifSystem.NotifyUser(context.Background(), &actorID, "admin_system", "submission", msg, &refURL)
+		}()
+	}
+
+	return nil
+}
+
+
+func (s *academyService) refreshCapstoneDiagramURL(ctx context.Context, capstone *domain.CapstoneProject) {
+	if capstone == nil || capstone.ArchitectureDiagramURL == "" {
+		return
+	}
+
+	rawURL := capstone.ArchitectureDiagramURL
+	var s3Key string
+
+	if strings.HasPrefix(rawURL, "assignments/") || strings.HasPrefix(rawURL, "threads/") || strings.HasPrefix(rawURL, "avatars/") {
+		s3Key = rawURL
+	} else if strings.Contains(rawURL, ".amazonaws.com/") {
+		parsed, err := url.Parse(rawURL)
+		if err == nil {
+			s3Key = strings.TrimPrefix(parsed.Path, "/")
+		}
+	}
+
+	if s3Key != "" {
+		freshURL, err := s.GeneratePresignedDownloadURL(ctx, s3Key)
+		if err == nil && freshURL != "" {
+			capstone.ArchitectureDiagramURL = freshURL
+		}
+	}
 }
 
 func (s *academyService) GetStudentCapstone(ctx context.Context, studentID uuid.UUID) (*domain.CapstoneProject, error) {
-	return s.repo.GetCapstoneByStudentID(ctx, studentID)
+	cap, err := s.repo.GetCapstoneByStudentID(ctx, studentID)
+	if err != nil {
+		return nil, err
+	}
+	s.refreshCapstoneDiagramURL(ctx, cap)
+	return cap, nil
 }
 
 func (s *academyService) GetPendingCapstones(ctx context.Context) ([]*domain.CapstoneProject, error) {
-	return s.repo.GetPendingCapstones(ctx)
+	caps, err := s.repo.GetPendingCapstones(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, cap := range caps {
+		s.refreshCapstoneDiagramURL(ctx, cap)
+	}
+	return caps, nil
 }
 
 func (s *academyService) GetCapstoneByID(ctx context.Context, id int) (*domain.CapstoneProject, error) {
-	return s.repo.GetCapstoneByID(ctx, id)
+	cap, err := s.repo.GetCapstoneByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	s.refreshCapstoneDiagramURL(ctx, cap)
+	return cap, nil
 }
+
 
 func (s *academyService) ApproveCapstone(ctx context.Context, capstoneID int, req *domain.ApproveCapstoneRequest) error {
 	// 1. Get Capstone
@@ -1096,7 +1217,7 @@ func (s *academyService) ApproveCapstone(ctx context.Context, capstoneID int, re
 	if err == nil {
 		go func() {
 			refURL := fmt.Sprintf("/academy/alumni/%s", slug)
-			msg := fmt.Sprintf("Congratulations! Your capstone project has been approved. Welcome to the Alumni Hall of Fame!")
+			msg := "Congratulations! Your capstone project has been approved. Welcome to the Alumni Hall of Fame!"
 			_ = s.notifSystem.NotifyUser(context.Background(), nil, student.ID.String(), "feedback", msg, &refURL)
 		}()
 	}
@@ -1242,6 +1363,9 @@ func (s *academyService) ListAlumni(ctx context.Context) ([]*domain.AlumniProfil
 			log.Printf("Warning: failed to fetch projects for alumni %d: %v", profiles[i].ID, err)
 			continue
 		}
+		for _, p := range projects {
+			s.refreshCapstoneDiagramURL(ctx, p)
+		}
 		profiles[i].Projects = projects
 	}
 
@@ -1256,8 +1380,12 @@ func (s *academyService) GetAlumniPortfolio(ctx context.Context, slug string) (*
 
 	projects, err := s.repo.GetCapstoneProjectsByAlumni(ctx, profile.ID)
 	if err == nil {
+		for _, p := range projects {
+			s.refreshCapstoneDiagramURL(ctx, p)
+		}
 		profile.Projects = projects
 	}
+
 
 	// Fetch Milestones
 	assignments, _ := s.repo.GetStudentAssignments(ctx, profile.StudentID)
@@ -1811,7 +1939,7 @@ func (s *academyService) GeneratePresignedDownloadURL(ctx context.Context, fileK
 		Bucket: aws.String(s.config.S3BucketName),
 		Key:    aws.String(fileKey),
 	}, func(opts *s3.PresignOptions) {
-		opts.Expires = 15 * time.Minute
+		opts.Expires = 24 * time.Hour
 	})
 
 	if err != nil {

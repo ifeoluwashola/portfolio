@@ -229,6 +229,7 @@ type AcademyRepository interface {
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
 	UpdateCapstoneStatus(ctx context.Context, id int, status string) error
 	UpdateCapstoneStatusAndFeedback(ctx context.Context, id int, status, feedback string) error
+	UpdateCapstoneStudentResponse(ctx context.Context, studentID uuid.UUID, comment string, newStatus string) error
 	DeleteAlumniProfile(ctx context.Context, slug string) error
 
 	// Cohorts & Curriculum
@@ -351,6 +352,7 @@ type AcademyService interface {
 	AdminUpdateAlumni(ctx context.Context, id int, req *GraduateStudentRequest) error
 	GetEligibleStudents(ctx context.Context) ([]*Student, error)
 	SubmitCapstone(ctx context.Context, studentID uuid.UUID, req *CapstoneProjectRequest) error
+	RespondToCapstone(ctx context.Context, studentID uuid.UUID, req *RespondToCapstoneRequest) error
 	GetStudentCapstone(ctx context.Context, studentID uuid.UUID) (*CapstoneProject, error)
 	GetPendingCapstones(ctx context.Context) ([]*CapstoneProject, error)
 	GetCapstoneByID(ctx context.Context, id int) (*CapstoneProject, error)
@@ -708,19 +710,22 @@ type AlumniProfile struct {
 }
 
 type CapstoneProject struct {
-	ID                     int       `json:"id"`
-	StudentID              uuid.UUID `json:"student_id"`
-	StudentName            string    `json:"student_name,omitempty"`
-	StudentLinkedIn        *string   `json:"student_linkedin,omitempty"`
-	StudentGitHub          *string   `json:"student_github,omitempty"`
-	ProjectTitle           string    `json:"project_title"`
-	Description            string    `json:"description"`
-	ArchitectureDiagramURL string    `json:"architecture_diagram_url"`
-	LiveDemoURL            string    `json:"live_demo_url"`
-	RepoURL                string    `json:"repo_url"`
-	Status                 string    `json:"status"` // pending, approved, needs_revision
-	Feedback               *string   `json:"feedback,omitempty"`
-	CreatedAt              time.Time `json:"created_at"`
+	ID                     int        `json:"id"`
+	StudentID              uuid.UUID  `json:"student_id"`
+	StudentName            string     `json:"student_name,omitempty"`
+	StudentLinkedIn        *string    `json:"student_linkedin,omitempty"`
+	StudentGitHub          *string    `json:"student_github,omitempty"`
+	AlumniSlug             *string    `json:"alumni_slug,omitempty"`
+	ProjectTitle           string     `json:"project_title"`
+	Description            string     `json:"description"`
+	ArchitectureDiagramURL string     `json:"architecture_diagram_url"`
+	LiveDemoURL            string     `json:"live_demo_url"`
+	RepoURL                string     `json:"repo_url"`
+	Status                 string     `json:"status"` // pending, approved, needs_revision, resubmitted
+	Feedback               *string    `json:"feedback,omitempty"`
+	StudentComment         *string    `json:"student_comment,omitempty"`
+	CreatedAt              time.Time  `json:"created_at"`
+	UpdatedAt              *time.Time `json:"updated_at,omitempty"`
 }
 
 type GraduateStudentRequest struct {
@@ -736,6 +741,13 @@ type CapstoneProjectRequest struct {
 	ArchitectureDiagramURL string `json:"architecture_diagram_url"`
 	LiveDemoURL            string `json:"live_demo_url"`
 	RepoURL                string `json:"repo_url"`
+	LinkedInURL            string `json:"linkedin_url,omitempty"`
+	GitHubURL              string `json:"github_url,omitempty"`
+	StudentComment         string `json:"student_comment,omitempty"`
+}
+
+type RespondToCapstoneRequest struct {
+	Comment string `json:"comment"`
 }
 
 type ApproveCapstoneRequest struct {

@@ -16,7 +16,8 @@ import {
   CreditCard,
   Settings,
   MessageSquare,
-  ChevronDown
+  ChevronDown,
+  GraduationCap
 } from "lucide-react";
 import { useEffect, useState, useCallback } from "react";
 import { logout, getDashboardData } from "../actions";
@@ -74,8 +75,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [pathname]);
 
-  const NavItem = ({ href, label, icon, weekNumber, isCollapsed }: { href: string; label: string; icon: React.ReactNode; weekNumber?: number; isCollapsed?: boolean }) => {
-    const isActive = pathname === href;
+  const NavItem = ({ href, label, icon, weekNumber, isCollapsed, badge }: { href: string; label: string; icon: React.ReactNode; weekNumber?: number; isCollapsed?: boolean; badge?: string }) => {
+    const isActive = pathname === href || (href !== "/academy/dashboard" && pathname.startsWith(href));
     return (
       <Link
         href={href}
@@ -92,9 +93,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
         {!isCollapsed && (
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 group-hover:text-yellow-500/50 transition-colors">
-              {weekNumber ? `Module ${weekNumber}` : "Control Center"}
-            </p>
+            <div className="flex items-center justify-between gap-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/50 group-hover:text-yellow-500/50 transition-colors">
+                {weekNumber ? `Module ${weekNumber}` : "Control Center"}
+              </p>
+              {badge && (
+                <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.2 rounded font-mono font-bold bg-yellow-500/15 text-yellow-500 border border-yellow-500/30">
+                  {badge}
+                </span>
+              )}
+            </div>
             <p className="text-sm font-semibold truncate tracking-tight">{label}</p>
           </div>
         )}
@@ -175,6 +183,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href="/academy/dashboard" 
               label="Overview" 
               icon={<LayoutDashboard className="w-5 h-5" />} 
+              isCollapsed={!isSidebarOpen}
+            />
+            <NavItem 
+              href="/academy/dashboard/capstone" 
+              label="Final Project (PR)" 
+              icon={<GraduationCap className="w-5 h-5" />} 
+              badge="Capstone"
               isCollapsed={!isSidebarOpen}
             />
             <NavItem 

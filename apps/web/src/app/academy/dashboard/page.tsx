@@ -1,8 +1,21 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Terminal, CheckCircle2, Clock, Calendar, ArrowRight, ExternalLink, AlertTriangle, ShieldX } from "lucide-react";
+import { 
+  Terminal, 
+  CheckCircle2, 
+  Clock, 
+  Calendar, 
+  ArrowRight, 
+  ExternalLink, 
+  AlertTriangle, 
+  ShieldX,
+  GraduationCap,
+  GitPullRequest,
+  ShieldCheck,
+  XCircle
+} from "lucide-react";
 import Link from "next/link";
-import { getDashboardData, getBillingStatus } from "../actions";
+import { getDashboardData, getBillingStatus, getStudentCapstone } from "../actions";
 import { AutoRefresher } from "@/components/academy/auto-refresher";
 import { DashboardNotifications } from "@/components/academy/DashboardNotifications";
 
@@ -25,14 +38,26 @@ export default async function StudentDashboard() {
     redirect("/academy/login");
   }
 
-  const [data, billingResult] = await Promise.all([
+  const [data, billingResult, capstoneResult] = await Promise.all([
     getDashboardData(),
     getBillingStatus(),
+    getStudentCapstone(),
   ]);
 
   const weeks: CohortWeek[] = data.weeks || [];
   const billing = "error" in billingResult ? null : billingResult;
   const remainingKobo = billing ? billing.total_due - billing.total_paid : 0;
+  const capstone = capstoneResult && "data" in capstoneResult ? (capstoneResult.data as {
+    id: number;
+    project_title: string;
+    description: string;
+    architecture_diagram_url: string;
+    live_demo_url: string;
+    repo_url: string;
+    status: string;
+    feedback?: string;
+    alumni_slug?: string;
+  } | null) : null;
 
   const formatNaira = (kobo: number) =>
     new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 }).format(kobo / 100);
@@ -139,6 +164,83 @@ export default async function StudentDashboard() {
                   <Clock className="w-5 h-5 text-yellow-500" />
                   <span className="text-foreground">Session: <span className="text-yellow-600 dark:text-yellow-400 font-bold">9:00 PM WAT</span></span>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Capstone / Final Project Milestone Banner ── */}
+          <div className="bg-gradient-to-br from-card via-card/90 to-yellow-500/[0.04] border border-border hover:border-yellow-500/40 rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-all shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-500 shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+                  <GraduationCap className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-foreground tracking-tight flex items-center gap-2">
+                    Final Project (Capstone PR)
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-mono">Module 16 &bull; Production Readiness Audit</p>
+                </div>
+              </div>
+
+              {/* Status Pill */}
+              <div>
+                {capstone?.status === "approved" ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-emerald-500/10 border border-emerald-500/30 text-emerald-500">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Certified Graduate
+                  </span>
+                ) : capstone?.status === "needs_revision" ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-red-500/10 border border-red-500/30 text-red-500 animate-pulse">
+                    <XCircle className="w-3.5 h-3.5" /> Revisions Requested
+                  </span>
+                ) : capstone?.status === "pending" ? (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-500/10 border border-amber-500/30 text-amber-500">
+                    <Clock className="w-3.5 h-3.5" /> Under Staff Review
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider bg-yellow-500/10 border border-yellow-500/20 text-yellow-500">
+                    <GitPullRequest className="w-3.5 h-3.5" /> Submission Open
+                  </span>
+                )}
+              </div>
+            </div>
+
+            <div className="pt-5 space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                {capstone?.status === "approved"
+                  ? `Congratulations! Your Capstone project "${capstone.project_title}" has been approved. You are officially certified in the Alumni Hall of Fame.`
+                  : capstone?.status === "needs_revision"
+                  ? `Your Capstone submission requires architectural or code adjustments. Admin feedback: "${capstone.feedback || "Please review reviewer comments"}". Resubmit when ready.`
+                  : capstone?.status === "pending"
+                  ? `Your Capstone PR "${capstone.project_title}" has been queued for faculty evaluation. Turnaround is typically 48–72 hours.`
+                  : "To earn your graduation certificate and portfolio showcase in the Alumni Hall of Fame, submit your production-ready Capstone PR with complete IaC, live deployment, and architecture diagrams."}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Link
+                  href="/academy/dashboard/capstone"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-slate-950 font-bold text-xs uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(234,179,8,0.2)]"
+                >
+                  {capstone?.status === "approved"
+                    ? "View Capstone Specs"
+                    : capstone?.status === "needs_revision"
+                    ? "Address Revisions & Resubmit"
+                    : capstone?.status === "pending"
+                    ? "View PR Audit Status"
+                    : "Submit Final Project (PR)"}
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+
+                {capstone?.status === "approved" && capstone.alumni_slug && (
+                  <Link
+                    href={`/academy/alumni/${capstone.alumni_slug}`}
+                    target="_blank"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-background border border-border hover:border-yellow-500/40 text-foreground font-bold text-xs uppercase tracking-widest rounded-xl transition-all"
+                  >
+                    Public Alumni Profile
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </Link>
+                )}
               </div>
             </div>
           </div>

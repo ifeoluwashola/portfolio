@@ -251,6 +251,7 @@ func main() {
 	mux.HandleFunc("GET /api/v1/academy/dashboard", authMW.RequireStudentAuth(academyHandler.HandleGetStudentDashboard))
 	mux.HandleFunc("GET /api/v1/academy/students/search", authMW.RequireStudentAuth(academyHandler.HandleSearchStudents))
 	mux.HandleFunc("POST /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleSubmitCapstone))
+	mux.HandleFunc("POST /api/v1/academy/capstone/respond", authMW.RequireStudentAuth(academyHandler.HandleRespondToCapstone))
 	mux.HandleFunc("GET /api/v1/academy/capstone", authMW.RequireStudentAuth(academyHandler.HandleGetStudentCapstone))
 	mux.HandleFunc("GET /api/v1/media/upload-url", authMW.RequireStudentAuth(academyHandler.HandleGetUploadURL))
 	mux.HandleFunc("GET /api/v1/media/download-url", authMW.RequireStudentAuth(academyHandler.HandleGetDownloadURL))
